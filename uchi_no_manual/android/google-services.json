@@ -6,7 +6,14 @@
   },
   "client": [
     {
-      "client_info": {
+      "client_info": {// uchi_no_manual/lib/screens/login_screen.dart
+...
+            ElevatedButton(
+              onPressed: _signInWithGoogle,
+              child: const Text('Googleでログイン'),
+            ),
+...
+
         "mobilesdk_app_id": "1:550323251580:android:edc2ea2b18031e42b45cf9",
         "android_client_info": {
           "package_name": "com.example.uchi_no_manual"
