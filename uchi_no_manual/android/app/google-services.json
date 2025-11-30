@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "151396203786",
+    "project_id": "develop-practice-e7579",
+    "storage_bucket": "develop-practice-e7579.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:151396203786:android:17b0d774ad4424dccecef3",
+        "android_client_info": {
+          "package_name": "com.example.uchi_no_manual"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYNgy9KcGLPTRPfiTxOnefflTwZ-qNzCk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
