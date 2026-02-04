@@ -271,7 +271,7 @@ export default function App() {
                 type="text"
                 value={form.name}
                 onChange={handleChange}
-                placeholder="田中 あい子"
+                placeholder="山田 花子"
               />
               {errors.name ? <span className="error-text">{errors.name}</span> : null}
             </div>
@@ -283,7 +283,7 @@ export default function App() {
                 type="email"
                 value={form.email}
                 onChange={handleChange}
-                placeholder="aiko@example.com"
+                placeholder="example@example.jp"
               />
               {errors.email ? <span className="error-text">{errors.email}</span> : null}
             </div>
@@ -295,7 +295,7 @@ export default function App() {
                 type="text"
                 value={form.address}
                 onChange={handleChange}
-                placeholder="東京都渋谷区"
+                placeholder="東京都港区"
               />
               {errors.address ? <span className="error-text">{errors.address}</span> : null}
             </div>
