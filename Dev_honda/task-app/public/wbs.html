@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WBS | タスク管理</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>WBS</h1>
+      <nav>
+        <a href="/projects.html">プロジェクト</a>
+        <a href="/wbs.html" class="active">WBS</a>
+        <a href="/gantt.html">ガント</a>
+        <a href="/backlog.html">未着手</a>
+      </nav>
+    </header>
+    <main class="page">
+      <section class="card">
+        <h2>課題（チケット）</h2>
+        <form id="ticket-form" class="form inline">
+          <input type="text" name="title" placeholder="課題タイトル" required />
+          <button type="submit">追加</button>
+        </form>
+        <ul id="ticket-list" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>子課題（タスク）</h2>
+        <form id="task-form" class="form">
+          <label>
+            親課題
+            <select id="ticket-select" name="parent_id"></select>
+          </label>
+          <label>
+            タイトル
+            <input type="text" name="title" required />
+          </label>
+          <label>
+            予定時間（分）
+            <input type="number" name="planned_minutes" min="0" value="30" />
+          </label>
+          <label>
+            予定開始日
+            <input type="date" name="planned_start" />
+          </label>
+          <label>
+            予定終了日
+            <input type="date" name="planned_end" />
+          </label>
+          <button type="submit">追加</button>
+        </form>
+        <ul id="task-list" class="list"></ul>
+      </section>
+    </main>
+    <script src="common.js"></script>
+    <script src="wbs.js"></script>
+  </body>
+</html>

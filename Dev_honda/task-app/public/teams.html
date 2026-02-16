@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>チーム | タスク管理</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>チーム</h1>
+      <nav>
+        <a href="/teams.html" class="active">チーム</a>
+        <a href="/projects.html">プロジェクト</a>
+      </nav>
+    </header>
+    <main class="page">
+      <section class="card">
+        <h2>チーム一覧</h2>
+        <ul id="team-list" class="list"></ul>
+      </section>
+      <section class="card">
+        <h2>チーム作成</h2>
+        <form id="team-form" class="form inline">
+          <input type="text" name="name" placeholder="チーム名" required />
+          <button type="submit">作成</button>
+        </form>
+      </section>
+    </main>
+    <script src="common.js"></script>
+    <script src="teams.js"></script>
+  </body>
+</html>
