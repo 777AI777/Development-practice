@@ -1,1936 +1,2981 @@
 {
-    "version":  "2.6",
-    "children":  [
-                     {
-                         "type":  "frame",
-                         "id":  "login-screen",
-                         "x":  0,
-                         "y":  0,
-                         "name":  "01 Login",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "login-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "login-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "login-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "login-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Sign in",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "login-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "Manage your top favorites by category.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "login-card",
-                                              "x":  380,
-                                              "y":  188,
-                                              "name":  "Login Card",
-                                              "width":  520,
-                                              "height":  416,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "login-google-btn",
-                                              "x":  436,
-                                              "y":  382,
-                                              "name":  "Google Button",
-                                              "width":  408,
-                                              "height":  56,
-                                              "fill":  "#005FCC",
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "login-google-btn-text",
-                                              "x":  545,
-                                              "y":  399,
-                                              "name":  "Google Button Text",
-                                              "fill":  "#FFFFFF",
-                                              "content":  "Sign in with Google",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "login-note",
-                                              "x":  436,
-                                              "y":  466,
-                                              "name":  "Note",
-                                              "fill":  "#55606E",
-                                              "content":  "Phase1: Personal mode only. No public sharing.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  14,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.6
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "ranking-list-screen",
-                         "x":  1320,
-                         "y":  0,
-                         "name":  "02 Ranking List",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-list-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-list-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-list-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-list-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "My Rankings",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-list-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "Create, edit, delete, and view your rankings.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-list-new-btn",
-                                              "x":  940,
-                                              "y":  124,
-                                              "name":  "New Button",
-                                              "width":  260,
-                                              "height":  56,
-                                              "fill":  "#005FCC",
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-list-new-btn-text",
-                                              "x":  1012,
-                                              "y":  141,
-                                              "name":  "New Button Text",
-                                              "fill":  "#FFFFFF",
-                                              "content":  "New ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-list-card1",
-                                              "x":  80,
-                                              "y":  230,
-                                              "name":  "Card 1",
-                                              "width":  1120,
-                                              "height":  170,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-list-card1-title",
-                                              "x":  116,
-                                              "y":  274,
-                                              "name":  "Card 1 Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Top 5 Movies",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-list-card1-tag",
-                                              "x":  116,
-                                              "y":  318,
-                                              "name":  "Card 1 Tag",
-                                              "fill":  "#55606E",
-                                              "content":  "Tags: Movies / Entertainment",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  14,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.6
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-list-card2",
-                                              "x":  80,
-                                              "y":  420,
-                                              "name":  "Card 2",
-                                              "width":  1120,
-                                              "height":  170,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-list-card2-title",
-                                              "x":  116,
-                                              "y":  464,
-                                              "name":  "Card 2 Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Top 5 Cafes",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "ranking-edit-screen",
-                         "x":  2640,
-                         "y":  0,
-                         "name":  "03 Ranking Create Edit",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Create Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "Set title, fixed tags, top 1-5 items.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-form",
-                                              "x":  80,
-                                              "y":  220,
-                                              "name":  "Form",
-                                              "width":  1120,
-                                              "height":  620,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-label-title",
-                                              "x":  116,
-                                              "y":  262,
-                                              "name":  "Label Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Ranking title",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-input-title",
-                                              "x":  116,
-                                              "y":  292,
-                                              "name":  "Input Title",
-                                              "width":  1048,
-                                              "height":  56,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-label-rank",
-                                              "x":  116,
-                                              "y":  372,
-                                              "name":  "Label Rank",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Top 5 items",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-r1-l",
-                                              "x":  116,
-                                              "y":  418,
-                                              "name":  "R1 Label",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "1",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-r1",
-                                              "x":  148,
-                                              "y":  404,
-                                              "name":  "R1 Input",
-                                              "width":  1016,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-r2-l",
-                                              "x":  116,
-                                              "y":  474,
-                                              "name":  "R2 Label",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "2",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-r2",
-                                              "x":  148,
-                                              "y":  460,
-                                              "name":  "R2 Input",
-                                              "width":  1016,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-r3-l",
-                                              "x":  116,
-                                              "y":  530,
-                                              "name":  "R3 Label",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "3",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-r3",
-                                              "x":  148,
-                                              "y":  516,
-                                              "name":  "R3 Input",
-                                              "width":  1016,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-r4-l",
-                                              "x":  116,
-                                              "y":  586,
-                                              "name":  "R4 Label",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "4",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-r4",
-                                              "x":  148,
-                                              "y":  572,
-                                              "name":  "R4 Input",
-                                              "width":  1016,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-edit-r5-l",
-                                              "x":  116,
-                                              "y":  642,
-                                              "name":  "R5 Label",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "5",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-r5",
-                                              "x":  148,
-                                              "y":  628,
-                                              "name":  "R5 Input",
-                                              "width":  1016,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-draft-btn",
-                                              "x":  860,
-                                              "y":  772,
-                                              "name":  "Draft",
-                                              "width":  136,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-edit-save-btn",
-                                              "x":  1012,
-                                              "y":  772,
-                                              "name":  "Save",
-                                              "width":  152,
-                                              "height":  48,
-                                              "fill":  "#005FCC",
-                                              "cornerRadius":  8
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "ranking-detail-screen",
-                         "x":  0,
-                         "y":  940,
-                         "name":  "04 Ranking Detail",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-detail-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-detail-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-detail-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-detail-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Ranking Detail",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-detail-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "Read-only ranking view with edit/delete actions.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-detail-card",
-                                              "x":  200,
-                                              "y":  220,
-                                              "name":  "Card",
-                                              "width":  880,
-                                              "height":  560,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-detail-main-title",
-                                              "x":  252,
-                                              "y":  264,
-                                              "name":  "Main Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Top 5 Movies",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-detail-r1",
-                                              "x":  252,
-                                              "y":  366,
-                                              "name":  "R1",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "1. Inception",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-detail-r2",
-                                              "x":  252,
-                                              "y":  416,
-                                              "name":  "R2",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "2. Spirited Away",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "ranking-detail-r3",
-                                              "x":  252,
-                                              "y":  466,
-                                              "name":  "R3",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "3. Parasite",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-detail-edit-btn",
-                                              "x":  872,
-                                              "y":  708,
-                                              "name":  "Edit",
-                                              "width":  96,
-                                              "height":  48,
-                                              "fill":  "#005FCC",
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "ranking-detail-delete-btn",
-                                              "x":  984,
-                                              "y":  708,
-                                              "name":  "Delete",
-                                              "width":  96,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#B00020"
-                                                         },
-                                              "cornerRadius":  8
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "tag-search-screen",
-                         "x":  1320,
-                         "y":  940,
-                         "name":  "05 Tag Search",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "tag-search-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "tag-search-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "tag-search-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "tag-search-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Search by Tag",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "tag-search-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "Filter rankings by fixed major category tags.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "tag-search-filter",
-                                              "x":  80,
-                                              "y":  220,
-                                              "name":  "Filter",
-                                              "width":  300,
-                                              "height":  620,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "tag-search-chip-music",
-                                              "x":  112,
-                                              "y":  300,
-                                              "name":  "Music Chip",
-                                              "width":  120,
-                                              "height":  44,
-                                              "fill":  "#005FCC",
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "tag-search-result1",
-                                              "x":  420,
-                                              "y":  220,
-                                              "name":  "Result1",
-                                              "width":  780,
-                                              "height":  180,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "tag-search-result1-title",
-                                              "x":  456,
-                                              "y":  266,
-                                              "name":  "Result1 Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Top 5 Songs for Working",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "tag-search-result2",
-                                              "x":  420,
-                                              "y":  420,
-                                              "name":  "Result2",
-                                              "width":  780,
-                                              "height":  180,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "drafts-screen",
-                         "x":  2640,
-                         "y":  940,
-                         "name":  "06 Drafts",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "drafts-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "drafts-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "drafts-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "drafts-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Drafts",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "drafts-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "Resume or delete drafts (up to 5 per user).",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "drafts-count-card",
-                                              "x":  80,
-                                              "y":  220,
-                                              "name":  "Count Card",
-                                              "width":  1120,
-                                              "height":  96,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "drafts-count-text",
-                                              "x":  116,
-                                              "y":  255,
-                                              "name":  "Count Text",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "3 / 5 drafts used",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "drafts-item1",
-                                              "x":  80,
-                                              "y":  340,
-                                              "name":  "Item1",
-                                              "width":  1120,
-                                              "height":  160,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "drafts-item2",
-                                              "x":  80,
-                                              "y":  520,
-                                              "name":  "Item2",
-                                              "width":  1120,
-                                              "height":  160,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "settings-screen",
-                         "x":  0,
-                         "y":  1880,
-                         "name":  "07 Settings",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "settings-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "settings-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "settings-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "settings-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Account Settings",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "settings-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "View account info and sign out.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "settings-account-card",
-                                              "x":  80,
-                                              "y":  220,
-                                              "name":  "Account Card",
-                                              "width":  1120,
-                                              "height":  236,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "settings-account-email",
-                                              "x":  116,
-                                              "y":  306,
-                                              "name":  "Email",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Email: user@example.com",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "settings-signout-btn",
-                                              "x":  1024,
-                                              "y":  376,
-                                              "name":  "Signout",
-                                              "width":  160,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "delete-screen",
-                         "x":  1320,
-                         "y":  1880,
-                         "name":  "08 Delete Confirmation",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "delete-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "delete-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "delete-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "delete-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Delete Confirmation",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "delete-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "Display irreversible deletion warning and explicit action.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "delete-overlay",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Overlay",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#00000066"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "delete-modal",
-                                              "x":  372,
-                                              "y":  270,
-                                              "name":  "Modal",
-                                              "width":  536,
-                                              "height":  280,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "delete-modal-title",
-                                              "x":  412,
-                                              "y":  320,
-                                              "name":  "Modal Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Delete this ranking?",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "delete-cancel-btn",
-                                              "x":  604,
-                                              "y":  468,
-                                              "name":  "Cancel",
-                                              "width":  120,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "delete-delete-btn",
-                                              "x":  740,
-                                              "y":  468,
-                                              "name":  "Delete",
-                                              "width":  132,
-                                              "height":  48,
-                                              "fill":  "#B00020",
-                                              "cornerRadius":  8
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "empty-list-screen",
-                         "x":  0,
-                         "y":  2820,
-                         "name":  "09 Empty List State",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-list-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-list-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-list-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-list-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "My Rankings",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-list-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "No rankings yet.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-list-card",
-                                              "x":  200,
-                                              "y":  250,
-                                              "name":  "Empty Card",
-                                              "width":  880,
-                                              "height":  460,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-list-title",
-                                              "x":  380,
-                                              "y":  456,
-                                              "name":  "Empty Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "ランキングがまだありません",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-list-body",
-                                              "x":  340,
-                                              "y":  514,
-                                              "name":  "Empty Body",
-                                              "fill":  "#55606E",
-                                              "content":  "「新規作成」から、あなたの好きなものを登録できます。",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-list-create-btn",
-                                              "x":  522,
-                                              "y":  586,
-                                              "name":  "Create Button",
-                                              "width":  236,
-                                              "height":  56,
-                                              "fill":  "#005FCC",
-                                              "cornerRadius":  8
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "empty-search-screen",
-                         "x":  1320,
-                         "y":  2820,
-                         "name":  "10 Empty Search State",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-search-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-search-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-search-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-search-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Search by Tag",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-search-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "No results for selected tags.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-search-filter",
-                                              "x":  80,
-                                              "y":  220,
-                                              "name":  "Filter Panel",
-                                              "width":  300,
-                                              "height":  620,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-search-results",
-                                              "x":  420,
-                                              "y":  220,
-                                              "name":  "Results Card",
-                                              "width":  780,
-                                              "height":  620,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-search-title",
-                                              "x":  624,
-                                              "y":  498,
-                                              "name":  "Empty Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "検索結果がありません",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-search-body",
-                                              "x":  544,
-                                              "y":  556,
-                                              "name":  "Empty Body",
-                                              "fill":  "#55606E",
-                                              "content":  "タグを変更するか、ランキングを新規作成してください。",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "empty-drafts-screen",
-                         "x":  2640,
-                         "y":  2820,
-                         "name":  "11 Empty Drafts State",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-drafts-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-drafts-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-drafts-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-drafts-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Drafts",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-drafts-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "No saved drafts.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-drafts-card",
-                                              "x":  200,
-                                              "y":  250,
-                                              "name":  "Empty Card",
-                                              "width":  880,
-                                              "height":  460,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-drafts-title",
-                                              "x":  456,
-                                              "y":  456,
-                                              "name":  "Empty Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "下書きはありません",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "empty-drafts-body",
-                                              "x":  372,
-                                              "y":  514,
-                                              "name":  "Empty Body",
-                                              "fill":  "#55606E",
-                                              "content":  "編集中のランキングを「下書き保存」するとここに表示されます。",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "empty-drafts-create-btn",
-                                              "x":  522,
-                                              "y":  586,
-                                              "name":  "Create Button",
-                                              "width":  236,
-                                              "height":  56,
-                                              "fill":  "#005FCC",
-                                              "cornerRadius":  8
-                                          }
-                                      ]
-                     },
-                     {
-                         "type":  "frame",
-                         "id":  "error-state-screen",
-                         "x":  0,
-                         "y":  3760,
-                         "name":  "12 Error States",
-                         "clip":  true,
-                         "width":  1280,
-                         "height":  900,
-                         "fill":  "#F3F5F7",
-                         "layout":  "none",
-                         "children":  [
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "error-state-screen-bg",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Background",
-                                              "width":  1280,
-                                              "height":  900,
-                                              "fill":  "#F3F5F7"
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "error-state-screen-header",
-                                              "x":  0,
-                                              "y":  0,
-                                              "name":  "Header",
-                                              "width":  1280,
-                                              "height":  72,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         }
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "error-state-screen-brand",
-                                              "x":  40,
-                                              "y":  22,
-                                              "name":  "Brand",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Favorites Ranking",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  24,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "error-state-screen-title",
-                                              "x":  80,
-                                              "y":  124,
-                                              "name":  "Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "Error UI",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "error-state-screen-subtitle",
-                                              "x":  80,
-                                              "y":  174,
-                                              "name":  "Subtitle",
-                                              "fill":  "#55606E",
-                                              "content":  "Connection and validation error examples.",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "error-banner",
-                                              "x":  80,
-                                              "y":  220,
-                                              "name":  "Error Banner",
-                                              "width":  1120,
-                                              "height":  64,
-                                              "fill":  "#FDECEE",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#B00020"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "error-banner-text",
-                                              "x":  112,
-                                              "y":  240,
-                                              "name":  "Error Banner Text",
-                                              "fill":  "#B00020",
-                                              "content":  "通信エラーが発生しました。時間をおいて再試行してください。",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "error-inline-card",
-                                              "x":  80,
-                                              "y":  304,
-                                              "name":  "Inline Error Card",
-                                              "width":  540,
-                                              "height":  220,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "error-inline-message",
-                                              "x":  112,
-                                              "y":  390,
-                                              "name":  "Inline Error Message",
-                                              "fill":  "#B00020",
-                                              "content":  "ランキングタイトルは1文字以上で入力してください。",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  17,
-                                              "fontWeight":  "400",
-                                              "lineHeight":  1.7
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "error-inline-input",
-                                              "x":  112,
-                                              "y":  434,
-                                              "name":  "Inline Error Input",
-                                              "width":  476,
-                                              "height":  48,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#B00020"
-                                                         },
-                                              "cornerRadius":  8
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "error-fatal-card",
-                                              "x":  660,
-                                              "y":  304,
-                                              "name":  "Fatal Error Card",
-                                              "width":  540,
-                                              "height":  420,
-                                              "fill":  "#FFFFFF",
-                                              "stroke":  {
-                                                             "align":  "inside",
-                                                             "thickness":  1,
-                                                             "fill":  "#C4CDD5"
-                                                         },
-                                              "cornerRadius":  12
-                                          },
-                                          {
-                                              "type":  "text",
-                                              "id":  "error-fatal-title",
-                                              "x":  760,
-                                              "y":  500,
-                                              "name":  "Fatal Error Title",
-                                              "fill":  "#1A1A1A",
-                                              "content":  "データの取得に失敗しました",
-                                              "fontFamily":  "Noto Sans JP",
-                                              "fontSize":  32,
-                                              "fontWeight":  "700",
-                                              "lineHeight":  1.4
-                                          },
-                                          {
-                                              "type":  "rectangle",
-                                              "id":  "error-fatal-retry-btn",
-                                              "x":  864,
-                                              "y":  624,
-                                              "name":  "Retry Button",
-                                              "width":  132,
-                                              "height":  48,
-                                              "fill":  "#005FCC",
-                                              "cornerRadius":  8
-                                          }
-                                      ]
-                     }
-                 ]
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "login-screen",
+      "x": 0,
+      "y": 0,
+      "name": "01 Login",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "login-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "login-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "login-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ZBuPN",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "サインイン",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "login-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "好きなものをカテゴリごとに管理しましょう。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "login-card",
+          "x": 380,
+          "y": 188,
+          "name": "Login Card",
+          "fill": "#FFFFFF",
+          "width": 520,
+          "height": 416,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "login-google-btn",
+          "x": 436,
+          "y": 382,
+          "name": "Google Button",
+          "fill": "#005FCC",
+          "width": 408,
+          "height": 56
+        },
+        {
+          "type": "text",
+          "id": "login-google-btn-text",
+          "x": 545,
+          "y": 399,
+          "name": "Google Button Text",
+          "fill": "#FFFFFF",
+          "content": "Googleでサインイン",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "login-note",
+          "x": 436,
+          "y": 466,
+          "name": "Note",
+          "fill": "#55606E",
+          "content": "フェーズ1: 個人利用モード（公開なし）。",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ranking-list-screen",
+      "x": 1320,
+      "y": 0,
+      "name": "02 Ranking List",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ranking-list-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "ranking-list-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "マイランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "作成・編集・削除・閲覧ができます。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-list-new-btn",
+          "x": 940,
+          "y": 124,
+          "name": "New Button",
+          "fill": "#005FCC",
+          "width": 260,
+          "height": 56
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-new-btn-text",
+          "x": 1012,
+          "y": 141,
+          "name": "New Button Text",
+          "fill": "#FFFFFF",
+          "content": "新規ランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ranking-list-card1",
+          "x": 80,
+          "y": 230,
+          "name": "Card 1",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 170,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-card1-title",
+          "x": 116,
+          "y": 274,
+          "name": "Card 1 Title",
+          "fill": "#1A1A1A",
+          "content": "映画トップ5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-card1-tag",
+          "x": 116,
+          "y": 318,
+          "name": "Card 1 Tag",
+          "fill": "#55606E",
+          "content": "タグ: 映画 / エンタメ",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ranking-list-card2",
+          "x": 80,
+          "y": 420,
+          "name": "Card 2",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 170,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-card2-title",
+          "x": 116,
+          "y": 464,
+          "name": "Card 2 Title",
+          "fill": "#1A1A1A",
+          "content": "カフェトップ5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ranking-edit-screen",
+      "x": 2640,
+      "y": 0,
+      "name": "03 Ranking Create Edit",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ranking-edit-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "ranking-edit-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "ランキング作成",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "タイトル・固定タグ・1〜5位を設定します。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ranking-edit-form",
+          "x": 80,
+          "y": 220,
+          "name": "Form",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 620,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-label-title",
+          "x": 116,
+          "y": 262,
+          "name": "Label Title",
+          "fill": "#1A1A1A",
+          "content": "ランキングタイトル",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-input-title",
+          "x": 116,
+          "y": 292,
+          "name": "Input Title",
+          "fill": "#FFFFFF",
+          "width": 1048,
+          "height": 56,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-label-rank",
+          "x": 116,
+          "y": 372,
+          "name": "Label Rank",
+          "fill": "#1A1A1A",
+          "content": "トップ5項目",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r1-l",
+          "x": 116,
+          "y": 418,
+          "name": "R1 Label",
+          "fill": "#1A1A1A",
+          "content": "1",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r1",
+          "x": 148,
+          "y": 404,
+          "name": "R1 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r2-l",
+          "x": 116,
+          "y": 474,
+          "name": "R2 Label",
+          "fill": "#1A1A1A",
+          "content": "2",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r2",
+          "x": 148,
+          "y": 460,
+          "name": "R2 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r3-l",
+          "x": 116,
+          "y": 530,
+          "name": "R3 Label",
+          "fill": "#1A1A1A",
+          "content": "3",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r3",
+          "x": 148,
+          "y": 516,
+          "name": "R3 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r4-l",
+          "x": 116,
+          "y": 586,
+          "name": "R4 Label",
+          "fill": "#1A1A1A",
+          "content": "4",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r4",
+          "x": 148,
+          "y": 572,
+          "name": "R4 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r5-l",
+          "x": 116,
+          "y": 642,
+          "name": "R5 Label",
+          "fill": "#1A1A1A",
+          "content": "5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r5",
+          "x": 148,
+          "y": 628,
+          "name": "R5 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-draft-btn",
+          "x": 860,
+          "y": 772,
+          "name": "Draft",
+          "fill": "#FFFFFF",
+          "width": 136,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-save-btn",
+          "x": 1012,
+          "y": 772,
+          "name": "Save",
+          "fill": "#005FCC",
+          "width": 152,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ranking-detail-screen",
+      "x": 0,
+      "y": 940,
+      "name": "04 Ranking Detail",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ranking-detail-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "ranking-detail-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "ランキング詳細",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "閲覧専用。編集・削除ができます。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ranking-detail-card",
+          "x": 200,
+          "y": 220,
+          "name": "Card",
+          "fill": "#FFFFFF",
+          "width": 880,
+          "height": 560,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-main-title",
+          "x": 252,
+          "y": 264,
+          "name": "Main Title",
+          "fill": "#1A1A1A",
+          "content": "映画トップ5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-r1",
+          "x": 252,
+          "y": 366,
+          "name": "R1",
+          "fill": "#1A1A1A",
+          "content": "1. インセプション",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-r2",
+          "x": 252,
+          "y": 416,
+          "name": "R2",
+          "fill": "#1A1A1A",
+          "content": "2. 千と千尋の神隠し",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-r3",
+          "x": 252,
+          "y": 466,
+          "name": "R3",
+          "fill": "#1A1A1A",
+          "content": "3. パラサイト",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-detail-edit-btn",
+          "x": 872,
+          "y": 708,
+          "name": "Edit",
+          "fill": "#005FCC",
+          "width": 96,
+          "height": 48
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-detail-delete-btn",
+          "x": 984,
+          "y": 708,
+          "name": "Delete",
+          "fill": "#FFFFFF",
+          "width": 96,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#B00020"
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "tag-search-screen",
+      "x": 1320,
+      "y": 940,
+      "name": "05 Tag Search",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "tag-search-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "tag-search-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "tag-search-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "tag-search-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "タグ検索",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "tag-search-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "固定タグでランキングを絞り込みます。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "tag-search-filter",
+          "x": 80,
+          "y": 220,
+          "name": "Filter",
+          "fill": "#FFFFFF",
+          "width": 300,
+          "height": 620,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "tag-search-chip-music",
+          "x": 112,
+          "y": 300,
+          "name": "Music Chip",
+          "fill": "#005FCC",
+          "width": 120,
+          "height": 44
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "tag-search-result1",
+          "x": 420,
+          "y": 220,
+          "name": "Result1",
+          "fill": "#FFFFFF",
+          "width": 780,
+          "height": 180,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "tag-search-result1-title",
+          "x": 456,
+          "y": 266,
+          "name": "Result1 Title",
+          "fill": "#1A1A1A",
+          "content": "作業用ソングトップ5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "tag-search-result2",
+          "x": 420,
+          "y": 420,
+          "name": "Result2",
+          "fill": "#FFFFFF",
+          "width": 780,
+          "height": 180,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "drafts-screen",
+      "x": 2640,
+      "y": 940,
+      "name": "06 Drafts",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "drafts-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "drafts-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "drafts-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "drafts-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "下書き",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "drafts-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "下書きを再開・削除できます（最大5件）。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "drafts-count-card",
+          "x": 80,
+          "y": 220,
+          "name": "Count Card",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 96,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "drafts-count-text",
+          "x": 116,
+          "y": 255,
+          "name": "Count Text",
+          "fill": "#1A1A1A",
+          "content": "下書き使用数: 3 / 5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "drafts-item1",
+          "x": 80,
+          "y": 340,
+          "name": "Item1",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 160,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "drafts-item2",
+          "x": 80,
+          "y": 520,
+          "name": "Item2",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 160,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "settings-screen",
+      "x": 0,
+      "y": 1880,
+      "name": "07 Settings",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "settings-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "settings-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "settings-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "settings-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "アカウント設定",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "settings-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "アカウント情報の確認とサインアウト",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "settings-account-card",
+          "x": 80,
+          "y": 220,
+          "name": "Account Card",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 236,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "settings-account-email",
+          "x": 116,
+          "y": 306,
+          "name": "Email",
+          "fill": "#1A1A1A",
+          "content": "メール: user@example.com",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "settings-signout-btn",
+          "x": 1024,
+          "y": 376,
+          "name": "Signout",
+          "fill": "#FFFFFF",
+          "width": 160,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "delete-screen",
+      "x": 1320,
+      "y": 1880,
+      "name": "08 Delete Confirmation",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "delete-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "delete-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "delete-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "delete-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "削除確認",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "delete-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "削除は元に戻せません。実行前に確認してください。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "id": "delete-overlay",
+          "x": 0,
+          "y": 0,
+          "name": "Overlay",
+          "fill": "#00000066",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "delete-modal",
+          "x": 372,
+          "y": 270,
+          "name": "Modal",
+          "fill": "#FFFFFF",
+          "width": 536,
+          "height": 280,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "delete-modal-title",
+          "x": 412,
+          "y": 320,
+          "name": "Modal Title",
+          "fill": "#1A1A1A",
+          "content": "このランキングを削除しますか？",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "delete-cancel-btn",
+          "x": 604,
+          "y": 468,
+          "name": "Cancel",
+          "fill": "#FFFFFF",
+          "width": 120,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "delete-delete-btn",
+          "x": 740,
+          "y": 468,
+          "name": "Delete",
+          "fill": "#B00020",
+          "width": 132,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "empty-list-screen",
+      "x": 0,
+      "y": 2820,
+      "name": "09 Empty List State",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "empty-list-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "empty-list-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "empty-list-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-list-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "マイランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-list-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "まだランキングがありません。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "empty-list-card",
+          "x": 200,
+          "y": 250,
+          "name": "Empty Card",
+          "fill": "#FFFFFF",
+          "width": 880,
+          "height": 460,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "empty-list-title",
+          "x": 380,
+          "y": 456,
+          "name": "Empty Title",
+          "fill": "#1A1A1A",
+          "content": "ランキングがまだありません",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-list-body",
+          "x": 340,
+          "y": 514,
+          "name": "Empty Body",
+          "fill": "#55606E",
+          "content": "「新規作成」から、あなたの好きなものを登録できます。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "empty-list-create-btn",
+          "x": 522,
+          "y": 586,
+          "name": "Create Button",
+          "fill": "#005FCC",
+          "width": 236,
+          "height": 56
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "empty-search-screen",
+      "x": 1320,
+      "y": 2820,
+      "name": "10 Empty Search State",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "empty-search-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "empty-search-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "empty-search-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-search-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "タグ検索",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-search-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "選択したタグの結果はありません。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "empty-search-filter",
+          "x": 80,
+          "y": 220,
+          "name": "Filter Panel",
+          "fill": "#FFFFFF",
+          "width": 300,
+          "height": 620,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "empty-search-results",
+          "x": 420,
+          "y": 220,
+          "name": "Results Card",
+          "fill": "#FFFFFF",
+          "width": 780,
+          "height": 620,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "empty-search-title",
+          "x": 624,
+          "y": 498,
+          "name": "Empty Title",
+          "fill": "#1A1A1A",
+          "content": "検索結果がありません",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-search-body",
+          "x": 544,
+          "y": 556,
+          "name": "Empty Body",
+          "fill": "#55606E",
+          "content": "タグを変更するか、ランキングを新規作成してください。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "empty-drafts-screen",
+      "x": 2640,
+      "y": 2820,
+      "name": "11 Empty Drafts State",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "empty-drafts-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "empty-drafts-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "empty-drafts-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-drafts-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "下書き",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-drafts-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "保存済みの下書きはありません。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "empty-drafts-card",
+          "x": 200,
+          "y": 250,
+          "name": "Empty Card",
+          "fill": "#FFFFFF",
+          "width": 880,
+          "height": 460,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "empty-drafts-title",
+          "x": 456,
+          "y": 456,
+          "name": "Empty Title",
+          "fill": "#1A1A1A",
+          "content": "下書きはありません",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "empty-drafts-body",
+          "x": 372,
+          "y": 514,
+          "name": "Empty Body",
+          "fill": "#55606E",
+          "content": "編集中のランキングを「下書き保存」するとここに表示されます。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "empty-drafts-create-btn",
+          "x": 522,
+          "y": 586,
+          "name": "Create Button",
+          "fill": "#005FCC",
+          "width": 236,
+          "height": 56
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "error-state-screen",
+      "x": 0,
+      "y": 3760,
+      "name": "12 Error States",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "error-state-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "error-state-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "error-state-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "error-state-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "エラー表示",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "error-state-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "通信・入力エラーの表示例",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "error-banner",
+          "x": 80,
+          "y": 220,
+          "name": "Error Banner",
+          "fill": "#FDECEE",
+          "width": 1120,
+          "height": 64,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#B00020"
+          }
+        },
+        {
+          "type": "text",
+          "id": "error-banner-text",
+          "x": 112,
+          "y": 240,
+          "name": "Error Banner Text",
+          "fill": "#B00020",
+          "content": "通信エラーが発生しました。時間をおいて再試行してください。",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "error-inline-card",
+          "x": 80,
+          "y": 304,
+          "name": "Inline Error Card",
+          "fill": "#FFFFFF",
+          "width": 540,
+          "height": 220,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "error-inline-message",
+          "x": 112,
+          "y": 390,
+          "name": "Inline Error Message",
+          "fill": "#B00020",
+          "content": "ランキングタイトルは1文字以上で入力してください。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "error-inline-input",
+          "x": 112,
+          "y": 434,
+          "name": "Inline Error Input",
+          "fill": "#FFFFFF",
+          "width": 476,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#B00020"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "error-fatal-card",
+          "x": 660,
+          "y": 304,
+          "name": "Fatal Error Card",
+          "fill": "#FFFFFF",
+          "width": 540,
+          "height": 420,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "error-fatal-title",
+          "x": 760,
+          "y": 500,
+          "name": "Fatal Error Title",
+          "fill": "#1A1A1A",
+          "content": "データの取得に失敗しました",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "error-fatal-retry-btn",
+          "x": 864,
+          "y": 624,
+          "name": "Retry Button",
+          "fill": "#005FCC",
+          "width": 132,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "SwV9b",
+      "x": 1320,
+      "y": 3760,
+      "name": "13 Loading State",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "8F4Yz",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "6qJck",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "34F3f",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "tD0dP",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "読み込み中",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "FvS9A",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "データを取得しています...",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "FLCWB",
+          "x": 200,
+          "y": 250,
+          "name": "Empty Card",
+          "fill": "#FFFFFF",
+          "width": 880,
+          "height": 460,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "irnyu",
+          "x": 380,
+          "y": 456,
+          "name": "Empty Title",
+          "fill": "#1A1A1A",
+          "content": "しばらくお待ちください",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "Zf889",
+          "x": 340,
+          "y": 514,
+          "name": "Empty Body",
+          "fill": "#55606E",
+          "content": "ランキング情報を読み込んでいます。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "pWlKH",
+          "x": 522,
+          "y": 586,
+          "name": "Create Button",
+          "fill": "#005FCC",
+          "width": 236,
+          "height": 56
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "sb6cD",
+      "x": 2640,
+      "y": 3760,
+      "name": "14 Auth Error State",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "N7KqQ",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "Wyz2c",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "TdFLb",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "Pv5m6",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "認証エラー",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "xaLdw",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "Google認証に失敗しました。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "mAtYC",
+          "x": 380,
+          "y": 188,
+          "name": "Login Card",
+          "fill": "#FFFFFF",
+          "width": 520,
+          "height": 416,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "yCkGb",
+          "x": 436,
+          "y": 382,
+          "name": "Google Button",
+          "fill": "#005FCC",
+          "width": 408,
+          "height": 56
+        },
+        {
+          "type": "text",
+          "id": "svhgD",
+          "x": 545,
+          "y": 399,
+          "name": "Google Button Text",
+          "fill": "#FFFFFF",
+          "content": "再試行",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "6si0T",
+          "x": 436,
+          "y": 466,
+          "name": "Note",
+          "fill": "#55606E",
+          "content": "時間をおいて再度お試しください。",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "bGqna",
+      "x": 0,
+      "y": 4700,
+      "name": "15 Not Found State",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "bTFem",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "8y1l8",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "nxP0s",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "0gbLY",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "ページが見つかりません",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "3Bi0l",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "URLを確認するか、ホームへ戻ってください。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "RtO9B",
+          "x": 80,
+          "y": 220,
+          "name": "Error Banner",
+          "fill": "#FDECEE",
+          "width": 1120,
+          "height": 64,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#B00020"
+          }
+        },
+        {
+          "type": "text",
+          "id": "rDe5N",
+          "x": 112,
+          "y": 240,
+          "name": "Error Banner Text",
+          "fill": "#B00020",
+          "content": "404 ページが見つかりません",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "nljpj",
+          "x": 80,
+          "y": 304,
+          "name": "Inline Error Card",
+          "fill": "#FFFFFF",
+          "width": 540,
+          "height": 220,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "89ZN6",
+          "x": 112,
+          "y": 390,
+          "name": "Inline Error Message",
+          "fill": "#B00020",
+          "content": "ランキングタイトルは1文字以上で入力してください。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "HgExK",
+          "x": 112,
+          "y": 434,
+          "name": "Inline Error Input",
+          "fill": "#FFFFFF",
+          "width": 476,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#B00020"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "BCJCV",
+          "x": 660,
+          "y": 304,
+          "name": "Fatal Error Card",
+          "fill": "#FFFFFF",
+          "width": 540,
+          "height": 420,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "UddIL",
+          "x": 760,
+          "y": 500,
+          "name": "Fatal Error Title",
+          "fill": "#1A1A1A",
+          "content": "お探しのページは存在しません",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ZoGTe",
+          "x": 864,
+          "y": 624,
+          "name": "Retry Button",
+          "fill": "#005FCC",
+          "width": 132,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "NQISp",
+      "x": 1320,
+      "y": 4700,
+      "name": "16 Draft Limit Reached",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "iQ3Uk",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "um8Jq",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "tqm6e",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "BSOZ3",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "下書き上限",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "nLdGy",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "下書きは最大5件までです。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "Z08j6",
+          "x": 80,
+          "y": 220,
+          "name": "Count Card",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 96,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "Y22MY",
+          "x": 116,
+          "y": 255,
+          "name": "Count Text",
+          "fill": "#1A1A1A",
+          "content": "下書き使用数: 5 / 5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "4a8Mp",
+          "x": 80,
+          "y": 340,
+          "name": "Item1",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 160,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "KF71q",
+          "x": 80,
+          "y": 520,
+          "name": "Item2",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 160,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ZjaCR",
+      "x": 2640,
+      "y": 4700,
+      "name": "17 Toast States",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ad58X",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "3JUlL",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "m67Jq",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "R8JOD",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "トースト表示",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "xKTxe",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "保存成功/失敗の通知表示例",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "eYsYu",
+          "x": 940,
+          "y": 124,
+          "name": "New Button",
+          "fill": "#005FCC",
+          "width": 260,
+          "height": 56
+        },
+        {
+          "type": "text",
+          "id": "xohRn",
+          "x": 1012,
+          "y": 141,
+          "name": "New Button Text",
+          "fill": "#FFFFFF",
+          "content": "新規ランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "sxel4",
+          "x": 80,
+          "y": 230,
+          "name": "Card 1",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 170,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "fkJbV",
+          "x": 116,
+          "y": 274,
+          "name": "Card 1 Title",
+          "fill": "#1A1A1A",
+          "content": "保存成功トースト",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "iY81R",
+          "x": 116,
+          "y": 318,
+          "name": "Card 1 Tag",
+          "fill": "#55606E",
+          "content": "ランキングを保存しました",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "mcnNh",
+          "x": 80,
+          "y": 420,
+          "name": "Card 2",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 170,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "jIdx7",
+          "x": 116,
+          "y": 464,
+          "name": "Card 2 Title",
+          "fill": "#1A1A1A",
+          "content": "保存失敗トースト",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "EWd53",
+      "x": 0,
+      "y": 5640,
+      "name": "18 Form Validation State",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "DgxYg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "tQzeQ",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "CvRQm",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "6dedR",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "入力バリデーション",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "Ltf2o",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "未入力・形式不正の表示例",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "AXT8k",
+          "x": 80,
+          "y": 220,
+          "name": "Form",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 620,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "p5jHS",
+          "x": 116,
+          "y": 262,
+          "name": "Label Title",
+          "fill": "#1A1A1A",
+          "content": "ランキングタイトル（必須）",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "vIMR2",
+          "x": 116,
+          "y": 292,
+          "name": "Input Title",
+          "fill": "#FFFFFF",
+          "width": 1048,
+          "height": 56,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "bNDQ8",
+          "x": 116,
+          "y": 372,
+          "name": "Label Rank",
+          "fill": "#1A1A1A",
+          "content": "トップ5項目（1つ以上必須）",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "Gmy8j",
+          "x": 116,
+          "y": 418,
+          "name": "R1 Label",
+          "fill": "#1A1A1A",
+          "content": "1",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "m1B6K",
+          "x": 148,
+          "y": 404,
+          "name": "R1 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "U66LT",
+          "x": 116,
+          "y": 474,
+          "name": "R2 Label",
+          "fill": "#1A1A1A",
+          "content": "2",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "0gJQR",
+          "x": 148,
+          "y": 460,
+          "name": "R2 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "OdNqn",
+          "x": 116,
+          "y": 530,
+          "name": "R3 Label",
+          "fill": "#1A1A1A",
+          "content": "3",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "NJYCm",
+          "x": 148,
+          "y": 516,
+          "name": "R3 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "RraCP",
+          "x": 116,
+          "y": 586,
+          "name": "R4 Label",
+          "fill": "#1A1A1A",
+          "content": "4",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "q0guw",
+          "x": 148,
+          "y": 572,
+          "name": "R4 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "rq2gX",
+          "x": 116,
+          "y": 642,
+          "name": "R5 Label",
+          "fill": "#1A1A1A",
+          "content": "5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "y9V1C",
+          "x": 148,
+          "y": 628,
+          "name": "R5 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "nzR5i",
+          "x": 860,
+          "y": 772,
+          "name": "Draft",
+          "fill": "#FFFFFF",
+          "width": 136,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "t1137",
+          "x": 1012,
+          "y": 772,
+          "name": "Save",
+          "fill": "#005FCC",
+          "width": 152,
+          "height": 48
+        }
+      ]
+    }
+  ]
 }
