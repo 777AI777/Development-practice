@@ -1,0 +1,2008 @@
+{
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "ranking-list-screen",
+      "x": 0,
+      "y": -18,
+      "name": "02 Ranking List",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ranking-list-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "ranking-list-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "マイランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "作成・編集・削除・閲覧ができます。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-list-new-btn",
+          "x": 980,
+          "y": 124,
+          "name": "New Button",
+          "fill": "#005FCC",
+          "width": 220,
+          "height": 48
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-new-btn-text",
+          "x": 1037,
+          "y": 137,
+          "name": "New Button Text",
+          "fill": "#FFFFFF",
+          "content": "新規ランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "4Kn7A",
+          "x": 84,
+          "y": 258,
+          "name": "Card 1 Shadow",
+          "fill": "#D0D7E2",
+          "width": 1120,
+          "height": 84
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ranking-list-card1",
+          "x": 80,
+          "y": 252,
+          "name": "Card 1",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 84,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-card1-title",
+          "x": 116,
+          "y": 270,
+          "name": "Card 1 Title",
+          "fill": "#1A1A1A",
+          "content": "映画トップ5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 20,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-card1-tag",
+          "x": 116,
+          "y": 296,
+          "name": "Card 1 Tag",
+          "fill": "#55606E",
+          "content": "タグ: 映画 / エンタメ",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ranking-list-card2",
+          "x": 80,
+          "y": 344,
+          "name": "Card 2",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 84,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-list-card2-title",
+          "x": 116,
+          "y": 362,
+          "name": "Card 2 Title",
+          "fill": "#1A1A1A",
+          "content": "邦画トップ5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 20,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 6,
+          "id": "F00nm",
+          "x": 1032,
+          "y": 278,
+          "name": "Edit",
+          "fill": "#005FCC",
+          "width": 72,
+          "height": 32
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 6,
+          "id": "VU0Ih",
+          "x": 1112,
+          "y": 278,
+          "name": "Delete",
+          "fill": "#FFFFFF",
+          "width": 72,
+          "height": 32,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#B00020"
+          }
+        },
+        {
+          "type": "text",
+          "id": "wHLqf",
+          "x": 1056,
+          "y": 285,
+          "name": "Edit Text",
+          "fill": "#FFFFFF",
+          "content": "編集",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "uihY9",
+          "x": 1136,
+          "y": 285,
+          "name": "Delete Text",
+          "fill": "#B00020",
+          "content": "削除",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "lbr5Z",
+          "x": 80,
+          "y": 210,
+          "name": "Tag Header Movie",
+          "fill": "#E9EEF3",
+          "width": 1120,
+          "height": 36,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "SNr9Z",
+          "x": 96,
+          "y": 218,
+          "name": "Tag Header Movie Text",
+          "fill": "#1A1A1A",
+          "content": "タグ: 映画",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "pTxWO",
+          "x": 1172,
+          "y": 218,
+          "name": "Tag Header Movie Chevron",
+          "fill": "#55606E",
+          "content": "▼",
+          "lineHeight": 1.2,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "SHYkb",
+          "x": 80,
+          "y": 532,
+          "name": "Tag Header Cafe",
+          "fill": "#E9EEF3",
+          "width": 1120,
+          "height": 36,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "jEaEt",
+          "x": 96,
+          "y": 540,
+          "name": "Tag Header Cafe Text",
+          "fill": "#1A1A1A",
+          "content": "タグ: カフェ",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "C2leo",
+          "x": 1172,
+          "y": 540,
+          "name": "Tag Header Cafe Chevron",
+          "fill": "#55606E",
+          "content": "▶",
+          "lineHeight": 1.2,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "THTWa",
+          "x": 80,
+          "y": 574,
+          "name": "Tag Header Cosmetics",
+          "fill": "#E9EEF3",
+          "width": 1120,
+          "height": 36,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "5myXA",
+          "x": 96,
+          "y": 582,
+          "name": "Tag Header Cosmetics Text",
+          "fill": "#1A1A1A",
+          "content": "タグ: 化粧品",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "fIpRO",
+          "x": 1172,
+          "y": 582,
+          "name": "Tag Header Cosmetics Chevron",
+          "fill": "#55606E",
+          "content": "▼",
+          "lineHeight": 1.2,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "mNTCb",
+          "x": 80,
+          "y": 436,
+          "name": "Card 3",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 84,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "1FGqJ",
+          "x": 116,
+          "y": 454,
+          "name": "Card 3 Title",
+          "fill": "#1A1A1A",
+          "content": "映画ベスト5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 20,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "2oPB6",
+          "x": 116,
+          "y": 480,
+          "name": "Card 3 Tag",
+          "fill": "#55606E",
+          "content": "タグ: 映画 / クラシック",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "crHT5",
+          "x": 116,
+          "y": 388,
+          "name": "Card 2 Tag",
+          "fill": "#55606E",
+          "content": "タグ: 映画 / 邦画",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "zse05",
+          "x": 80,
+          "y": 616,
+          "name": "Card 4",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 84,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "vEFRf",
+          "x": 116,
+          "y": 634,
+          "name": "Card 4 Title",
+          "fill": "#1A1A1A",
+          "content": "コスメベスト5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 20,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "SrReW",
+          "x": 116,
+          "y": 660,
+          "name": "Card 4 Tag",
+          "fill": "#55606E",
+          "content": "タグ: 化粧品 / スキンケア",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "XrFJA",
+          "x": 80,
+          "y": 708,
+          "name": "Card 5",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 84,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "o6QXC",
+          "x": 116,
+          "y": 726,
+          "name": "Card 5 Title",
+          "fill": "#1A1A1A",
+          "content": "メイクアップ厳選",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 20,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "fW3KA",
+          "x": 116,
+          "y": 752,
+          "name": "Card 5 Tag",
+          "fill": "#55606E",
+          "content": "タグ: 化粧品 / メイク",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "CX8U5",
+          "x": 80,
+          "y": 800,
+          "name": "Card 6",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 84,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "j6BuV",
+          "x": 116,
+          "y": 818,
+          "name": "Card 6 Title",
+          "fill": "#1A1A1A",
+          "content": "香水トップ5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 20,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "02z0G",
+          "x": 116,
+          "y": 844,
+          "name": "Card 6 Tag",
+          "fill": "#55606E",
+          "content": "タグ: 化粧品 / フレグランス",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "Wyh3u",
+          "x": 1001,
+          "y": 136,
+          "name": "New Button Plus",
+          "fill": "#FFFFFF",
+          "content": "＋",
+          "lineHeight": 1.2,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 18,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 6,
+          "id": "PUKx5",
+          "x": 952,
+          "y": 278,
+          "name": "Detail",
+          "fill": "#FFFFFF",
+          "width": 72,
+          "height": 32,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#005FCC"
+          }
+        },
+        {
+          "type": "text",
+          "id": "5MvWW",
+          "x": 976,
+          "y": 285,
+          "name": "Detail Text",
+          "fill": "#005FCC",
+          "content": "詳細",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ranking-edit-screen",
+      "x": 1320,
+      "y": -18,
+      "name": "03 Ranking Create Edit",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ranking-edit-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "ranking-edit-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "ランキング作成",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "タイトル・固定タグ・1〜5位を設定します。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ranking-edit-form",
+          "x": 80,
+          "y": 220,
+          "name": "Form",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 620,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-label-title",
+          "x": 116,
+          "y": 262,
+          "name": "Label Title",
+          "fill": "#1A1A1A",
+          "content": "ランキングタイトル",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-input-title",
+          "x": 116,
+          "y": 292,
+          "name": "Input Title",
+          "fill": "#FFFFFF",
+          "width": 1048,
+          "height": 56,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-label-rank",
+          "x": 116,
+          "y": 448,
+          "name": "Label Rank",
+          "fill": "#1A1A1A",
+          "content": "トップ5項目",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r1-l",
+          "x": 116,
+          "y": 494,
+          "name": "R1 Label",
+          "fill": "#1A1A1A",
+          "content": "1",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r1",
+          "x": 148,
+          "y": 480,
+          "name": "R1 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r2-l",
+          "x": 116,
+          "y": 550,
+          "name": "R2 Label",
+          "fill": "#1A1A1A",
+          "content": "2",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r2",
+          "x": 148,
+          "y": 536,
+          "name": "R2 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r3-l",
+          "x": 116,
+          "y": 606,
+          "name": "R3 Label",
+          "fill": "#1A1A1A",
+          "content": "3",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r3",
+          "x": 148,
+          "y": 592,
+          "name": "R3 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r4-l",
+          "x": 116,
+          "y": 662,
+          "name": "R4 Label",
+          "fill": "#1A1A1A",
+          "content": "4",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r4",
+          "x": 148,
+          "y": 648,
+          "name": "R4 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-edit-r5-l",
+          "x": 116,
+          "y": 718,
+          "name": "R5 Label",
+          "fill": "#1A1A1A",
+          "content": "5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-r5",
+          "x": 148,
+          "y": 704,
+          "name": "R5 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-draft-btn",
+          "x": 916,
+          "y": 772,
+          "name": "Draft",
+          "fill": "#FFFFFF",
+          "width": 120,
+          "height": 44,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-edit-save-btn",
+          "x": 1048,
+          "y": 772,
+          "name": "Save",
+          "fill": "#005FCC",
+          "width": 120,
+          "height": 44
+        },
+        {
+          "type": "text",
+          "id": "rIfWp",
+          "x": 960,
+          "y": 784,
+          "name": "Draft Text",
+          "fill": "#1A1A1A",
+          "content": "戻る",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "hTeps",
+          "x": 1092,
+          "y": 784,
+          "name": "Save Text",
+          "fill": "#FFFFFF",
+          "content": "作成",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "u7ZAf",
+          "x": 116,
+          "y": 360,
+          "name": "Label Tag",
+          "fill": "#1A1A1A",
+          "content": "タグ",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ChNmn",
+          "x": 116,
+          "y": 388,
+          "name": "Tag Select",
+          "fill": "#FFFFFF",
+          "width": 1048,
+          "height": 44,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "VLAuP",
+          "x": 132,
+          "y": 400,
+          "name": "Tag Placeholder",
+          "fill": "#A0A7B1",
+          "content": "タグを選択",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 15,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "avW5u",
+          "x": 1136,
+          "y": 398,
+          "name": "Tag Chevron",
+          "fill": "#55606E",
+          "content": "▼",
+          "lineHeight": 1.2,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ranking-detail-screen",
+      "x": 0,
+      "y": 1189,
+      "name": "04 Ranking Detail",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ranking-detail-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "ranking-detail-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "ランキング詳細",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "閲覧専用。編集・削除ができます。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "ranking-detail-card",
+          "x": 200,
+          "y": 220,
+          "name": "Card",
+          "fill": "#FFFFFF",
+          "width": 880,
+          "height": 617,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-main-title",
+          "x": 252,
+          "y": 274,
+          "name": "Main Title",
+          "fill": "#1A1A1A",
+          "content": "映画トップ5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "oY8GW",
+          "x": 232,
+          "y": 340,
+          "name": "Row 1",
+          "fill": "#FFFFFF",
+          "width": 816,
+          "height": 52,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "paYqW",
+          "x": 232,
+          "y": 398,
+          "name": "Row 2",
+          "fill": "#FFFFFF",
+          "width": 816,
+          "height": 52,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "wNjHX",
+          "x": 232,
+          "y": 456,
+          "name": "Row 3",
+          "fill": "#FFFFFF",
+          "width": 816,
+          "height": 52,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "jCZtN",
+          "x": 232,
+          "y": 514,
+          "name": "Row 4",
+          "fill": "#FFFFFF",
+          "width": 816,
+          "height": 52,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "PWodu",
+          "x": 232,
+          "y": 572,
+          "name": "Row 5",
+          "fill": "#FFFFFF",
+          "width": 816,
+          "height": 52,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-r1",
+          "x": 252,
+          "y": 352,
+          "name": "R1",
+          "fill": "#1A1A1A",
+          "content": "1. インセプション",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-r2",
+          "x": 252,
+          "y": 410,
+          "name": "R2",
+          "fill": "#1A1A1A",
+          "content": "2. 千と千尋の神隠し",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ranking-detail-r3",
+          "x": 252,
+          "y": 468,
+          "name": "R3",
+          "fill": "#1A1A1A",
+          "content": "3. パラサイト",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-detail-edit-btn",
+          "x": 948,
+          "y": 708,
+          "name": "Edit",
+          "fill": "#005FCC",
+          "width": 120,
+          "height": 44
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "ranking-detail-delete-btn",
+          "x": 816,
+          "y": 708,
+          "name": "Delete",
+          "fill": "#FFFFFF",
+          "width": 120,
+          "height": 44,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#B00020"
+          }
+        },
+        {
+          "type": "text",
+          "id": "RciTF",
+          "x": 252,
+          "y": 526,
+          "name": "R4",
+          "fill": "#1A1A1A",
+          "content": "4. ダークナイト",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "46Vst",
+          "x": 252,
+          "y": 584,
+          "name": "R5",
+          "fill": "#1A1A1A",
+          "content": "5. 君の名は。",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 22,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "CTu7q",
+          "x": 684,
+          "y": 708,
+          "name": "Back",
+          "fill": "#FFFFFF",
+          "width": 120,
+          "height": 44,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "BXTCr",
+          "x": 728,
+          "y": 718,
+          "name": "Back Text",
+          "fill": "#1A1A1A",
+          "content": "戻る",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "NCo3w",
+          "x": 992,
+          "y": 718,
+          "name": "Edit Text",
+          "fill": "#FFFFFF",
+          "content": "編集",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "s1yr2",
+          "x": 860,
+          "y": 718,
+          "name": "Delete Text",
+          "fill": "#B00020",
+          "content": "削除",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "7mHdk",
+          "x": 252,
+          "y": 240,
+          "name": "Tag Pill",
+          "fill": "#E9EEF3",
+          "width": 72,
+          "height": 24,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "q48N1",
+          "x": 272,
+          "y": 244,
+          "name": "Tag Text",
+          "fill": "#1A1A1A",
+          "content": "映画",
+          "lineHeight": 1.2,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 12,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "delete-screen",
+      "x": 1320,
+      "y": 1189,
+      "name": "08 Delete Confirmation",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "delete-screen-bg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "delete-screen-header",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "delete-screen-brand",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "delete-screen-title",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "削除確認",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "delete-screen-subtitle",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "削除は元に戻せません。実行前に確認してください。",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "id": "delete-overlay",
+          "x": 0,
+          "y": 0,
+          "name": "Overlay",
+          "fill": "#00000066",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "delete-modal",
+          "x": 372,
+          "y": 270,
+          "name": "Modal",
+          "fill": "#FFFFFF",
+          "width": 620,
+          "height": 280,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "delete-modal-title",
+          "x": 443,
+          "y": 365,
+          "name": "Modal Title",
+          "fill": "#1A1A1A",
+          "content": "このランキングを削除しますか？",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "delete-cancel-btn",
+          "x": 563,
+          "y": 478,
+          "name": "Cancel",
+          "fill": "#FFFFFF",
+          "width": 120,
+          "height": 44,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "delete-delete-btn",
+          "x": 710,
+          "y": 478,
+          "name": "Delete",
+          "fill": "#B00020",
+          "width": 120,
+          "height": 44
+        },
+        {
+          "type": "text",
+          "id": "4OAr5",
+          "x": 606,
+          "y": 489,
+          "name": "Cancel Text",
+          "fill": "#1A1A1A",
+          "content": "戻る",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "pNP18",
+          "x": 753,
+          "y": 489.9041546080323,
+          "name": "Delete Text",
+          "rotation": 1.5700220211961682,
+          "fill": "#FFFFFF",
+          "content": "削除",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 16,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ZjaCR",
+      "x": 0,
+      "y": 2396,
+      "name": "17 Toast States",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "ad58X",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "3JUlL",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "m67Jq",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "R8JOD",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "トースト表示",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "xKTxe",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "保存成功/失敗の通知表示例",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "eYsYu",
+          "x": 940,
+          "y": 124,
+          "name": "New Button",
+          "fill": "#005FCC",
+          "width": 260,
+          "height": 56
+        },
+        {
+          "type": "text",
+          "id": "xohRn",
+          "x": 1012,
+          "y": 141,
+          "name": "New Button Text",
+          "fill": "#FFFFFF",
+          "content": "新規ランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "sxel4",
+          "x": 80,
+          "y": 230,
+          "name": "Card 1",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 170,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "fkJbV",
+          "x": 116,
+          "y": 274,
+          "name": "Card 1 Title",
+          "fill": "#1A1A1A",
+          "content": "保存成功トースト",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "iY81R",
+          "x": 116,
+          "y": 318,
+          "name": "Card 1 Tag",
+          "fill": "#55606E",
+          "content": "ランキングを保存しました",
+          "lineHeight": 1.6,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "mcnNh",
+          "x": 80,
+          "y": 420,
+          "name": "Card 2",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 170,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "jIdx7",
+          "x": 116,
+          "y": 464,
+          "name": "Card 2 Title",
+          "fill": "#1A1A1A",
+          "content": "保存失敗トースト",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "Ts4Qw",
+          "x": 954,
+          "y": 141,
+          "name": "New Button Plus",
+          "fill": "#FFFFFF",
+          "content": "＋",
+          "lineHeight": 1.2,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 18,
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "EWd53",
+      "x": 1320,
+      "y": 2396,
+      "name": "18 Form Validation State",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "#F3F5F7",
+      "layout": "none",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "DgxYg",
+          "x": 0,
+          "y": 0,
+          "name": "Background",
+          "fill": "#F3F5F7",
+          "width": 1280,
+          "height": 900
+        },
+        {
+          "type": "rectangle",
+          "id": "tQzeQ",
+          "x": 0,
+          "y": 0,
+          "name": "Header",
+          "fill": "#FFFFFF",
+          "width": 1280,
+          "height": 72,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "CvRQm",
+          "x": 40,
+          "y": 22,
+          "name": "Brand",
+          "fill": "#1A1A1A",
+          "content": "お気に入りランキング",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 24,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "6dedR",
+          "x": 80,
+          "y": 124,
+          "name": "Title",
+          "fill": "#1A1A1A",
+          "content": "入力バリデーション",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 32,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "Ltf2o",
+          "x": 80,
+          "y": 174,
+          "name": "Subtitle",
+          "fill": "#55606E",
+          "content": "未入力・形式不正の表示例",
+          "lineHeight": 1.7,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 12,
+          "id": "AXT8k",
+          "x": 80,
+          "y": 220,
+          "name": "Form",
+          "fill": "#FFFFFF",
+          "width": 1120,
+          "height": 620,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "p5jHS",
+          "x": 116,
+          "y": 262,
+          "name": "Label Title",
+          "fill": "#1A1A1A",
+          "content": "ランキングタイトル（必須）",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "vIMR2",
+          "x": 116,
+          "y": 292,
+          "name": "Input Title",
+          "fill": "#FFFFFF",
+          "width": 1048,
+          "height": 56,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "bNDQ8",
+          "x": 116,
+          "y": 372,
+          "name": "Label Rank",
+          "fill": "#1A1A1A",
+          "content": "トップ5項目（1つ以上必須）",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "Gmy8j",
+          "x": 116,
+          "y": 418,
+          "name": "R1 Label",
+          "fill": "#1A1A1A",
+          "content": "1",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "m1B6K",
+          "x": 148,
+          "y": 404,
+          "name": "R1 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "U66LT",
+          "x": 116,
+          "y": 474,
+          "name": "R2 Label",
+          "fill": "#1A1A1A",
+          "content": "2",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "0gJQR",
+          "x": 148,
+          "y": 460,
+          "name": "R2 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "OdNqn",
+          "x": 116,
+          "y": 530,
+          "name": "R3 Label",
+          "fill": "#1A1A1A",
+          "content": "3",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "NJYCm",
+          "x": 148,
+          "y": 516,
+          "name": "R3 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "RraCP",
+          "x": 116,
+          "y": 586,
+          "name": "R4 Label",
+          "fill": "#1A1A1A",
+          "content": "4",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "q0guw",
+          "x": 148,
+          "y": 572,
+          "name": "R4 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "text",
+          "id": "rq2gX",
+          "x": 116,
+          "y": 642,
+          "name": "R5 Label",
+          "fill": "#1A1A1A",
+          "content": "5",
+          "lineHeight": 1.4,
+          "fontFamily": "Noto Sans JP",
+          "fontSize": 17,
+          "fontWeight": "700"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "y9V1C",
+          "x": 148,
+          "y": 628,
+          "name": "R5 Input",
+          "fill": "#FFFFFF",
+          "width": 1016,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "nzR5i",
+          "x": 860,
+          "y": 772,
+          "name": "Draft",
+          "fill": "#FFFFFF",
+          "width": 136,
+          "height": 48,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#C4CDD5"
+          }
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": 8,
+          "id": "t1137",
+          "x": 1012,
+          "y": 772,
+          "name": "Save",
+          "fill": "#005FCC",
+          "width": 152,
+          "height": 48
+        }
+      ]
+    }
+  ]
+}
