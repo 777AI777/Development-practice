@@ -5,7 +5,7 @@ export interface MockUser {
 }
 
 export const MOCK_USERS: MockUser[] = [
-  { id: "user-google-001", name: "山田 太郎", email: "yamada@example.com" },
-  { id: "user-google-002", name: "佐藤 花子", email: "sato@example.com" },
+  { id: "user-google-001", name: "Taro Yamada", email: "yamada@example.com" },
+  { id: "user-google-002", name: "Hanako Sato", email: "sato@example.com" },
 ];
 

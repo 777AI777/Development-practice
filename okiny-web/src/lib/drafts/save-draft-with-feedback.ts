@@ -19,13 +19,13 @@ export async function saveDraftWithFeedback(
     return {
       ok: true,
       record,
-      toast: { type: "success", message: "下書きを保存しました。" },
+      toast: { type: "success", message: "Draft saved." },
     };
   } catch (error) {
     if (error instanceof DraftLimitError) {
       return {
         ok: false,
-        toast: { type: "warning", message: "下書き上限に達しています（最大5件）" },
+        toast: { type: "warning", message: "Draft limit reached (max 5)." },
       };
     }
 
@@ -33,7 +33,7 @@ export async function saveDraftWithFeedback(
       ok: false,
       toast: {
         type: "error",
-        message: "下書き保存に失敗しました。ブラウザ設定を確認してください。",
+        message: "Failed to save draft in local browser storage.",
         persistent: true,
       },
     };

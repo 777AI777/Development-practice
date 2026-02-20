@@ -122,7 +122,7 @@ export class IndexedDbDraftRepository implements DraftRepository {
     if (!existing) {
       const draftCount = await this.count(userId);
       if (draftCount >= MAX_DRAFTS_PER_USER) {
-        throw new DraftLimitError("下書き上限に達しています（最大5件）");
+        throw new DraftLimitError("Draft limit reached (max 5).");
       }
     }
 
@@ -172,4 +172,3 @@ export async function __resetDraftDbForTests(): Promise<void> {
     request.onblocked = () => resolve();
   });
 }
-

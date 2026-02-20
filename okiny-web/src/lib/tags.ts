@@ -4,11 +4,11 @@ export interface FixedTag {
 }
 
 export const FIXED_TAGS: FixedTag[] = [
-  { id: "movie", label: "映画" },
-  { id: "music", label: "音楽" },
-  { id: "travel", label: "旅行" },
-  { id: "cafe", label: "カフェ" },
-  { id: "cosmetics", label: "化粧品" },
-  { id: "daily", label: "日用品" },
+  { id: "movie", label: "Movie" },
+  { id: "music", label: "Music" },
+  { id: "travel", label: "Travel" },
+  { id: "cafe", label: "Cafe" },
+  { id: "cosmetics", label: "Cosmetics" },
+  { id: "daily", label: "Daily Goods" },
 ];
 

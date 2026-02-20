@@ -1,31 +1,53 @@
-import { getPublishedRepository } from "@/lib/published/memory-published-repository";
-import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
-import { NextResponse } from "next/server";
 import { z } from "zod";
+import { NextResponse } from "next/server";
 
-const createPublishedRankingSchema = z.object({
-  userId: z.string().min(1, "userId is required"),
+import { createRanking, listRankingsByUser } from "@/lib/supabase-rest";
+import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
+
+const createSchema = z.object({
+  userId: z.string().min(1),
   ranking: z.object({
-    title: z.string().trim().min(1, "タイトルは必須です。"),
-    tagId: z.string().trim().min(1, "タグは必須です。"),
+    title: z.string().trim().min(1, "Title is required."),
+    tagId: z.string().trim().min(1, "Tag is required."),
     items: z
-      .array(z.string().trim().min(1, "各順位の項目は必須です。"))
+      .array(z.string().trim().min(1, "All ranking items are required."))
       .length(RANKING_ITEM_COUNT),
   }),
 });
 
+function toRankingItems(items: string[]): RankingItems {
+  return [items[0] ?? "", items[1] ?? "", items[2] ?? "", items[3] ?? "", items[4] ?? ""];
+}
+
 export async function GET(request: Request) {
-  const userId = new URL(request.url).searchParams.get("userId") ?? "";
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId") ?? "";
+  const tagId = url.searchParams.get("tagId") ?? undefined;
+
   if (!userId) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId is required" } },
+      { error: { code: "VALIDATION", message: "userId query parameter is required." } },
       { status: 422 },
     );
   }
 
-  const repository = getPublishedRepository();
-  const data = await repository.listByUser(userId);
-  return NextResponse.json({ data });
+  try {
+    const data = await listRankingsByUser({ userId, tagId });
+    return NextResponse.json({ data });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "SERVER",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to load rankings from Supabase.",
+        },
+      },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
@@ -39,13 +61,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = createPublishedRankingSchema.safeParse(payload);
+  const parsed = createSchema.safeParse(payload);
   if (!parsed.success) {
     return NextResponse.json(
       {
         error: {
           code: "VALIDATION",
-          message: parsed.error.issues[0]?.message ?? "入力内容を確認してください。",
+          message: parsed.error.issues[0]?.message ?? "Invalid input.",
         },
       },
       { status: 422 },
@@ -53,28 +75,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    const repository = getPublishedRepository();
-    const rankingItems = [
-      parsed.data.ranking.items[0],
-      parsed.data.ranking.items[1],
-      parsed.data.ranking.items[2],
-      parsed.data.ranking.items[3],
-      parsed.data.ranking.items[4],
-    ] as RankingItems;
-
-    const data = await repository.create({
+    const created = await createRanking({
       userId: parsed.data.userId,
-      ranking: {
-        title: parsed.data.ranking.title,
-        tagId: parsed.data.ranking.tagId,
-        items: rankingItems,
-      },
+      title: parsed.data.ranking.title,
+      tagId: parsed.data.ranking.tagId,
+      items: toRankingItems(parsed.data.ranking.items),
     });
-    return NextResponse.json({ data }, { status: 201 });
-  } catch {
+    return NextResponse.json({ data: created }, { status: 201 });
+  } catch (error) {
     return NextResponse.json(
-      { error: { code: "SERVER", message: "サーバーで問題が発生しました。" } },
+      {
+        error: {
+          code: "SERVER",
+          message: error instanceof Error ? error.message : "Failed to create ranking.",
+        },
+      },
       { status: 500 },
     );
   }
 }
+

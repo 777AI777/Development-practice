@@ -27,6 +27,10 @@ const draftRepository: DraftRepository = {
 describe("publishRanking", () => {
   it("deletes local draft after publish succeeds", async () => {
     const apiClient: PublishedApiClient = {
+      listPublishedRankings: async () => [],
+      getPublishedRanking: async () => {
+        throw new Error("not used in this test");
+      },
       createPublishedRanking: async () => ({
         id: "published-1",
         userId: "user-1",
@@ -36,6 +40,10 @@ describe("publishRanking", () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
+      updatePublishedRanking: async () => {
+        throw new Error("not used in this test");
+      },
+      deletePublishedRanking: async () => {},
     };
 
     const result = await publishRanking({
@@ -54,4 +62,3 @@ describe("publishRanking", () => {
     expect(draftRepository.delete).toHaveBeenCalledWith("user-1", "draft-1");
   });
 });
-

@@ -1,7 +1,7 @@
 import type { AppErrorCode, PublishedRanking, RankingInput } from "@/lib/types";
 
-interface RankingCreateResponse {
-  data?: PublishedRanking;
+interface ApiResponse<T> {
+  data?: T;
   error?: {
     code?: AppErrorCode;
     message?: string;
@@ -13,70 +13,128 @@ export class PublishedApiError extends Error {
 
   constructor(code: AppErrorCode, message: string) {
     super(message);
-    this.name = "PublishedApiError";
     this.code = code;
+    this.name = "PublishedApiError";
+  }
+}
+
+function mapStatusToErrorCode(status: number): AppErrorCode {
+  if (status === 401) return "UNAUTHORIZED";
+  if (status === 403) return "FORBIDDEN";
+  if (status === 404) return "NOT_FOUND";
+  if (status === 422) return "VALIDATION";
+  if (status === 429) return "RATE_LIMIT";
+  return "SERVER";
+}
+
+async function parseJson<T>(response: Response): Promise<ApiResponse<T>> {
+  try {
+    return (await response.json()) as ApiResponse<T>;
+  } catch {
+    return {};
   }
 }
 
 export interface PublishedApiClient {
+  listPublishedRankings(userId: string, tagId?: string): Promise<PublishedRanking[]>;
+  getPublishedRanking(userId: string, rankingId: string): Promise<PublishedRanking>;
   createPublishedRanking(input: {
     userId: string;
     ranking: RankingInput;
   }): Promise<PublishedRanking>;
+  updatePublishedRanking(input: {
+    userId: string;
+    rankingId: string;
+    ranking: RankingInput;
+  }): Promise<PublishedRanking>;
+  deletePublishedRanking(userId: string, rankingId: string): Promise<void>;
 }
 
 export class HttpPublishedApiClient implements PublishedApiClient {
+  async listPublishedRankings(userId: string, tagId?: string): Promise<PublishedRanking[]> {
+    const params = new URLSearchParams({ userId });
+    if (tagId) {
+      params.set("tagId", tagId);
+    }
+    const response = await fetch(`/api/v1/rankings?${params.toString()}`, {
+      cache: "no-store",
+    });
+    const body = await parseJson<PublishedRanking[]>(response);
+    if (!response.ok || !body.data) {
+      throw new PublishedApiError(
+        body.error?.code ?? mapStatusToErrorCode(response.status),
+        body.error?.message ?? "Failed to load rankings.",
+      );
+    }
+    return body.data;
+  }
+
+  async getPublishedRanking(userId: string, rankingId: string): Promise<PublishedRanking> {
+    const params = new URLSearchParams({ userId });
+    const response = await fetch(`/api/v1/rankings/${rankingId}?${params.toString()}`, {
+      cache: "no-store",
+    });
+    const body = await parseJson<PublishedRanking>(response);
+    if (!response.ok || !body.data) {
+      throw new PublishedApiError(
+        body.error?.code ?? mapStatusToErrorCode(response.status),
+        body.error?.message ?? "Failed to load ranking.",
+      );
+    }
+    return body.data;
+  }
+
   async createPublishedRanking(input: {
     userId: string;
     ranking: RankingInput;
   }): Promise<PublishedRanking> {
-    let response: Response;
-
-    try {
-      response = await fetch("/api/v1/rankings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-      });
-    } catch {
+    const response = await fetch("/api/v1/rankings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = await parseJson<PublishedRanking>(response);
+    if (!response.ok || !body.data) {
       throw new PublishedApiError(
-        "NETWORK",
-        "通信エラーが発生しました。時間をおいて再試行してください。",
+        body.error?.code ?? mapStatusToErrorCode(response.status),
+        body.error?.message ?? "Failed to create ranking.",
       );
     }
-
-    const body = (await response.json()) as RankingCreateResponse;
-    if (!response.ok || !body.data) {
-      const code = body.error?.code ?? "SERVER";
-      const message = body.error?.message ?? "保存に失敗しました。";
-      throw new PublishedApiError(code, message);
-    }
-
     return body.data;
   }
 
-  async listPublishedRankings(userId: string): Promise<PublishedRanking[]> {
-    let response: Response;
-
-    try {
-      response = await fetch(`/api/v1/rankings?userId=${encodeURIComponent(userId)}`);
-    } catch {
+  async updatePublishedRanking(input: {
+    userId: string;
+    rankingId: string;
+    ranking: RankingInput;
+  }): Promise<PublishedRanking> {
+    const response = await fetch(`/api/v1/rankings/${input.rankingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: input.userId, ranking: input.ranking }),
+    });
+    const body = await parseJson<PublishedRanking>(response);
+    if (!response.ok || !body.data) {
       throw new PublishedApiError(
-        "NETWORK",
-        "通信エラーが発生しました。時間をおいて再試行してください。",
+        body.error?.code ?? mapStatusToErrorCode(response.status),
+        body.error?.message ?? "Failed to update ranking.",
       );
     }
-
-    const body = (await response.json()) as {
-      data?: PublishedRanking[];
-      error?: { code?: AppErrorCode; message?: string };
-    };
-    if (!response.ok || !body.data) {
-      const code = body.error?.code ?? "SERVER";
-      const message = body.error?.message ?? "一覧取得に失敗しました。";
-      throw new PublishedApiError(code, message);
-    }
-
     return body.data;
+  }
+
+  async deletePublishedRanking(userId: string, rankingId: string): Promise<void> {
+    const params = new URLSearchParams({ userId });
+    const response = await fetch(`/api/v1/rankings/${rankingId}?${params.toString()}`, {
+      method: "DELETE",
+    });
+    const body = await parseJson<{ ok: boolean }>(response);
+    if (!response.ok || !body.data?.ok) {
+      throw new PublishedApiError(
+        body.error?.code ?? mapStatusToErrorCode(response.status),
+        body.error?.message ?? "Failed to delete ranking.",
+      );
+    }
   }
 }
+
