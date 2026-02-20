@@ -1,129 +1,88 @@
-# OKINY 画面遷移図（As-Is / To-Be）
+# OKINY 画面遷移図（現行）
+## ファイル構成
+- `UI_mock.pen`: 主導線のみ（PC版、17画面）
+- `UI_mock_sub.pen`: 状態検証用（11画面、参照用）
+- `UI_mock_mobile.pen`: モバイル主導線（11画面）
 
-`UI_mock.pen` を正として、現行実装の遷移とSNS拡張後の遷移を分けて管理する。
-
-## As-Is（Phase1）
-
-```mermaid
-flowchart LR
-  root["/"] --> login["01 Login (/login)"]
-  login -->|ログイン成功| list["02 Ranking List (/rankings)"]
-
-  subgraph Normal["通常利用クラスタ"]
-    list --> create["03 Ranking Create/Edit (/rankings/new)"]
-    list --> detail["04 Ranking Detail (/rankings/:id)"]
-    list --> search["05 Tag Search (/search)"]
-    list --> drafts["06 Drafts (/drafts)"]
-    list --> settings["07 Settings (/settings)"]
-    settings --> settingsLogout["07a Logout Confirm (/settings/logout)"]
-    settings -->|ログアウト即時| login
-    settingsLogout -->|ログアウト確定| login
-    settingsLogout -->|キャンセル| settings
-
-    create -->|作成成功| detail
-    create -->|下書き保存| drafts
-    create -->|キャンセル| list
-
-    detail --> edit["03 Ranking Create/Edit (/rankings/:id/edit)"]
-    detail --> del["08 Delete Confirmation (/rankings/:id/delete)"]
-    detail -->|戻る| list
-    edit -->|更新/キャンセル| detail
-    del -->|削除| list
-    del -->|キャンセル| detail
-
-    search -->|検索結果詳細| detail
-    drafts -->|新規作成| create
-    drafts -->|下書き編集| create
-  end
-
-  subgraph State["状態検証クラスタ（AppShellのDevフラグ表示）"]
-    s09["09 Empty List State"]
-    s10["10 Empty Search State"]
-    s11["11 Empty Drafts State"]
-    s12["12 Error States"]
-    s13["13 Loading State"]
-    s14["14 Auth Error State"]
-    s15["15 Not Found State"]
-    s16["16 Draft Limit Reached"]
-    s17["17 Toast States"]
-    s18["18 State Transition Check"]
-    s19["19 Common Header"]
-  end
-
-  list -. state=empty .-> s09
-  list -. state=loading .-> s13
-  list -. state=error .-> s12
-  search -. 空結果検証 .-> s10
-  drafts -. 空状態検証 .-> s11
-  login -. 認証失敗 .-> s14
-  list -. 404/導線確認 .-> s15
-  drafts -. 上限到達確認 .-> s16
-  list -. Toast挙動確認 .-> s17
-  list -. 遷移整合確認 .-> s18
-  settings -. ヘッダー導線確認 .-> s19
-
-  list -. 未認証時リダイレクト .-> login
-  create -. 未認証時リダイレクト .-> login
-  detail -. 未認証時リダイレクト .-> login
-```
-
-## To-Be（継続率優先SNS導線）
-
-```mermaid
-flowchart LR
-  login["Login"] --> onboarding["Onboarding"]
-  onboarding --> home["Home Feed"]
-
-  subgraph Core["コア導線"]
-    home --> composer["Composer"]
-    composer --> preview["Publish Preview"]
-    preview --> post["Post Detail"]
-    post --> home
-
-    home --> post
-    post --> reaction["Reaction/Save"]
-    reaction --> home
-
-    post --> profile["Profile"]
-    profile --> follow["Follow"]
-    follow --> following["Following Feed"]
-    following --> post
-
-    home --> noti["Notifications"]
-    noti --> post
-    noti --> profile
-    drafts["Drafts"] --> composer
-  end
-
-  subgraph Loop["Growth Loop"]
-    g1["投稿"]
-    g2["反応獲得"]
-    g3["通知"]
-    g4["再訪"]
-    g5["再投稿"]
-    g1 --> g2 --> g3 --> g4 --> g5 --> g1
-  end
-
-  post --> g2
-  noti --> g3
-  home --> g4
-  composer --> g1
-```
-
-## 遷移ルール（実装同期用）
-
-| ルール | 内容 |
+## PC版画面セット（`UI_mock.pen`）
+| 番号 | 画面名 |
 |---|---|
-| 入口 | `/` は `/login` にリダイレクト |
-| 認証 | 未認証時は `AppShell` で `/login` へリダイレクト |
-| 一覧起点 | `/rankings` から作成・詳細・検索・下書き・設定へ遷移 |
-| 作成導線 | `/rankings/new` は公開成功で詳細、下書き保存で下書き、キャンセルで一覧 |
-| 詳細導線 | `/rankings/:id` から編集・削除確認・一覧戻り |
-| 設定導線 | `/settings` から `/settings/logout`、またはログアウト |
-| 状態画面 | `09-19` は本番主導線ではなく検証導線として別クラスタ管理 |
-| クエリ遷移 | `state=*` への遷移は Mermaid で点線表現 |
+| 01 | ログイン |
+| 02 | オンボーディング |
+| 03 | ホームフィード（おすすめ） |
+| 04 | ホームフィード（フォロー中） |
+| 05 | 投稿作成 |
+| 06 | 公開プレビュー |
+| 07 | 投稿詳細（SNS） |
+| 08 | プロフィール |
+| 09 | 通知 |
+| 10 | ランキング一覧 |
+| 11 | ランキング作成・編集 |
+| 12 | ランキング詳細 |
+| 13 | タグ検索 |
+| 14 | 下書き一覧 |
+| 15 | 設定 |
+| 16 | ログアウト確認 |
+| 17 | 削除確認 |
 
-## 運用メモ
+## 主導線遷移（PC）
+```mermaid
+flowchart LR
+  L01["01 ログイン"] --> L02["02 オンボーディング"]
+  L02 --> L03["03 ホームフィード（おすすめ）"]
+  L03 --> L04["04 ホームフィード（フォロー中）"]
+  L03 --> L05["05 投稿作成"]
+  L05 --> L06["06 公開プレビュー"]
+  L06 --> L07["07 投稿詳細（SNS）"]
+  L07 --> L03
+  L07 --> L08["08 プロフィール"]
+  L03 --> L09["09 通知"]
+  L09 --> L07
+  L09 --> L08
 
-- 状態画面ナビは `NEXT_PUBLIC_SHOW_STATE_SCREENS`（または開発環境）で表示。
-- SNS拡張導線は `NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true` で有効化。
+  L10["10 ランキング一覧"] --> L11["11 ランキング作成・編集"]
+  L10 --> L12["12 ランキング詳細"]
+  L10 --> L13["13 タグ検索"]
+  L10 --> L14["14 下書き一覧"]
+  L10 --> L15["15 設定"]
+  L11 --> L12
+  L11 --> L14
+  L12 --> L11
+  L12 --> L17["17 削除確認"]
+  L17 --> L10
+  L15 --> L16["16 ログアウト確認"]
+  L16 --> L01
+
+  L14 --> L05
+  L08 --> L04
+```
+
+## 状態検証画面（`UI_mock_sub.pen`）
+- 状態01 空状態: ランキング一覧
+- 状態02 空状態: タグ検索
+- 状態03 空状態: 下書き一覧
+- 状態04 エラー状態一覧
+- 状態05 読み込み状態
+- 状態06 認証エラー
+- 状態07 404ページ未検出
+- 状態08 下書き上限到達
+- 状態09 トースト表示ルール
+- 状態10 遷移チェック
+- 状態11 共通ヘッダー
+
+## モバイル画面（`UI_mock_mobile.pen`）
+- M01 ログイン
+- M02 オンボーディング
+- M03 ホームフィード
+- M04 投稿詳細
+- M05 投稿作成
+- M06 公開プレビュー
+- M07 ランキング作成・編集
+- M08 ランキング一覧
+- M09 下書き一覧
+- M10 設定
+- M11 通知
+
+## 補足
+- 成長ループマップは主導線から削除済みです。
+- 必要時はドキュメント上のKPI定義（`metrics-and-events.md`）で運用します。
