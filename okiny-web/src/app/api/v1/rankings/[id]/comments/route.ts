@@ -30,7 +30,7 @@ export async function POST(
   const parsed = createSchema.safeParse(payload);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId and body are required." } },
+      { error: { code: "VALIDATION", message: "userId と body は必須です。" } },
       { status: 422 },
     );
   }

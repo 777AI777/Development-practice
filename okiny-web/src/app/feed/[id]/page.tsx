@@ -43,10 +43,10 @@ export default function FeedDetailPage() {
           error?: { message?: string };
         };
         if (!feedResponse.ok || !feedBody.data) {
-          throw new Error(feedBody.error?.message ?? "Failed to load post detail.");
+          throw new Error(feedBody.error?.message ?? "投稿詳細の読み込みに失敗しました。");
         }
         if (!commentsResponse.ok || !commentsBody.data) {
-          throw new Error(commentsBody.error?.message ?? "Failed to load comments.");
+          throw new Error(commentsBody.error?.message ?? "コメントの読み込みに失敗しました。");
         }
         if (canceled) {
           return;
@@ -58,7 +58,7 @@ export default function FeedDetailPage() {
         if (canceled) {
           return;
         }
-        setError(reason instanceof Error ? reason.message : "Failed to load post detail.");
+        setError(reason instanceof Error ? reason.message : "投稿詳細の読み込みに失敗しました。");
       })
       .finally(() => {
         if (canceled) {
@@ -96,7 +96,7 @@ export default function FeedDetailPage() {
     });
     const body = (await response.json()) as { data?: Reaction; error?: { message?: string } };
     if (!response.ok || !body.data) {
-      pushToast({ type: "error", message: body.error?.message ?? "Reaction update failed." });
+      pushToast({ type: "error", message: body.error?.message ?? "リアクションの更新に失敗しました。" });
       return;
     }
     setItem((prev) => {
@@ -135,7 +135,7 @@ export default function FeedDetailPage() {
       });
       const body = (await response.json()) as { data?: CommentSummary; error?: { message?: string } };
       if (!response.ok || !body.data) {
-        pushToast({ type: "error", message: body.error?.message ?? "Failed to post comment." });
+        pushToast({ type: "error", message: body.error?.message ?? "コメントの投稿に失敗しました。" });
         return;
       }
       setComments((prev) => [body.data!, ...prev]);
@@ -166,15 +166,17 @@ export default function FeedDetailPage() {
 
   if (!ENABLE_SNS_EXPANSION) {
     return (
-      <AppShell title="Post Detail" subtitle="SNS expansion is disabled.">
-        <p className="text-sm text-slate-600">Enable NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true to use feed detail routes.</p>
+      <AppShell title="投稿詳細" subtitle="SNS拡張は無効です。">
+        <p className="text-sm text-slate-600">
+          投稿詳細画面を利用するには `NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true` を有効にしてください。
+        </p>
       </AppShell>
     );
   }
 
   return (
     <AppShell
-      title="Post Detail"
+      title="投稿詳細"
       subtitle="リアクション・保存・共有・通報・コメントを集約した拡張詳細画面。"
     >
       {isLoading ? (
@@ -191,7 +193,7 @@ export default function FeedDetailPage() {
           <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-2xl font-bold text-slate-900">{item.title}</p>
             <p className="mt-1 text-xs text-slate-600">
-              by{" "}
+              投稿者:{" "}
               <Link href={`/profile/${item.author.id}`} className="font-semibold text-blue-700 underline">
                 {item.author.name}
               </Link>{" "}
@@ -212,7 +214,7 @@ export default function FeedDetailPage() {
                     : "border border-slate-300 bg-white"
                 }`}
               >
-                Like {reactionMap.get("like")?.count ?? 0}
+                いいね {reactionMap.get("like")?.count ?? 0}
               </button>
               <button
                 type="button"
@@ -223,27 +225,27 @@ export default function FeedDetailPage() {
                     : "border border-slate-300 bg-white"
                 }`}
               >
-                Save {reactionMap.get("save")?.count ?? 0}
+                保存 {reactionMap.get("save")?.count ?? 0}
               </button>
               <button
                 type="button"
                 onClick={() => void share()}
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold"
               >
-                Share
+                共有
               </button>
               <button
                 type="button"
                 onClick={report}
                 className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700"
               >
-                Report
+                通報
               </button>
             </div>
           </div>
 
           <section className="space-y-3">
-            <p className="text-sm font-semibold text-slate-700">Comments</p>
+            <p className="text-sm font-semibold text-slate-700">コメント</p>
             <form onSubmit={(event) => void submitComment(event)} className="flex flex-col gap-2">
               <textarea
                 value={commentBody}
@@ -256,7 +258,7 @@ export default function FeedDetailPage() {
                 disabled={isSubmittingComment || !commentBody.trim()}
                 className="self-start rounded-md bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
               >
-                {isSubmittingComment ? "Posting..." : "Post Comment"}
+                {isSubmittingComment ? "投稿中..." : "コメントを投稿"}
               </button>
             </form>
 

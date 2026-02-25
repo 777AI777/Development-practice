@@ -22,9 +22,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-10">
       <main className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white px-8 py-10 shadow-sm">
-        <h1 className="text-3xl font-bold text-slate-900">Sign in</h1>
+        <h1 className="text-3xl font-bold text-slate-900">ログイン</h1>
         <p className="mt-2 text-sm text-slate-600">
-          This screen corresponds to mock 01 Login.
+          モック01のログイン画面です。
         </p>
         <div className="mt-8 space-y-3">
           {MOCK_USERS.map((user) => (
@@ -42,7 +42,7 @@ export default function LoginPage() {
               }}
               className="flex w-full items-center justify-between rounded-md bg-blue-700 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-800"
             >
-              <span>Sign in with Google as {user.name}</span>
+              <span>Googleでログイン（{user.name}）</span>
               <span>{user.email}</span>
             </button>
           ))}

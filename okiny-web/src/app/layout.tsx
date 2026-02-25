@@ -3,8 +3,8 @@ import { ToastProvider } from "@/components/toast-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OKINY Phase1",
-  description: "Local draft storage with IndexedDB and publish-only API.",
+  title: "OKINY フェーズ1",
+  description: "IndexedDB を使ったローカル下書き保存と公開専用APIの検証アプリ。",
 };
 
 export default function RootLayout({

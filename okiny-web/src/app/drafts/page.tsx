@@ -29,7 +29,7 @@ export default function DraftsPage() {
     } catch {
       pushToast({
         type: "error",
-        message: "Failed to load local drafts.",
+        message: "ローカル下書きの読み込みに失敗しました。",
         persistent: true,
       });
     }
@@ -43,7 +43,7 @@ export default function DraftsPage() {
     if (!user) return;
     await draftRepository.delete(user.id, draftId);
     await loadDrafts();
-    pushToast({ type: "info", message: "Draft deleted." });
+    pushToast({ type: "info", message: "下書きを削除しました。" });
   };
 
   const publishDraft = async (draft: DraftLocalRecord) => {
@@ -63,47 +63,47 @@ export default function DraftsPage() {
 
   return (
     <AppShell
-      title="Drafts"
-      subtitle="Local browser drafts by user. This corresponds to mock 06."
+      title="下書き一覧"
+      subtitle="ユーザーごとのローカルブラウザ下書き一覧。モック06に対応。"
     >
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
           <Link href="/rankings/new" className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white">
-            Create new ranking
+            新規ランキング作成
           </Link>
           {SHOW_STATE_SCREENS ? (
             <Link href="/states/empty-drafts" className="rounded-md border border-slate-300 px-4 py-2 text-sm">
-              Open Empty Drafts Screen (11)
+              空の下書き画面を開く (11)
             </Link>
           ) : null}
         </div>
 
         <p className="text-sm text-slate-600">
-          Draft count: {drafts.length}/{MAX_DRAFTS_PER_USER}
+          下書き件数: {drafts.length}/{MAX_DRAFTS_PER_USER}
         </p>
 
         {drafts.length === 0 ? (
           <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="text-sm text-slate-600">No local drafts.</p>
+            <p className="text-sm text-slate-600">ローカル下書きはありません。</p>
             <Link
               href="/rankings/new"
               className="inline-flex rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white"
             >
-              Create ranking
+              ランキング作成
             </Link>
           </div>
         ) : (
           <ul className="space-y-3">
             {drafts.map((draft) => (
               <li key={draft.draftId} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-3">
-                <p className="font-semibold text-slate-900">{draft.title || "(Untitled)"}</p>
-                <p className="text-xs text-slate-600">tag: {draft.tagId}</p>
+                <p className="font-semibold text-slate-900">{draft.title || "（無題）"}</p>
+                <p className="text-xs text-slate-600">タグ: {draft.tagId}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Link
                     href={`/rankings/new?draftId=${encodeURIComponent(draft.draftId)}`}
                     className="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold"
                   >
-                    Edit
+                    編集
                   </Link>
                   <button
                     type="button"
@@ -111,14 +111,14 @@ export default function DraftsPage() {
                     disabled={publishingId === draft.draftId}
                     className="rounded-md bg-blue-700 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
                   >
-                    {publishingId === draft.draftId ? "Publishing..." : "Publish"}
+                    {publishingId === draft.draftId ? "公開中..." : "公開"}
                   </button>
                   <button
                     type="button"
                     onClick={() => void deleteDraft(draft.draftId)}
                     className="rounded-md border border-red-300 px-3 py-1 text-xs font-semibold text-red-700"
                   >
-                    Delete
+                    削除
                   </button>
                 </div>
               </li>

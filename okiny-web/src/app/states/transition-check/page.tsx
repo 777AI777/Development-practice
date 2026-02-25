@@ -5,16 +5,16 @@ import { StateScreen } from "@/components/state-screen";
 export default function TransitionCheckStatePage() {
   return (
     <StateScreen
-      title="State Transition Check"
-      subtitle="Mock 18"
+      title="状態遷移確認"
+      subtitle="モック18"
       bullets={[
-        "Each main screen supports normal/empty/error/loading when applicable.",
-        "Priority: Error > Loading > Empty > Normal.",
-        "Timeouts: delayed hint at 10 sec, error transition at 60 sec.",
-        "404 is isolated as dedicated not-found screen.",
+        "各メイン画面は必要に応じて通常/空/エラー/ローディング状態を持つ。",
+        "優先順位: エラー > ローディング > 空 > 通常。",
+        "タイムアウト: 10秒で遅延ヒント、60秒でエラー遷移。",
+        "404 は専用の未検出画面として分離。",
       ]}
       actionHref="/rankings"
-      actionLabel="Back to list for manual validation"
+      actionLabel="手動確認用に一覧へ戻る"
     />
   );
 }

@@ -36,7 +36,7 @@ export default function TagSearchPage() {
       .catch((error: unknown) => {
         if (canceled) return;
         const message =
-          error instanceof PublishedApiError ? error.message : "Failed to search rankings.";
+          error instanceof PublishedApiError ? error.message : "ランキング検索に失敗しました。";
         pushToast({ type: "error", message });
       })
       .finally(() => {
@@ -51,13 +51,13 @@ export default function TagSearchPage() {
 
   return (
     <AppShell
-      title="Tag Search"
-      subtitle="Filter rankings by fixed tag. This corresponds to mock 05."
+      title="タグ検索"
+      subtitle="固定タグでランキングを絞り込みます。モック05に対応。"
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <label htmlFor="tag-filter" className="text-sm font-semibold text-slate-700">
-            Tag
+            タグ
           </label>
           <select
             id="tag-filter"
@@ -73,7 +73,7 @@ export default function TagSearchPage() {
           </select>
           {SHOW_STATE_SCREENS ? (
             <Link href="/states/empty-search" className="rounded-md border border-slate-300 px-3 py-2 text-sm">
-              Open Empty Search Screen (10)
+              空の検索結果画面を開く (10)
             </Link>
           ) : null}
         </div>
@@ -82,12 +82,12 @@ export default function TagSearchPage() {
           <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
         ) : results.length === 0 ? (
           <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="text-sm text-slate-600">No rankings found for selected tag.</p>
+            <p className="text-sm text-slate-600">選択したタグのランキングは見つかりませんでした。</p>
             <Link
               href={`/rankings/new?tagId=${encodeURIComponent(tagId)}`}
               className="inline-flex rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white"
             >
-              Create ranking with this tag
+              このタグでランキングを作成
             </Link>
           </div>
         ) : (
@@ -95,12 +95,12 @@ export default function TagSearchPage() {
             {results.map((ranking) => (
               <li key={ranking.id} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
                 <p className="font-semibold text-slate-900">{ranking.title}</p>
-                <p className="text-xs text-slate-600">tag: {ranking.tagId}</p>
+                <p className="text-xs text-slate-600">タグ: {ranking.tagId}</p>
                 <Link
                   href={`/rankings/${ranking.id}`}
                   className="mt-2 inline-flex rounded-md border border-blue-300 px-3 py-1 text-xs font-semibold text-blue-700"
                 >
-                  Open Detail
+                  詳細を開く
                 </Link>
               </li>
             ))}

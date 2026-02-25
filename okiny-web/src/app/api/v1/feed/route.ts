@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   if (!userId) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId query parameter is required." } },
+      { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
       { status: 422 },
     );
   }

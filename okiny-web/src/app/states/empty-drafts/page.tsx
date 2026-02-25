@@ -5,15 +5,15 @@ import { StateScreen } from "@/components/state-screen";
 export default function EmptyDraftsStatePage() {
   return (
     <StateScreen
-      title="Empty Drafts State"
-      subtitle="Mock 11"
+      title="下書き空状態"
+      subtitle="モック11"
       bullets={[
-        "No local drafts found in IndexedDB.",
-        "Show explain text about local browser storage.",
-        "Provide quick action to create ranking.",
+        "IndexedDB にローカル下書きが存在しない。",
+        "ブラウザ内保存であることの説明文を表示する。",
+        "ランキング作成へのクイックアクションを出す。",
       ]}
       actionHref="/rankings/new"
-      actionLabel="Create ranking"
+      actionLabel="ランキング作成"
     />
   );
 }

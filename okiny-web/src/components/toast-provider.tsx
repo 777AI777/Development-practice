@@ -116,7 +116,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 className="rounded px-2 py-0.5 text-xs font-medium text-white/90 hover:bg-white/15"
                 onClick={() => removeToast(toast.id)}
               >
-                Close
+                閉じる
               </button>
             </div>
           </div>

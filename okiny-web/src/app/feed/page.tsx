@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { useSessionUser } from "@/hooks/use-session-user";
@@ -19,7 +19,7 @@ interface FeedResponse {
   };
 }
 
-export default function FeedPage() {
+function FeedPageContent() {
   const searchParams = useSearchParams();
   const { user } = useSessionUser();
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +44,7 @@ export default function FeedPage() {
       .then(async (response) => {
         const body = (await response.json()) as { data?: FeedResponse; error?: { message?: string } };
         if (!response.ok || !body.data) {
-          throw new Error(body.error?.message ?? "Failed to load feed.");
+          throw new Error(body.error?.message ?? "フィードの読み込みに失敗しました。");
         }
         if (canceled) {
           return;
@@ -59,7 +59,7 @@ export default function FeedPage() {
         if (canceled) {
           return;
         }
-        setError(reason instanceof Error ? reason.message : "Failed to load feed.");
+        setError(reason instanceof Error ? reason.message : "フィードの読み込みに失敗しました。");
       })
       .finally(() => {
         if (canceled) {
@@ -93,12 +93,14 @@ export default function FeedPage() {
     window.localStorage.setItem(key, now.toISOString());
   }, [user]);
 
-  const heading = useMemo(() => (tab === "following" ? "Following Feed" : "For You Feed"), [tab]);
+  const heading = useMemo(() => (tab === "following" ? "フォロー中フィード" : "おすすめフィード"), [tab]);
 
   if (!ENABLE_SNS_EXPANSION) {
     return (
-      <AppShell title="Home Feed" subtitle="SNS expansion is disabled.">
-        <p className="text-sm text-slate-600">Enable NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true to use feed routes.</p>
+      <AppShell title="ホームフィード" subtitle="SNS拡張は無効です。">
+        <p className="text-sm text-slate-600">
+          フィード画面を利用するには `NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true` を有効にしてください。
+        </p>
       </AppShell>
     );
   }
@@ -116,7 +118,7 @@ export default function FeedPage() {
               tab === "for-you" ? "bg-blue-700 text-white" : "border border-slate-300 bg-white"
             }`}
           >
-            For You
+            おすすめ
           </Link>
           <Link
             href="/feed?tab=following"
@@ -124,13 +126,13 @@ export default function FeedPage() {
               tab === "following" ? "bg-blue-700 text-white" : "border border-slate-300 bg-white"
             }`}
           >
-            Following
+            フォロー中
           </Link>
           <Link href="/composer" className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold">
-            Composer
+            投稿作成
           </Link>
           <Link href="/notifications" className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold">
-            Notifications
+            通知
           </Link>
         </div>
 
@@ -152,11 +154,11 @@ export default function FeedPage() {
                 <article key={item.id} className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-lg font-bold text-slate-900">{item.title}</p>
                   <p className="text-xs text-slate-600">
-                    by{" "}
+                    投稿者:{" "}
                     <Link href={`/profile/${item.author.id}`} className="font-semibold text-blue-700 underline">
                       {item.author.name}
                     </Link>{" "}
-                    / tag: {item.tagId}
+                    / タグ: {item.tagId}
                   </p>
                   <ol className="mt-2 space-y-1 text-sm text-slate-700">
                     {item.previewItems.map((preview, index) => (
@@ -164,22 +166,22 @@ export default function FeedPage() {
                     ))}
                   </ol>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                    <span>Like {like?.count ?? 0}</span>
-                    <span>Save {save?.count ?? 0}</span>
-                    <span>Comments {item.commentsCount}</span>
+                    <span>いいね {like?.count ?? 0}</span>
+                    <span>保存 {save?.count ?? 0}</span>
+                    <span>コメント {item.commentsCount}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Link
                       href={`/feed/${item.rankingId}`}
                       className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white"
                     >
-                      Open Post Detail
+                      投稿詳細を開く
                     </Link>
                     <Link
                       href={`/profile/${item.author.id}`}
                       className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold"
                     >
-                      Open Profile
+                      プロフィールを開く
                     </Link>
                   </div>
                 </article>
@@ -192,7 +194,7 @@ export default function FeedPage() {
               フィードに表示できる投稿がありません。おすすめユーザーをフォローして再読み込みしてください。
             </p>
             <Link href="/profile/user-google-001" className="inline-flex rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white">
-              Open profile and follow
+              プロフィールを開いてフォローする
             </Link>
           </div>
         )}
@@ -200,7 +202,7 @@ export default function FeedPage() {
         {feed ? (
           <div className="grid gap-3 md:grid-cols-2">
             <section className="rounded-md border border-slate-200 bg-white px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Discovery Tags</p>
+              <p className="text-xs font-semibold tracking-wide text-slate-500">発見タグ</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {feed.discovery.tags.map((tag) => (
                   <span key={tag.id} className="rounded-full border border-slate-300 px-2 py-1 text-xs font-semibold">
@@ -210,10 +212,10 @@ export default function FeedPage() {
               </div>
             </section>
             <section className="rounded-md border border-slate-200 bg-white px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Recommended Users</p>
+              <p className="text-xs font-semibold tracking-wide text-slate-500">おすすめユーザー</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {feed.discovery.users.length === 0 ? (
-                  <span className="text-xs text-slate-500">No recommendations.</span>
+                  <span className="text-xs text-slate-500">おすすめユーザーはいません。</span>
                 ) : (
                   feed.discovery.users.map((candidate) => (
                     <Link
@@ -231,5 +233,13 @@ export default function FeedPage() {
         ) : null}
       </div>
     </AppShell>
+  );
+}
+
+export default function FeedPage() {
+  return (
+    <Suspense fallback={null}>
+      <FeedPageContent />
+    </Suspense>
   );
 }

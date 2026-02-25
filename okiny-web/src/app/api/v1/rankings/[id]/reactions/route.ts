@@ -24,7 +24,7 @@ export async function POST(
   const parsed = await parseBody(request);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId and type are required." } },
+      { error: { code: "VALIDATION", message: "userId と type は必須です。" } },
       { status: 422 },
     );
   }
@@ -45,7 +45,7 @@ export async function DELETE(
   const parsed = await parseBody(request);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId and type are required." } },
+      { error: { code: "VALIDATION", message: "userId と type は必須です。" } },
       { status: 422 },
     );
   }

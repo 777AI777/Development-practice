@@ -18,12 +18,12 @@ export default function OnboardingPage() {
 
   return (
     <AppShell
-      title="Onboarding"
+      title="オンボーディング"
       subtitle="興味タグと使い方を最短で案内し、初回投稿までの到達時間を短縮します。"
     >
       <div className="space-y-4">
         <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-          <p className="font-semibold text-slate-900">Welcome to OKINY SNS beta</p>
+          <p className="font-semibold text-slate-900">OKINY SNS ベータへようこそ</p>
           <p className="mt-1">
             1分で「見る」「作る」「つながる」の3導線をセットアップします。
           </p>
@@ -36,15 +36,15 @@ export default function OnboardingPage() {
             2. まずはホームフィードを確認
           </li>
           <li className="rounded-md border border-slate-200 bg-white px-3 py-2">
-            3. Composer から最初の投稿を作成
+            3. 投稿作成画面から最初の投稿を作成
           </li>
         </ol>
         <div className="flex flex-wrap gap-2">
           <Link href="/feed" className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white">
-            Start Home Feed
+            ホームフィードを始める
           </Link>
           <Link href="/composer" className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold">
-            Open Composer
+            投稿作成を開く
           </Link>
         </div>
       </div>

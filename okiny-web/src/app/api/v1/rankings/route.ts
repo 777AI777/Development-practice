@@ -7,10 +7,10 @@ import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
 const createSchema = z.object({
   userId: z.string().min(1),
   ranking: z.object({
-    title: z.string().trim().min(1, "Title is required."),
-    tagId: z.string().trim().min(1, "Tag is required."),
+    title: z.string().trim().min(1, "タイトルは必須です。"),
+    tagId: z.string().trim().min(1, "タグは必須です。"),
     items: z
-      .array(z.string().trim().min(1, "All ranking items are required."))
+      .array(z.string().trim().min(1, "ランキング項目はすべて必須です。"))
       .length(RANKING_ITEM_COUNT),
   }),
 });
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
   if (!userId) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId query parameter is required." } },
+      { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
       { status: 422 },
     );
   }
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
           message:
             error instanceof Error
               ? error.message
-              : "Failed to load rankings from Supabase.",
+              : "Supabase からランキングの読み込みに失敗しました。",
         },
       },
       { status: 500 },
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       {
         error: {
           code: "SERVER",
-          message: error instanceof Error ? error.message : "Failed to create ranking.",
+          message: error instanceof Error ? error.message : "ランキングの作成に失敗しました。",
         },
       },
       { status: 500 },

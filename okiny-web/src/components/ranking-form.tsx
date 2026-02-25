@@ -20,13 +20,13 @@ function toRankingItems(items: string[]): RankingItems {
 
 function validateInput(value: RankingInput): string | null {
   if (!value.title.trim()) {
-    return "Title is required.";
+    return "タイトルは必須です。";
   }
   if (!value.tagId.trim()) {
-    return "Tag is required.";
+    return "タグは必須です。";
   }
   if (value.items.some((item) => !item.trim())) {
-    return "All 5 ranking items are required.";
+    return "ランキング項目は5件すべて入力してください。";
   }
   return null;
 }
@@ -206,20 +206,20 @@ export function RankingForm({
     <div className="space-y-4">
       <div>
         <label htmlFor="ranking-title" className="mb-1 block text-sm font-semibold text-slate-700">
-          Ranking Title
+          ランキングタイトル
         </label>
         <input
           id="ranking-title"
           value={form.title}
           onChange={(event) => setTitle(event.target.value)}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          placeholder="e.g. Movie Top 5"
+          placeholder="例: 映画トップ5"
         />
       </div>
 
       <div>
         <label htmlFor="ranking-tag" className="mb-1 block text-sm font-semibold text-slate-700">
-          Tag
+          タグ
         </label>
         <select
           id="ranking-tag"
@@ -236,7 +236,7 @@ export function RankingForm({
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-slate-700">Top 5 items</legend>
+        <legend className="text-sm font-semibold text-slate-700">トップ5項目</legend>
         {form.items.map((item, index) => (
           <div key={index} className="flex items-center gap-3">
             <span className="w-6 text-center text-sm font-bold">{index + 1}</span>
@@ -244,7 +244,7 @@ export function RankingForm({
               value={item}
               onChange={(event) => setItem(index, event.target.value)}
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              placeholder={`Rank ${index + 1}`}
+              placeholder={`順位 ${index + 1}`}
             />
           </div>
         ))}
@@ -268,7 +268,7 @@ export function RankingForm({
             disabled={isSavingDraft}
             className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold disabled:opacity-60"
           >
-            {isSavingDraft ? "Saving draft..." : "Save Draft"}
+            {isSavingDraft ? "下書き保存中..." : "下書き保存"}
           </button>
         ) : null}
         <button
@@ -277,7 +277,7 @@ export function RankingForm({
           disabled={isSubmitting}
           className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
-          {isSubmitting ? "Submitting..." : submitLabel}
+          {isSubmitting ? "送信中..." : submitLabel}
         </button>
         {onCancel ? (
           <button
@@ -285,7 +285,7 @@ export function RankingForm({
             onClick={triggerCancel}
             className="rounded-md border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold"
           >
-            Cancel
+            キャンセル
           </button>
         ) : null}
       </div>

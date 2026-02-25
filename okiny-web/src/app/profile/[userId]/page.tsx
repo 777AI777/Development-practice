@@ -32,7 +32,7 @@ export default function ProfilePage() {
       .then(async (response) => {
         const body = (await response.json()) as { data?: UserProfile; error?: { message?: string } };
         if (!response.ok || !body.data) {
-          throw new Error(body.error?.message ?? "Failed to load profile.");
+          throw new Error(body.error?.message ?? "プロフィールの読み込みに失敗しました。");
         }
         if (canceled) {
           return;
@@ -43,7 +43,7 @@ export default function ProfilePage() {
         if (canceled) {
           return;
         }
-        setError(reason instanceof Error ? reason.message : "Failed to load profile.");
+        setError(reason instanceof Error ? reason.message : "プロフィールの読み込みに失敗しました。");
       })
       .finally(() => {
         if (canceled) {
@@ -86,16 +86,18 @@ export default function ProfilePage() {
 
   if (!ENABLE_SNS_EXPANSION) {
     return (
-      <AppShell title="Profile" subtitle="SNS expansion is disabled.">
-        <p className="text-sm text-slate-600">Enable NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true to use profile routes.</p>
+      <AppShell title="プロフィール" subtitle="SNS拡張は無効です。">
+        <p className="text-sm text-slate-600">
+          プロフィール画面を利用するには `NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true` を有効にしてください。
+        </p>
       </AppShell>
     );
   }
 
   return (
     <AppShell
-      title="Profile"
-      subtitle="ユーザープロフィールとFollow導線。投稿から関係性構築へつなげる画面。"
+      title="プロフィール"
+      subtitle="ユーザープロフィールとフォロー導線。投稿から関係性構築へつなげる画面。"
     >
       {isLoading ? (
         <div className="h-24 animate-pulse rounded-md bg-slate-100" />
@@ -107,10 +109,10 @@ export default function ProfilePage() {
         <div className="space-y-4">
           <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-xl font-bold text-slate-900">{profile.name}</p>
-            <p className="mt-1 text-sm text-slate-600">{profile.bio ?? "No bio"}</p>
+            <p className="mt-1 text-sm text-slate-600">{profile.bio ?? "自己紹介は未設定です"}</p>
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-600">
-              <span>Followers: {profile.followersCount}</span>
-              <span>Following: {profile.followingCount}</span>
+              <span>フォロワー: {profile.followersCount}</span>
+              <span>フォロー中: {profile.followingCount}</span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -120,14 +122,14 @@ export default function ProfilePage() {
                 onClick={() => void toggleFollow()}
                 className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white"
               >
-                {profile.isFollowing ? "Unfollow" : "Follow"}
+                {profile.isFollowing ? "フォロー解除" : "フォロー"}
               </button>
             ) : null}
             <Link href="/feed?tab=following" className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold">
-              Open Following Feed
+              フォロー中フィードを開く
             </Link>
             <Link href="/feed" className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold">
-              Back to Feed
+              フィードに戻る
             </Link>
           </div>
         </div>

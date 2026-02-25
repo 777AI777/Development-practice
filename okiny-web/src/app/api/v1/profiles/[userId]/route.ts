@@ -12,7 +12,7 @@ export async function GET(
 
   if (!viewerUserId) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "viewerUserId query parameter is required." } },
+      { error: { code: "VALIDATION", message: "viewerUserId クエリパラメータは必須です。" } },
       { status: 422 },
     );
   }
@@ -20,7 +20,7 @@ export async function GET(
   const profile = getUserProfile({ viewerUserId, userId });
   if (!profile) {
     return NextResponse.json(
-      { error: { code: "NOT_FOUND", message: "Profile not found." } },
+      { error: { code: "NOT_FOUND", message: "プロフィールが見つかりません。" } },
       { status: 404 },
     );
   }

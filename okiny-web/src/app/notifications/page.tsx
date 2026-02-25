@@ -9,7 +9,7 @@ const SAMPLE_NOTIFICATIONS = [
   {
     id: "notice-001",
     type: "reaction",
-    message: "あなたの「映画トップ5」に新しいLikeが付きました。",
+    message: "あなたの「映画トップ5」に新しいいいねが付きました。",
     href: "/feed/demo",
   },
   {
@@ -29,15 +29,17 @@ const SAMPLE_NOTIFICATIONS = [
 export default function NotificationsPage() {
   if (!ENABLE_SNS_EXPANSION) {
     return (
-      <AppShell title="Notifications" subtitle="SNS expansion is disabled.">
-        <p className="text-sm text-slate-600">Enable NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true to use notification routes.</p>
+      <AppShell title="通知" subtitle="SNS拡張は無効です。">
+        <p className="text-sm text-slate-600">
+          通知画面を利用するには `NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true` を有効にしてください。
+        </p>
       </AppShell>
     );
   }
 
   return (
     <AppShell
-      title="Notifications"
+      title="通知"
       subtitle="フォロー・反応・コメント通知を集約し、再訪を促す通知センター。"
     >
       <div className="space-y-3">
@@ -47,7 +49,13 @@ export default function NotificationsPage() {
             href={notice.href}
             className="block rounded-md border border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-100"
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{notice.type}</p>
+            <p className="text-xs font-semibold tracking-wide text-slate-500">
+              {notice.type === "reaction"
+                ? "リアクション"
+                : notice.type === "follow"
+                  ? "フォロー"
+                  : "コメント"}
+            </p>
             <p className="mt-1 text-sm text-slate-800">{notice.message}</p>
           </Link>
         ))}

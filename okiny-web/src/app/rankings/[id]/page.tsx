@@ -48,7 +48,7 @@ export default function RankingDetailPage() {
         const message =
           error instanceof PublishedApiError
             ? error.message
-            : "Failed to load ranking detail.";
+            : "ランキング詳細の読み込みに失敗しました。";
         setErrorMessage(message);
         pushToast({ type: "error", message });
       })
@@ -64,8 +64,8 @@ export default function RankingDetailPage() {
 
   return (
     <AppShell
-      title="Ranking Detail"
-      subtitle="Read-only detail with edit and delete actions. This corresponds to mock 04."
+      title="ランキング詳細"
+      subtitle="閲覧専用の詳細画面。編集・削除アクション付き（モック04）。"
     >
       {isLoading ? (
         <div className="space-y-3">
@@ -79,7 +79,7 @@ export default function RankingDetailPage() {
       ) : ranking ? (
         <div className="space-y-4">
           <h2 className="text-3xl font-bold text-slate-900">{ranking.title}</h2>
-          <p className="text-sm text-slate-600">tag: {ranking.tagId}</p>
+          <p className="text-sm text-slate-600">タグ: {ranking.tagId}</p>
           <ol className="space-y-2">
             {ranking.items.map((item, index) => (
               <li
@@ -95,19 +95,19 @@ export default function RankingDetailPage() {
               href={`/rankings/${ranking.id}/edit`}
               className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white"
             >
-              Edit
+              編集
             </Link>
             <Link
               href={`/rankings/${ranking.id}/delete`}
               className="rounded-md border border-red-300 px-4 py-2 text-sm font-semibold text-red-700"
             >
-              Delete
+              削除
             </Link>
             <Link
               href="/rankings"
               className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold"
             >
-              Back
+              戻る
             </Link>
           </div>
         </div>

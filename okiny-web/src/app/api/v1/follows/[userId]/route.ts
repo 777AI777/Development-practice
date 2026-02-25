@@ -23,7 +23,7 @@ export async function POST(
   const parsed = await parseBody(request);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "followerUserId is required." } },
+      { error: { code: "VALIDATION", message: "followerUserId は必須です。" } },
       { status: 422 },
     );
   }
@@ -39,7 +39,7 @@ export async function DELETE(
   const parsed = await parseBody(request);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "followerUserId is required." } },
+      { error: { code: "VALIDATION", message: "followerUserId は必須です。" } },
       { status: 422 },
     );
   }

@@ -12,7 +12,7 @@ export async function GET(
 
   if (!userId) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId query parameter is required." } },
+      { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
       { status: 422 },
     );
   }
@@ -20,7 +20,7 @@ export async function GET(
   const item = getFeedItemByRankingId(id, userId);
   if (!item) {
     return NextResponse.json(
-      { error: { code: "NOT_FOUND", message: "Feed item not found." } },
+      { error: { code: "NOT_FOUND", message: "フィード項目が見つかりません。" } },
       { status: 404 },
     );
   }

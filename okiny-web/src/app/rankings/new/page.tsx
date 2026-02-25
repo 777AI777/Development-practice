@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { RankingForm } from "@/components/ranking-form";
@@ -20,7 +20,7 @@ function toRankingItems(items: string[]): RankingItems {
 
 const EMPTY_ITEMS: RankingItems = ["", "", "", "", ""];
 
-export default function NewRankingPage() {
+function NewRankingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { pushToast } = useToast();
@@ -114,18 +114,26 @@ export default function NewRankingPage() {
 
   return (
     <AppShell
-      title="Create Ranking"
-      subtitle="Create or save draft. This corresponds to mock 03."
+      title="ランキング作成"
+      subtitle="作成または下書き保存。モック03に対応。"
     >
       <RankingForm
         key={activeDraftId ?? "new"}
         initialValue={initialDraft}
-        submitLabel="Create"
+        submitLabel="作成"
         onSubmit={handlePublish}
         onSaveDraft={handleSaveDraft}
         onCancel={() => router.push("/rankings")}
         autosaveKey={user ? `${user.id}:${activeDraftId ?? "new"}` : undefined}
       />
     </AppShell>
+  );
+}
+
+export default function NewRankingPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewRankingPageContent />
+    </Suspense>
   );
 }

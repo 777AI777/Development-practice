@@ -13,7 +13,7 @@ export default function LogoutConfirmPage() {
   return (
     <AppShell
       title="ログアウト確認"
-      subtitle="mock 07a のログアウト確認画面。"
+      subtitle="モック07aのログアウト確認画面。"
     >
       <div className="space-y-4">
         <p className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">

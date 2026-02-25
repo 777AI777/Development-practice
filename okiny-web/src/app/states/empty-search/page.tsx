@@ -5,15 +5,15 @@ import { StateScreen } from "@/components/state-screen";
 export default function EmptySearchStatePage() {
   return (
     <StateScreen
-      title="Empty Search State"
-      subtitle="Mock 10"
+      title="検索結果なし状態"
+      subtitle="モック10"
       bullets={[
-        "No ranking matched selected tag.",
-        "Display clear message with reset search action.",
-        "Remain inside search flow.",
+        "選択したタグに一致するランキングがない。",
+        "わかりやすい説明と検索リセット導線を表示する。",
+        "検索フロー内に留まる。",
       ]}
       actionHref="/search"
-      actionLabel="Back to Tag Search"
+      actionLabel="タグ検索へ戻る"
     />
   );
 }

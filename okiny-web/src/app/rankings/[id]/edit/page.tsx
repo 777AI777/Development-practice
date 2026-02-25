@@ -55,7 +55,7 @@ export default function RankingEditPage() {
         const message =
           error instanceof PublishedApiError
             ? error.message
-            : "Failed to load ranking for edit.";
+            : "編集用ランキングの読み込みに失敗しました。";
         pushToast({ type: "error", message });
       })
       .finally(() => {
@@ -76,13 +76,13 @@ export default function RankingEditPage() {
         rankingId,
         ranking: value,
       });
-      pushToast({ type: "success", message: "Ranking updated." });
+      pushToast({ type: "success", message: "ランキングを更新しました。" });
       router.push(`/rankings/${rankingId}`);
     } catch (error: unknown) {
       const message =
         error instanceof PublishedApiError
           ? error.message
-          : "Failed to update ranking.";
+          : "ランキングの更新に失敗しました。";
       pushToast({ type: "error", message, persistent: true });
     }
   };
@@ -98,8 +98,8 @@ export default function RankingEditPage() {
 
   return (
     <AppShell
-      title="Edit Ranking"
-      subtitle="This screen corresponds to create/edit mock 03 (edit mode)."
+      title="ランキング編集"
+      subtitle="作成/編集モック03の編集モード画面です。"
     >
       {isLoading ? (
         <div className="space-y-3">
@@ -109,14 +109,14 @@ export default function RankingEditPage() {
       ) : initialValue ? (
         <RankingForm
           initialValue={initialValue}
-          submitLabel="Update"
+          submitLabel="更新"
           onSubmit={handleSubmit}
           onSaveDraft={handleSaveDraft}
           onCancel={() => router.push(`/rankings/${rankingId}`)}
           autosaveKey={user ? `${user.id}:edit:${rankingId}` : undefined}
         />
       ) : (
-        <p className="text-sm text-slate-600">No data.</p>
+        <p className="text-sm text-slate-600">データがありません。</p>
       )}
     </AppShell>
   );

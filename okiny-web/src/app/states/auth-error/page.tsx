@@ -5,15 +5,15 @@ import { StateScreen } from "@/components/state-screen";
 export default function AuthErrorStatePage() {
   return (
     <StateScreen
-      title="Auth Error State"
-      subtitle="Mock 14"
+      title="認証エラー状態"
+      subtitle="モック14"
       bullets={[
-        "Google sign-in failed.",
-        "Display retry button and support message.",
-        "Route back to login screen.",
+        "Googleログインに失敗した状態。",
+        "再試行ボタンとサポート案内を表示する。",
+        "ログイン画面へ戻る導線を出す。",
       ]}
       actionHref="/login"
-      actionLabel="Retry login"
+      actionLabel="ログインを再試行"
     />
   );
 }

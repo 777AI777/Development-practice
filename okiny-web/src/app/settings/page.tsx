@@ -29,8 +29,8 @@ export default function SettingsPage() {
 
   return (
     <AppShell
-      title="Settings"
-      subtitle="表示名編集・ログイン情報確認・明示保存。mock 07 に準拠。"
+      title="設定"
+      subtitle="表示名編集・ログイン情報確認・明示保存。モック07に準拠。"
     >
       <div className="space-y-4">
         <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
@@ -45,7 +45,7 @@ export default function SettingsPage() {
             placeholder="表示名"
           />
           <p className="mt-3 text-sm text-slate-600">メール: {user?.email ?? "-"}</p>
-          <p className="mt-1 text-xs text-slate-500">Provider: Google OAuth (assumed configured)</p>
+          <p className="mt-1 text-xs text-slate-500">認証プロバイダ: Google OAuth（設定済み想定）</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button

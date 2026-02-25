@@ -5,15 +5,15 @@ import { StateScreen } from "@/components/state-screen";
 export default function CommonHeaderStatePage() {
   return (
     <StateScreen
-      title="Common Header"
-      subtitle="Mock 19"
+      title="共通ヘッダー"
+      subtitle="モック19"
       bullets={[
-        "Header includes app brand, settings shortcut, and account controls.",
-        "Sign-out action routes to confirmation screen.",
-        "Current signed-in user is displayed for validation.",
+        "ヘッダーにアプリ名・設定ショートカット・アカウント操作を含む。",
+        "サインアウト操作は確認画面へ遷移する。",
+        "確認用に現在のログインユーザー名を表示する。",
       ]}
       actionHref="/settings"
-      actionLabel="Open Settings"
+      actionLabel="設定を開く"
     />
   );
 }
