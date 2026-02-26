@@ -5,12 +5,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { useToast } from "@/components/toast-provider";
-import { SHOW_STATE_SCREENS } from "@/lib/features";
+import { useSessionUser } from "@/hooks/use-session-user";
 import { MAX_DRAFTS_PER_USER } from "@/lib/drafts/constants";
 import { draftRepository } from "@/lib/drafts/client-repository";
-import { publishRanking } from "@/lib/publish/publish-ranking";
+import { SHOW_STATE_SCREENS } from "@/lib/features";
 import { publishedApiClient } from "@/lib/publish/client";
-import { useSessionUser } from "@/hooks/use-session-user";
+import { publishRanking } from "@/lib/publish/publish-ranking";
 import type { DraftLocalRecord } from "@/lib/types";
 
 export default function DraftsPage() {
@@ -98,7 +98,14 @@ export default function DraftsPage() {
               <li key={draft.draftId} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-3">
                 <p className="font-semibold text-slate-900">{draft.title || "（無題）"}</p>
                 <p className="text-xs text-slate-600">タグ: {draft.tagId}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <ol className="mt-2 space-y-1 text-xs text-slate-700">
+                  {draft.items.slice(0, 3).map((item, index) => (
+                    <li key={`${draft.draftId}-top3-${index}`}>
+                      {index + 1}位: {item.trim() ? item : "未入力"}
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Link
                     href={`/rankings/new?draftId=${encodeURIComponent(draft.draftId)}`}
                     className="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold"
