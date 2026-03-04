@@ -129,7 +129,7 @@ export async function DELETE(
   const { id } = await params;
   try {
     await deleteRanking({ rankingId: id, userId });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ data: { ok: true } });
   } catch (error) {
     return NextResponse.json(
       {

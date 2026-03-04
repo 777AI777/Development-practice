@@ -83,6 +83,27 @@ async function ensureResponseOk(response: Response): Promise<void> {
   throw new Error(`Supabase REST failed (${response.status}): ${detail}`);
 }
 
+function buildRankingItemsPayload(params: {
+  rankingId: string;
+  items: [string, string, string, string, string];
+}) {
+  return params.items
+    .map((item, index) => ({
+      ranking_id: params.rankingId,
+      rank: index + 1,
+      item_text: item.trim(),
+    }))
+    .filter((item) => item.item_text.length > 0);
+}
+
+async function deleteRankingById(rankingId: string): Promise<void> {
+  const query = new URLSearchParams({ id: `eq.${rankingId}` });
+  const response = await requestSupabase(`rankings?${query.toString()}`, {
+    method: "DELETE",
+  });
+  await ensureResponseOk(response);
+}
+
 export async function listRankingsByUser(params: {
   userId: string;
   tagId?: string;
@@ -148,17 +169,25 @@ export async function createRanking(params: {
     throw new Error("Ranking insert did not return id.");
   }
 
-  const itemsBody = params.items.map((item, index) => ({
-    ranking_id: rankingId,
-    rank: index + 1,
-    item_text: item,
-  }));
-
-  const itemInsertResponse = await requestSupabase("ranking_items", {
-    method: "POST",
-    body: itemsBody,
+  const itemsBody = buildRankingItemsPayload({
+    rankingId,
+    items: params.items,
   });
-  await ensureResponseOk(itemInsertResponse);
+  if (itemsBody.length === 0) {
+    await deleteRankingById(rankingId);
+    throw new Error("Ranking must contain at least one non-empty item.");
+  }
+
+  try {
+    const itemInsertResponse = await requestSupabase("ranking_items", {
+      method: "POST",
+      body: itemsBody,
+    });
+    await ensureResponseOk(itemInsertResponse);
+  } catch (error) {
+    await deleteRankingById(rankingId);
+    throw error;
+  }
   const created = await getRankingById({ userId: params.userId, rankingId });
   if (!created) {
     throw new Error("Failed to fetch created ranking.");
@@ -173,6 +202,14 @@ export async function updateRanking(params: {
   tagId: string;
   items: [string, string, string, string, string];
 }) {
+  const itemsBody = buildRankingItemsPayload({
+    rankingId: params.rankingId,
+    items: params.items,
+  });
+  if (itemsBody.length === 0) {
+    throw new Error("Ranking must contain at least one non-empty item.");
+  }
+
   const updateQuery = new URLSearchParams({
     id: `eq.${params.rankingId}`,
     user_id: `eq.${params.userId}`,
@@ -201,11 +238,7 @@ export async function updateRanking(params: {
 
   const itemInsertResponse = await requestSupabase("ranking_items", {
     method: "POST",
-    body: params.items.map((item, index) => ({
-      ranking_id: params.rankingId,
-      rank: index + 1,
-      item_text: item,
-    })),
+    body: itemsBody,
   });
   await ensureResponseOk(itemInsertResponse);
 
