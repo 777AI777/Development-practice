@@ -1,0 +1,41 @@
+# API CRUD 一覧
+
+対象: `src/app/api/v1/**/route.ts` で実装されている API のみを列挙。
+（未実装のAPIは含めていません）
+
+## CRUD マップ（対象リソース + データソース/DB）
+
+| メソッド | パス | 日本語名 | CRUD | 対象リソース | データソース | DB / テーブル |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/api/v1/feed` | フィード一覧取得 | R | feed | mock | mock-social-store |
+| GET | `/api/v1/feed/{id}` | フィード詳細取得 | R | feed | mock | mock-social-store |
+| POST | `/api/v1/follows/{userId}` | フォロー追加 | C | follows | mock | mock-social-store |
+| DELETE | `/api/v1/follows/{userId}` | フォロー解除 | D | follows | mock | mock-social-store |
+| GET | `/api/v1/profiles/{userId}` | プロフィール取得 | R | profiles | mock | mock-social-store |
+| GET | `/api/v1/rankings` | ランキング一覧取得 | R | rankings | Supabase REST | Supabase: `rankings`, `ranking_items` |
+| POST | `/api/v1/rankings` | ランキング作成 | C | rankings | Supabase REST | Supabase: `rankings`, `ranking_items` |
+| GET | `/api/v1/rankings/{id}` | ランキング取得 | R | rankings | Supabase REST | Supabase: `rankings`, `ranking_items` |
+| PATCH | `/api/v1/rankings/{id}` | ランキング更新 | U | rankings | Supabase REST | Supabase: `rankings`, `ranking_items` |
+| DELETE | `/api/v1/rankings/{id}` | ランキング削除 | D | rankings | Supabase REST | Supabase: `rankings` |
+| GET | `/api/v1/rankings/{id}/comments` | コメント一覧取得 | R | comments | mock | mock-social-store |
+| POST | `/api/v1/rankings/{id}/comments` | コメント作成 | C | comments | mock | mock-social-store |
+| POST | `/api/v1/rankings/{id}/reactions` | リアクション付与 | C | reactions | mock | mock-social-store |
+| DELETE | `/api/v1/rankings/{id}/reactions` | リアクション解除 | D | reactions | mock | mock-social-store |
+
+## DB構成（参考）
+
+### Supabase（公開ランキングの永続化）
+
+- `rankings`:
+  - `id`, `user_id`, `title`, `tag_id`, `created_at`, `updated_at`
+- `ranking_items`:
+  - `id`, `ranking_id`, `rank`, `item_text`
+- リレーション:
+  - `ranking_items.ranking_id` → `rankings.id`
+
+### IndexedDB（下書き・ローカル保存）
+
+※ 下書きは API 経由ではなくクライアント内で完結。
+
+- DB名: `okiny-local`
+- store: `drafts`（keyPath: `draftId`, index: `userId`）
