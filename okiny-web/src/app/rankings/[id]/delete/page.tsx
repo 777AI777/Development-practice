@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { useToast } from "@/components/toast-provider";
@@ -18,6 +18,44 @@ export default function DeleteRankingPage() {
   const { user } = useSessionUser();
   const { pushToast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    if (rankingId === DEMO_RANKING_ID) {
+      setExpectedUpdatedAt(undefined);
+      setIsLoading(false);
+      return;
+    }
+
+    let canceled = false;
+    setIsLoading(true);
+    void publishedApiClient
+      .getPublishedRanking(user.id, rankingId)
+      .then((ranking) => {
+        if (canceled) return;
+        setExpectedUpdatedAt(ranking.updatedAt);
+      })
+      .catch((error: unknown) => {
+        if (canceled) return;
+        const message =
+          error instanceof PublishedApiError
+            ? error.message
+            : "ランキングの削除に必要な情報が取得できませんでした。";
+        pushToast({ type: "error", message });
+      })
+      .finally(() => {
+        if (canceled) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [pushToast, rankingId, user]);
 
   const runDelete = async () => {
     if (!user) return;
@@ -29,7 +67,18 @@ export default function DeleteRankingPage() {
 
     setIsDeleting(true);
     try {
-      await publishedApiClient.deletePublishedRanking(user.id, rankingId);
+      if (!expectedUpdatedAt) {
+        pushToast({
+          type: "error",
+          message: "最新の更新日時が取得できませんでした。再読み込みしてください。",
+        });
+        return;
+      }
+      await publishedApiClient.deletePublishedRanking(
+        user.id,
+        rankingId,
+        expectedUpdatedAt,
+      );
       pushToast({ type: "success", message: "ランキングを削除しました。" });
       router.push("/rankings");
     } catch (error: unknown) {
@@ -54,7 +103,7 @@ export default function DeleteRankingPage() {
           <button
             type="button"
             onClick={() => void runDelete()}
-            disabled={isDeleting}
+            disabled={isDeleting || isLoading}
             className="rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             {isDeleting ? "削除中..." : "完全に削除する"}
@@ -70,4 +119,3 @@ export default function DeleteRankingPage() {
     </AppShell>
   );
 }
-

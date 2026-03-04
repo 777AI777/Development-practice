@@ -8,6 +8,7 @@ export type AppErrorCode =
   | "NETWORK"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
+  | "CONFLICT"
   | "VALIDATION"
   | "RATE_LIMIT"
   | "SERVER"

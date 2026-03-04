@@ -1,4 +1,4 @@
-# API CRUD 一覧
+﻿# API CRUD 一覧
 
 対象: `src/app/api/v1/**/route.ts` で実装されている API のみを列挙。
 （未実装のAPIは含めていません）
@@ -21,6 +21,11 @@
 | POST | `/api/v1/rankings/{id}/comments` | コメント作成 | C | comments | mock | mock-social-store |
 | POST | `/api/v1/rankings/{id}/reactions` | リアクション付与 | C | reactions | mock | mock-social-store |
 | DELETE | `/api/v1/rankings/{id}/reactions` | リアクション解除 | D | reactions | mock | mock-social-store |
+
+## 競合検知（楽観ロック）
+
+- `PATCH /api/v1/rankings/{id}` と `DELETE /api/v1/rankings/{id}` は `expectedUpdatedAt` を必須とする。
+- `expectedUpdatedAt` が最新の `updated_at` と一致しない場合は `409 Conflict` を返す。
 
 ## DB構成（参考）
 

@@ -75,6 +75,13 @@ export function mapRankingRow(row: SupabaseRankingRow) {
   };
 }
 
+export class ConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ConflictError";
+  }
+}
+
 async function ensureResponseOk(response: Response): Promise<void> {
   if (response.ok) {
     return;
@@ -154,11 +161,28 @@ export async function createRanking(params: {
     item_text: item,
   }));
 
-  const itemInsertResponse = await requestSupabase("ranking_items", {
-    method: "POST",
-    body: itemsBody,
-  });
-  await ensureResponseOk(itemInsertResponse);
+  try {
+    const itemInsertResponse = await requestSupabase("ranking_items", {
+      method: "POST",
+      body: itemsBody,
+    });
+    await ensureResponseOk(itemInsertResponse);
+  } catch (error) {
+    const rollbackQuery = new URLSearchParams({
+      id: `eq.${rankingId}`,
+      user_id: `eq.${params.userId}`,
+    });
+    try {
+      const rollbackResponse = await requestSupabase(
+        `rankings?${rollbackQuery.toString()}`,
+        { method: "DELETE" },
+      );
+      await ensureResponseOk(rollbackResponse);
+    } catch {
+      // best-effort rollback
+    }
+    throw error;
+  }
   const created = await getRankingById({ userId: params.userId, rankingId });
   if (!created) {
     throw new Error("Failed to fetch created ranking.");
@@ -172,15 +196,29 @@ export async function updateRanking(params: {
   title: string;
   tagId: string;
   items: [string, string, string, string, string];
+  expectedUpdatedAt: string;
 }) {
+  const previous = await getRankingById({
+    userId: params.userId,
+    rankingId: params.rankingId,
+  });
+  if (!previous) {
+    throw new Error("Ranking not found.");
+  }
+  if (previous.updatedAt !== params.expectedUpdatedAt) {
+    throw new ConflictError("Ranking was modified by another request.");
+  }
+
   const updateQuery = new URLSearchParams({
     id: `eq.${params.rankingId}`,
     user_id: `eq.${params.userId}`,
+    updated_at: `eq.${params.expectedUpdatedAt}`,
   });
   const rankingUpdateResponse = await requestSupabase(
     `rankings?${updateQuery.toString()}`,
     {
       method: "PATCH",
+      prefer: "return=representation",
       body: {
         title: params.title,
         tag_id: params.tagId,
@@ -189,25 +227,61 @@ export async function updateRanking(params: {
     },
   );
   await ensureResponseOk(rankingUpdateResponse);
+  const updatedRows = (await rankingUpdateResponse.json()) as Array<{ id: string }>;
+  if (updatedRows.length === 0) {
+    throw new ConflictError("Ranking was modified by another request.");
+  }
 
   const deleteItemsQuery = new URLSearchParams({ ranking_id: `eq.${params.rankingId}` });
-  const deleteItemsResponse = await requestSupabase(
-    `ranking_items?${deleteItemsQuery.toString()}`,
-    {
-      method: "DELETE",
-    },
-  );
-  await ensureResponseOk(deleteItemsResponse);
+  try {
+    const deleteItemsResponse = await requestSupabase(
+      `ranking_items?${deleteItemsQuery.toString()}`,
+      {
+        method: "DELETE",
+      },
+    );
+    await ensureResponseOk(deleteItemsResponse);
 
-  const itemInsertResponse = await requestSupabase("ranking_items", {
-    method: "POST",
-    body: params.items.map((item, index) => ({
-      ranking_id: params.rankingId,
-      rank: index + 1,
-      item_text: item,
-    })),
-  });
-  await ensureResponseOk(itemInsertResponse);
+    const itemInsertResponse = await requestSupabase("ranking_items", {
+      method: "POST",
+      body: params.items.map((item, index) => ({
+        ranking_id: params.rankingId,
+        rank: index + 1,
+        item_text: item,
+      })),
+    });
+    await ensureResponseOk(itemInsertResponse);
+  } catch (error) {
+    try {
+      const restoreRankingResponse = await requestSupabase(
+        `rankings?${new URLSearchParams({
+          id: `eq.${previous.id}`,
+          user_id: `eq.${params.userId}`,
+        }).toString()}`,
+        {
+          method: "PATCH",
+          body: {
+            title: previous.title,
+            tag_id: previous.tagId,
+            updated_at: previous.updatedAt,
+          },
+        },
+      );
+      await ensureResponseOk(restoreRankingResponse);
+      const restoreItemsResponse = await requestSupabase("ranking_items", {
+        method: "POST",
+        body: previous.items.map((item, index) => ({
+          ranking_id: previous.id,
+          rank: index + 1,
+          item_text: item,
+        })),
+      });
+      await ensureResponseOk(restoreItemsResponse);
+    } catch {
+      // best-effort rollback
+    }
+    throw error;
+  }
 
   const updated = await getRankingById({
     userId: params.userId,
@@ -219,7 +293,11 @@ export async function updateRanking(params: {
   return updated;
 }
 
-export async function deleteRanking(params: { rankingId: string; userId: string }) {
+export async function deleteRanking(params: {
+  rankingId: string;
+  userId: string;
+  expectedUpdatedAt: string;
+}) {
   const existing = await getRankingById({
     userId: params.userId,
     rankingId: params.rankingId,
@@ -227,22 +305,48 @@ export async function deleteRanking(params: { rankingId: string; userId: string 
   if (!existing) {
     return;
   }
+  if (existing.updatedAt !== params.expectedUpdatedAt) {
+    throw new ConflictError("Ranking was modified by another request.");
+  }
 
   const deleteItemsQuery = new URLSearchParams({ ranking_id: `eq.${params.rankingId}` });
-  const deleteItemsResponse = await requestSupabase(
-    `ranking_items?${deleteItemsQuery.toString()}`,
-    {
-      method: "DELETE",
-    },
-  );
-  await ensureResponseOk(deleteItemsResponse);
+  try {
+    const deleteItemsResponse = await requestSupabase(
+      `ranking_items?${deleteItemsQuery.toString()}`,
+      {
+        method: "DELETE",
+      },
+    );
+    await ensureResponseOk(deleteItemsResponse);
 
-  const query = new URLSearchParams({
-    id: `eq.${params.rankingId}`,
-    user_id: `eq.${params.userId}`,
-  });
-  const response = await requestSupabase(`rankings?${query.toString()}`, {
-    method: "DELETE",
-  });
-  await ensureResponseOk(response);
+    const query = new URLSearchParams({
+      id: `eq.${params.rankingId}`,
+      user_id: `eq.${params.userId}`,
+      updated_at: `eq.${params.expectedUpdatedAt}`,
+    });
+    const response = await requestSupabase(`rankings?${query.toString()}`, {
+      method: "DELETE",
+      prefer: "return=representation",
+    });
+    await ensureResponseOk(response);
+    const deletedRows = (await response.json()) as Array<{ id: string }>;
+    if (deletedRows.length === 0) {
+      throw new ConflictError("Ranking was modified by another request.");
+    }
+  } catch (error) {
+    try {
+      const restoreItemsResponse = await requestSupabase("ranking_items", {
+        method: "POST",
+        body: existing.items.map((item, index) => ({
+          ranking_id: existing.id,
+          rank: index + 1,
+          item_text: item,
+        })),
+      });
+      await ensureResponseOk(restoreItemsResponse);
+    } catch {
+      // best-effort rollback
+    }
+    throw error;
+  }
 }

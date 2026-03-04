@@ -2,6 +2,7 @@ import { z } from "zod";
 import { NextResponse } from "next/server";
 
 import {
+  ConflictError,
   deleteRanking,
   getRankingById,
   updateRanking,
@@ -10,6 +11,7 @@ import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
 
 const updateSchema = z.object({
   userId: z.string().min(1),
+  expectedUpdatedAt: z.string().min(1),
   ranking: z.object({
     title: z.string().trim().min(1, "タイトルは必須です。"),
     tagId: z.string().trim().min(1, "タグは必須です。"),
@@ -29,9 +31,10 @@ export async function GET(
 ) {
   const url = new URL(request.url);
   const userId = url.searchParams.get("userId") ?? "";
+  const expectedUpdatedAt = url.searchParams.get("expectedUpdatedAt") ?? "";
   const { id } = await params;
 
-  if (!userId) {
+  if (!userId || !expectedUpdatedAt) {
     return NextResponse.json(
       { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
       { status: 422 },
@@ -96,9 +99,16 @@ export async function PATCH(
       title: parsed.data.ranking.title,
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
+      expectedUpdatedAt: parsed.data.expectedUpdatedAt,
     });
     return NextResponse.json({ data });
   } catch (error) {
+    if (error instanceof ConflictError) {
+      return NextResponse.json(
+        { error: { code: "CONFLICT", message: error.message } },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       {
         error: {
@@ -127,9 +137,15 @@ export async function DELETE(
 
   const { id } = await params;
   try {
-    await deleteRanking({ rankingId: id, userId });
+    await deleteRanking({ rankingId: id, userId, expectedUpdatedAt });
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof ConflictError) {
+      return NextResponse.json(
+        { error: { code: "CONFLICT", message: error.message } },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       {
         error: {
@@ -141,4 +157,3 @@ export async function DELETE(
     );
   }
 }
-
