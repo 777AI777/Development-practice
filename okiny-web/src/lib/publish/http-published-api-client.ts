@@ -128,8 +128,11 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     const response = await fetch(`/api/v1/rankings/${rankingId}?${params.toString()}`, {
       method: "DELETE",
     });
-    const body = await parseJson<{ ok: boolean }>(response);
-    if (!response.ok || !body.data?.ok) {
+    const body = (await parseJson<{ ok: boolean }>(response)) as ApiResponse<{ ok: boolean }> & {
+      ok?: boolean;
+    };
+    const isOk = body.data?.ok ?? body.ok;
+    if (!response.ok || isOk !== true) {
       throw new PublishedApiError(
         body.error?.code ?? mapStatusToErrorCode(response.status),
         body.error?.message ?? "Failed to delete ranking.",

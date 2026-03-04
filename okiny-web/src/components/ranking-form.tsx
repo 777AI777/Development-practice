@@ -25,8 +25,8 @@ function validateInput(value: RankingInput): string | null {
   if (!value.tagId.trim()) {
     return "タグは必須です。";
   }
-  if (value.items.some((item) => !item.trim())) {
-    return "ランキング項目は5件すべて入力してください。";
+  if (!value.items.some((item) => item.trim().length > 0)) {
+    return "ランキング順位は1つ以上入力してください。";
   }
   return null;
 }
@@ -236,7 +236,7 @@ export function RankingForm({
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-slate-700">トップ5項目</legend>
+        <legend className="text-sm font-semibold text-slate-700">トップ5順位</legend>
         {form.items.map((item, index) => (
           <div key={index} className="flex items-center gap-3">
             <span className="w-6 text-center text-sm font-bold">{index + 1}</span>
@@ -250,9 +250,7 @@ export function RankingForm({
         ))}
       </fieldset>
 
-      {autosaveText ? (
-        <p className="text-xs font-medium text-slate-500">{autosaveText}</p>
-      ) : null}
+      {autosaveText ? <p className="text-xs font-medium text-slate-500">{autosaveText}</p> : null}
 
       {errorMessage ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">

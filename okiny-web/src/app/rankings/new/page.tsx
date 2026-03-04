@@ -1,17 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { RankingForm } from "@/components/ranking-form";
 import { useToast } from "@/components/toast-provider";
+import { useSessionUser } from "@/hooks/use-session-user";
+import { trackEvent } from "@/lib/analytics";
 import { draftRepository } from "@/lib/drafts/client-repository";
 import { saveDraftWithFeedback } from "@/lib/drafts/save-draft-with-feedback";
-import { trackEvent } from "@/lib/analytics";
-import { publishRanking } from "@/lib/publish/publish-ranking";
 import { publishedApiClient } from "@/lib/publish/client";
-import { useSessionUser } from "@/hooks/use-session-user";
+import { publishRanking } from "@/lib/publish/publish-ranking";
 import type { RankingInput, RankingItems } from "@/lib/types";
 
 function toRankingItems(items: string[]): RankingItems {
@@ -116,6 +117,14 @@ function NewRankingPageContent() {
     <AppShell
       title="ランキング作成"
       subtitle="作成または下書き保存。モック03に対応。"
+      headerActions={
+        <Link
+          href="/drafts"
+          className="inline-flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          下書き一覧へ
+        </Link>
+      }
     >
       <RankingForm
         key={activeDraftId ?? "new"}
