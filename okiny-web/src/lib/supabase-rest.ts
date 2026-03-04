@@ -220,6 +220,23 @@ export async function updateRanking(params: {
 }
 
 export async function deleteRanking(params: { rankingId: string; userId: string }) {
+  const existing = await getRankingById({
+    userId: params.userId,
+    rankingId: params.rankingId,
+  });
+  if (!existing) {
+    return;
+  }
+
+  const deleteItemsQuery = new URLSearchParams({ ranking_id: `eq.${params.rankingId}` });
+  const deleteItemsResponse = await requestSupabase(
+    `ranking_items?${deleteItemsQuery.toString()}`,
+    {
+      method: "DELETE",
+    },
+  );
+  await ensureResponseOk(deleteItemsResponse);
+
   const query = new URLSearchParams({
     id: `eq.${params.rankingId}`,
     user_id: `eq.${params.userId}`,
@@ -229,4 +246,3 @@ export async function deleteRanking(params: { rankingId: string; userId: string 
   });
   await ensureResponseOk(response);
 }
-
