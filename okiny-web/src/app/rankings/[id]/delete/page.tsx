@@ -15,13 +15,16 @@ export default function DeleteRankingPage() {
   const params = useParams<{ id: string }>();
   const rankingId = params.id;
   const router = useRouter();
-  const { user } = useSessionUser();
+  const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string | undefined>();
 
   useEffect(() => {
+    if (!isReady) {
+      return;
+    }
     if (!user) {
       return;
     }
@@ -55,7 +58,7 @@ export default function DeleteRankingPage() {
     return () => {
       canceled = true;
     };
-  }, [pushToast, rankingId, user]);
+  }, [isReady, pushToast, rankingId, user]);
 
   const runDelete = async () => {
     if (!user) return;

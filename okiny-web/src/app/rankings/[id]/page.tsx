@@ -15,7 +15,7 @@ import type { PublishedRanking } from "@/lib/types";
 export default function RankingDetailPage() {
   const params = useParams<{ id: string }>();
   const rankingId = params.id;
-  const { user } = useSessionUser();
+  const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -23,6 +23,9 @@ export default function RankingDetailPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isReady) {
+      return;
+    }
     if (!user) {
       return;
     }
@@ -60,7 +63,7 @@ export default function RankingDetailPage() {
     return () => {
       canceled = true;
     };
-  }, [pushToast, rankingId, user]);
+  }, [isReady, pushToast, rankingId, user]);
 
   return (
     <AppShell
@@ -115,4 +118,3 @@ export default function RankingDetailPage() {
     </AppShell>
   );
 }
-

@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import { NextResponse } from "next/server";
 
 import {
@@ -13,10 +13,10 @@ const updateSchema = z.object({
   userId: z.string().min(1),
   expectedUpdatedAt: z.string().min(1),
   ranking: z.object({
-    title: z.string().trim().min(1, "タイトルは必須です。"),
-    tagId: z.string().trim().min(1, "タグは必須です。"),
+    title: z.string().trim().min(1, "Title is required."),
+    tagId: z.string().trim().min(1, "Tag is required."),
     items: z
-      .array(z.string().trim().min(1, "ランキング項目はすべて必須です。"))
+      .array(z.string().trim().min(1, "Item is required."))
       .length(RANKING_ITEM_COUNT),
   }),
 });
@@ -31,12 +31,11 @@ export async function GET(
 ) {
   const url = new URL(request.url);
   const userId = url.searchParams.get("userId") ?? "";
-  const expectedUpdatedAt = url.searchParams.get("expectedUpdatedAt") ?? "";
   const { id } = await params;
 
-  if (!userId || !expectedUpdatedAt) {
+  if (!userId) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
+      { error: { code: "VALIDATION", message: "userId is required." } },
       { status: 422 },
     );
   }
@@ -45,7 +44,7 @@ export async function GET(
     const data = await getRankingById({ userId, rankingId: id });
     if (!data) {
       return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "ランキングが見つかりません。" } },
+        { error: { code: "NOT_FOUND", message: "Ranking not found." } },
         { status: 404 },
       );
     }
@@ -55,7 +54,7 @@ export async function GET(
       {
         error: {
           code: "SERVER",
-          message: error instanceof Error ? error.message : "ランキングの読み込みに失敗しました。",
+          message: error instanceof Error ? error.message : "Failed to load ranking.",
         },
       },
       { status: 500 },
@@ -113,7 +112,7 @@ export async function PATCH(
       {
         error: {
           code: "SERVER",
-          message: error instanceof Error ? error.message : "ランキングの更新に失敗しました。",
+          message: error instanceof Error ? error.message : "Failed to update ranking.",
         },
       },
       { status: 500 },
@@ -127,10 +126,11 @@ export async function DELETE(
 ) {
   const url = new URL(request.url);
   const userId = url.searchParams.get("userId") ?? "";
+  const expectedUpdatedAt = url.searchParams.get("expectedUpdatedAt") ?? "";
 
-  if (!userId) {
+  if (!userId || !expectedUpdatedAt) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
+      { error: { code: "VALIDATION", message: "userId and expectedUpdatedAt are required." } },
       { status: 422 },
     );
   }
@@ -150,7 +150,7 @@ export async function DELETE(
       {
         error: {
           code: "SERVER",
-          message: error instanceof Error ? error.message : "ランキングの削除に失敗しました。",
+          message: error instanceof Error ? error.message : "Failed to delete ranking.",
         },
       },
       { status: 500 },

@@ -18,7 +18,7 @@ export default function RankingEditPage() {
   const params = useParams<{ id: string }>();
   const rankingId = params.id;
   const router = useRouter();
-  const { user } = useSessionUser();
+  const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +26,9 @@ export default function RankingEditPage() {
   const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string | undefined>();
 
   useEffect(() => {
+    if (!isReady) {
+      return;
+    }
     if (!user) {
       return;
     }
@@ -69,7 +72,7 @@ export default function RankingEditPage() {
     return () => {
       canceled = true;
     };
-  }, [pushToast, rankingId, user]);
+  }, [isReady, pushToast, rankingId, user]);
 
   const handleSubmit = async (value: RankingInput) => {
     if (!user) return;
