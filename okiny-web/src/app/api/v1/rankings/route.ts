@@ -1,17 +1,22 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { createRanking, listRankingsByUser } from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
+
+const rankingItemsSchema = z
+  .array(z.string().transform((value) => value.trim()))
+  .length(RANKING_ITEM_COUNT)
+  .refine((items) => items.some((item) => item.length > 0), {
+    message: "ランキング順位は1つ以上入力してください。",
+  });
 
 const createSchema = z.object({
   userId: z.string().min(1),
   ranking: z.object({
     title: z.string().trim().min(1, "タイトルは必須です。"),
     tagId: z.string().trim().min(1, "タグは必須です。"),
-    items: z
-      .array(z.string().trim().min(1, "ランキング項目はすべて必須です。"))
-      .length(RANKING_ITEM_COUNT),
+    items: rankingItemsSchema,
   }),
 });
 
@@ -94,4 +99,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

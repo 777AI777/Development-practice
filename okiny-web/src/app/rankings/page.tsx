@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { useSessionUser } from "@/hooks/use-session-user";
@@ -87,6 +87,12 @@ function RankingsPageContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rankings, setRankings] = useState<PublishedRanking[]>([]);
 
+  useLayoutEffect(() => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setRankings([]);
+  }, [requestedState, user?.id]);
+
   useEffect(() => {
     if (!isReady) {
       return;
@@ -96,19 +102,16 @@ function RankingsPageContent() {
     }
 
     if (requestedState === "loading") {
-      setIsLoading(true);
       return;
     }
     if (requestedState === "error") {
       setIsLoading(false);
       setErrorMessage("シミュレーション用のエラー状態です。");
-      setRankings([]);
       return;
     }
     if (requestedState === "empty") {
       setIsLoading(false);
       setErrorMessage(null);
-      setRankings([]);
       return;
     }
 

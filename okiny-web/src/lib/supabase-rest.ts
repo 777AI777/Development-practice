@@ -1,4 +1,4 @@
-import type { SupabaseRankingRow } from "@/lib/types";
+﻿import type { SupabaseRankingRow } from "@/lib/types";
 
 interface SupabaseEnv {
   url: string;
@@ -90,6 +90,27 @@ async function ensureResponseOk(response: Response): Promise<void> {
   throw new Error(`Supabase REST failed (${response.status}): ${detail}`);
 }
 
+function buildRankingItemsPayload(params: {
+  rankingId: string;
+  items: [string, string, string, string, string];
+}) {
+  return params.items
+    .map((item, index) => ({
+      ranking_id: params.rankingId,
+      rank: index + 1,
+      item_text: item.trim(),
+    }))
+    .filter((item) => item.item_text.length > 0);
+}
+
+async function deleteRankingById(rankingId: string): Promise<void> {
+  const query = new URLSearchParams({ id: `eq.${rankingId}` });
+  const response = await requestSupabase(`rankings?${query.toString()}`, {
+    method: "DELETE",
+  });
+  await ensureResponseOk(response);
+}
+
 export async function listRankingsByUser(params: {
   userId: string;
   tagId?: string;
@@ -155,11 +176,14 @@ export async function createRanking(params: {
     throw new Error("Ranking insert did not return id.");
   }
 
-  const itemsBody = params.items.map((item, index) => ({
-    ranking_id: rankingId,
-    rank: index + 1,
-    item_text: item,
-  }));
+  const itemsBody = buildRankingItemsPayload({
+    rankingId,
+    items: params.items,
+  });
+  if (itemsBody.length === 0) {
+    await deleteRankingById(rankingId);
+    throw new Error("Ranking must contain at least one non-empty item.");
+  }
 
   try {
     const itemInsertResponse = await requestSupabase("ranking_items", {
@@ -168,16 +192,8 @@ export async function createRanking(params: {
     });
     await ensureResponseOk(itemInsertResponse);
   } catch (error) {
-    const rollbackQuery = new URLSearchParams({
-      id: `eq.${rankingId}`,
-      user_id: `eq.${params.userId}`,
-    });
     try {
-      const rollbackResponse = await requestSupabase(
-        `rankings?${rollbackQuery.toString()}`,
-        { method: "DELETE" },
-      );
-      await ensureResponseOk(rollbackResponse);
+      await deleteRankingById(rankingId);
     } catch {
       // best-effort rollback
     }
@@ -207,6 +223,14 @@ export async function updateRanking(params: {
   }
   if (previous.updatedAt !== params.expectedUpdatedAt) {
     throw new ConflictError("Ranking was modified by another request.");
+  }
+
+  const itemsBody = buildRankingItemsPayload({
+    rankingId: params.rankingId,
+    items: params.items,
+  });
+  if (itemsBody.length === 0) {
+    throw new Error("Ranking must contain at least one non-empty item.");
   }
 
   const updateQuery = new URLSearchParams({
@@ -244,11 +268,7 @@ export async function updateRanking(params: {
 
     const itemInsertResponse = await requestSupabase("ranking_items", {
       method: "POST",
-      body: params.items.map((item, index) => ({
-        ranking_id: params.rankingId,
-        rank: index + 1,
-        item_text: item,
-      })),
+      body: itemsBody,
     });
     await ensureResponseOk(itemInsertResponse);
   } catch (error) {

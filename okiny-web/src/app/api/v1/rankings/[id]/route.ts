@@ -1,5 +1,5 @@
-﻿import { z } from "zod";
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import {
   ConflictError,
@@ -9,15 +9,20 @@ import {
 } from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
 
+const rankingItemsSchema = z
+  .array(z.string().transform((value) => value.trim()))
+  .length(RANKING_ITEM_COUNT)
+  .refine((items) => items.some((item) => item.length > 0), {
+    message: "At least one item is required.",
+  });
+
 const updateSchema = z.object({
   userId: z.string().min(1),
   expectedUpdatedAt: z.string().min(1),
   ranking: z.object({
     title: z.string().trim().min(1, "Title is required."),
     tagId: z.string().trim().min(1, "Tag is required."),
-    items: z
-      .array(z.string().trim().min(1, "Item is required."))
-      .length(RANKING_ITEM_COUNT),
+    items: rankingItemsSchema,
   }),
 });
 
