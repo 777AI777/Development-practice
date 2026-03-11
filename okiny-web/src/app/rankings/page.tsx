@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { useSessionUser } from "@/hooks/use-session-user";
@@ -86,6 +86,13 @@ function RankingsPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rankings, setRankings] = useState<PublishedRanking[]>([]);
+  const [collapsedTagIds, setCollapsedTagIds] = useState<string[]>([]);
+
+  const toggleTagAccordion = useCallback((tagId: string) => {
+    setCollapsedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
+    );
+  }, []);
 
   useLayoutEffect(() => {
     setIsLoading(true);
@@ -223,16 +230,30 @@ function RankingsPageContent() {
 
     return (
       <div className="space-y-3">
-        {groupedRankings.map((group) => (
+        {groupedRankings.map((group) => {
+          const isCollapsed = collapsedTagIds.includes(group.tagId);
+          const panelId = `tag-panel-${group.tagId}`;
+
+          return (
           <section key={group.tagId} className="space-y-1.5">
-            <div className="flex h-9 items-center justify-between rounded-lg border border-[#C4CDD5] bg-[#E9EEF3] px-4">
+            <button
+              type="button"
+              onClick={() => toggleTagAccordion(group.tagId)}
+              aria-expanded={!isCollapsed}
+              aria-controls={panelId}
+              className="flex h-9 w-full items-center justify-between rounded-lg border border-[#C4CDD5] bg-[#E9EEF3] px-4 text-left hover:bg-[#DFE6EC]"
+            >
               <p className="text-sm font-bold text-[#1A1A1A] sm:text-base">
                 {TEXT.tagPrefix}: {getTagLabel(group.tagId)}
               </p>
-              <span className="text-xs font-bold text-[#55606E]">{"\u25BC"}</span>
-            </div>
+              <span
+                className={`text-xs font-bold text-[#55606E] transition-transform ${isCollapsed ? "-rotate-90" : "rotate-0"}`}
+              >
+                {"\u25BC"}
+              </span>
+            </button>
 
-            <ul className="space-y-1.5">
+            <ul id={panelId} className={`space-y-1.5 ${isCollapsed ? "hidden" : ""}`}>
               {group.items.map((ranking) => (
                 <li
                   key={ranking.id}
@@ -273,10 +294,11 @@ function RankingsPageContent() {
               ))}
             </ul>
           </section>
-        ))}
+          );
+        })}
       </div>
     );
-  }, [errorMessage, groupedRankings, isLoading, rankings.length]);
+  }, [collapsedTagIds, errorMessage, groupedRankings, isLoading, rankings.length, toggleTagAccordion]);
 
   return (
     <AppShell

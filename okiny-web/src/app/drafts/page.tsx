@@ -6,9 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
-import { MAX_DRAFTS_PER_USER } from "@/lib/drafts/constants";
 import { draftRepository } from "@/lib/drafts/client-repository";
-import { SHOW_STATE_SCREENS } from "@/lib/features";
+import { MAX_DRAFTS_PER_USER } from "@/lib/drafts/constants";
 import { publishedApiClient } from "@/lib/publish/client";
 import { publishRanking } from "@/lib/publish/publish-ranking";
 import type { DraftLocalRecord } from "@/lib/types";
@@ -71,11 +70,6 @@ export default function DraftsPage() {
           <Link href="/rankings/new" className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white">
             新規ランキング作成
           </Link>
-          {SHOW_STATE_SCREENS ? (
-            <Link href="/states/empty-drafts" className="rounded-md border border-slate-300 px-4 py-2 text-sm">
-              空の下書き画面を開く (11)
-            </Link>
-          ) : null}
         </div>
 
         <p className="text-sm text-slate-600">

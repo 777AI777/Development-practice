@@ -23,7 +23,6 @@ export const SCREEN_ROUTES: ScreenRoute[] = [
   { href: "/notifications", label: "通知", group: "sns" },
   { href: "/states/empty-list", label: "09 空一覧", group: "states" },
   { href: "/states/empty-search", label: "10 検索結果なし", group: "states" },
-  { href: "/states/empty-drafts", label: "11 下書きなし", group: "states" },
   { href: "/states/error-catalog", label: "12 エラー状態一覧", group: "states" },
   { href: "/states/loading", label: "13 ローディング", group: "states" },
   { href: "/states/auth-error", label: "14 認証エラー", group: "states" },
