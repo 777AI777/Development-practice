@@ -23,6 +23,13 @@ export function getDisplayNameMap(): Record<string, string> {
   }
 }
 
+export function getSessionUserId(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.localStorage.getItem(SESSION_USER_ID_KEY);
+}
+
 export function setDisplayName(userId: string, displayName: string): void {
   if (typeof window === "undefined") {
     return;

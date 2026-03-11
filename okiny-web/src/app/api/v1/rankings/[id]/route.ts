@@ -1,21 +1,27 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { deleteRanking, getRankingById, updateRanking } from "@/lib/supabase-rest";
+import {
+  ConflictError,
+  deleteRanking,
+  getRankingById,
+  updateRanking,
+} from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
 
 const rankingItemsSchema = z
   .array(z.string().transform((value) => value.trim()))
   .length(RANKING_ITEM_COUNT)
   .refine((items) => items.some((item) => item.length > 0), {
-    message: "ランキング順位は1つ以上入力してください。",
+    message: "At least one item is required.",
   });
 
 const updateSchema = z.object({
   userId: z.string().min(1),
+  expectedUpdatedAt: z.string().min(1),
   ranking: z.object({
-    title: z.string().trim().min(1, "タイトルは必須です。"),
-    tagId: z.string().trim().min(1, "タグは必須です。"),
+    title: z.string().trim().min(1, "Title is required."),
+    tagId: z.string().trim().min(1, "Tag is required."),
     items: rankingItemsSchema,
   }),
 });
@@ -34,7 +40,7 @@ export async function GET(
 
   if (!userId) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
+      { error: { code: "VALIDATION", message: "userId is required." } },
       { status: 422 },
     );
   }
@@ -43,7 +49,7 @@ export async function GET(
     const data = await getRankingById({ userId, rankingId: id });
     if (!data) {
       return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "ランキングが見つかりません。" } },
+        { error: { code: "NOT_FOUND", message: "Ranking not found." } },
         { status: 404 },
       );
     }
@@ -53,7 +59,7 @@ export async function GET(
       {
         error: {
           code: "SERVER",
-          message: error instanceof Error ? error.message : "ランキングの読み込みに失敗しました。",
+          message: error instanceof Error ? error.message : "Failed to load ranking.",
         },
       },
       { status: 500 },
@@ -97,14 +103,21 @@ export async function PATCH(
       title: parsed.data.ranking.title,
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
+      expectedUpdatedAt: parsed.data.expectedUpdatedAt,
     });
     return NextResponse.json({ data });
   } catch (error) {
+    if (error instanceof ConflictError) {
+      return NextResponse.json(
+        { error: { code: "CONFLICT", message: error.message } },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       {
         error: {
           code: "SERVER",
-          message: error instanceof Error ? error.message : "ランキングの更新に失敗しました。",
+          message: error instanceof Error ? error.message : "Failed to update ranking.",
         },
       },
       { status: 500 },
@@ -118,24 +131,31 @@ export async function DELETE(
 ) {
   const url = new URL(request.url);
   const userId = url.searchParams.get("userId") ?? "";
+  const expectedUpdatedAt = url.searchParams.get("expectedUpdatedAt") ?? "";
 
-  if (!userId) {
+  if (!userId || !expectedUpdatedAt) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
+      { error: { code: "VALIDATION", message: "userId and expectedUpdatedAt are required." } },
       { status: 422 },
     );
   }
 
   const { id } = await params;
   try {
-    await deleteRanking({ rankingId: id, userId });
-    return NextResponse.json({ data: { ok: true } });
+    await deleteRanking({ rankingId: id, userId, expectedUpdatedAt });
+    return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof ConflictError) {
+      return NextResponse.json(
+        { error: { code: "CONFLICT", message: error.message } },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       {
         error: {
           code: "SERVER",
-          message: error instanceof Error ? error.message : "ランキングの削除に失敗しました。",
+          message: error instanceof Error ? error.message : "Failed to delete ranking.",
         },
       },
       { status: 500 },

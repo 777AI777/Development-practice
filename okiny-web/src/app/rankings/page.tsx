@@ -81,7 +81,7 @@ function groupRankingsByTag(rankings: PublishedRanking[]) {
 function RankingsPageContent() {
   const searchParams = useSearchParams();
   const requestedState = searchParams.get("state");
-  const { user } = useSessionUser();
+  const { isReady, user } = useSessionUser();
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -101,6 +101,9 @@ function RankingsPageContent() {
   }, [requestedState, user?.id]);
 
   useEffect(() => {
+    if (!isReady) {
+      return;
+    }
     if (!user) {
       return;
     }
@@ -151,7 +154,7 @@ function RankingsPageContent() {
     return () => {
       canceled = true;
     };
-  }, [requestedState, user]);
+  }, [isReady, requestedState, user]);
 
   const groupedRankings = useMemo(() => groupRankingsByTag(rankings), [rankings]);
   const isEmpty = !isLoading && !errorMessage && rankings.length === 0;

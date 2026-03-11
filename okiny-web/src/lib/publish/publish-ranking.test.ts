@@ -40,10 +40,10 @@ describe("publishRanking", () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
-      updatePublishedRanking: async () => {
+      updatePublishedRanking: async (_input) => {
         throw new Error("not used in this test");
       },
-      deletePublishedRanking: async () => {},
+      deletePublishedRanking: async (_userId, _rankingId, _expectedUpdatedAt) => {},
     };
 
     const result = await publishRanking({

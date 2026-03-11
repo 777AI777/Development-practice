@@ -18,13 +18,17 @@ export default function RankingEditPage() {
   const params = useParams<{ id: string }>();
   const rankingId = params.id;
   const router = useRouter();
-  const { user } = useSessionUser();
+  const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
   const [initialValue, setInitialValue] = useState<RankingInput | undefined>();
+  const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string | undefined>();
 
   useEffect(() => {
+    if (!isReady) {
+      return;
+    }
     if (!user) {
       return;
     }
@@ -34,6 +38,7 @@ export default function RankingEditPage() {
         tagId: DEMO_RANKING.tagId,
         items: DEMO_RANKING.items,
       });
+      setExpectedUpdatedAt(undefined);
       setIsLoading(false);
       return;
     }
@@ -49,6 +54,7 @@ export default function RankingEditPage() {
           tagId: ranking.tagId,
           items: ranking.items,
         });
+        setExpectedUpdatedAt(ranking.updatedAt);
       })
       .catch((error: unknown) => {
         if (canceled) return;
@@ -66,15 +72,23 @@ export default function RankingEditPage() {
     return () => {
       canceled = true;
     };
-  }, [pushToast, rankingId, user]);
+  }, [isReady, pushToast, rankingId, user]);
 
   const handleSubmit = async (value: RankingInput) => {
     if (!user) return;
+    if (!expectedUpdatedAt) {
+      pushToast({
+        type: "error",
+        message: "最新の更新日時が取得できませんでした。再読み込みしてください。",
+      });
+      return;
+    }
     try {
       await publishedApiClient.updatePublishedRanking({
         userId: user.id,
         rankingId,
         ranking: value,
+        expectedUpdatedAt,
       });
       pushToast({ type: "success", message: "ランキングを更新しました。" });
       router.push(`/rankings/${rankingId}`);
