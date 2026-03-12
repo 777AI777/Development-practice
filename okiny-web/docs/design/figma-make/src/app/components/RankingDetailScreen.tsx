@@ -52,7 +52,7 @@ export function RankingDetailScreen({ onNavigate, onSidebarToggle }: RankingDeta
             style={{ color: "var(--foreground)" }}
             onClick={() => onNavigate("rankings")}
           >
-            ＜
+            ←
           </button>
         </div>
 
@@ -73,7 +73,7 @@ export function RankingDetailScreen({ onNavigate, onSidebarToggle }: RankingDeta
             <button
               type="button"
               onClick={() => setMenuOpen((prev) => !prev)}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition bg-transparent border-none cursor-pointer"
+              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition bg-transparent border-none cursor-pointer text-2xl font-black scale-110"
               aria-label="メニュー"
               style={{ color: "var(--foreground)" }}
             >

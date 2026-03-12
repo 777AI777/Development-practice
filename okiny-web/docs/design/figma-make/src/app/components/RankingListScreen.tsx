@@ -247,13 +247,13 @@ export function RankingListScreen({
       </div>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 h-[60px] border-t z-40 flex"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] h-[60px] border-t border-l border-r rounded-t-lg z-40 flex"
         style={{
           backgroundColor: "var(--card)",
           borderColor: "var(--border)",
         }}
       >
-        <div className="flex w-full max-w-[480px] mx-auto">
+        <div className="flex w-full">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (

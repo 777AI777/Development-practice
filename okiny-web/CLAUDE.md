@@ -42,7 +42,7 @@
 - `src/app/api/v1/rankings/[id]/comments/` — **Mock**（インメモリ、rankings配下だがSNS機能）
 - `src/app/api/v1/rankings/[id]/reactions/` — **Mock**（同上）
 - `src/app/api/v1/feed/`, `follows/`, `profiles/` — **Mock**（インメモリ）
-- `ENABLE_SNS_EXPANSION=false` の時、Mock API系の画面・ルートは非表示
+- `ENABLE_SNS_EXPANSION=false` の時、Mock API系の**画面・導線は非表示**（APIルート自体は残る。バックエンド側にフラグガードなし）
 - Mock APIに本番品質のバリデーションやエラーハンドリングを実装しない
 - 本番APIの修正時にMock APIの実装を参考にしない
 

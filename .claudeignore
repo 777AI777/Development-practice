@@ -8,11 +8,6 @@ dist/
 out/
 build/
 
-# Package Lock Files
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
 # OS Files
 .DS_Store
 Thumbs.db

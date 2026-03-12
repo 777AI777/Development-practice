@@ -20,8 +20,7 @@ interface SidebarProps {
 
 const MENU_ITEMS: { label: string; screen: Screen; icon: string }[] = [
   { label: "設定", screen: "settings", icon: "⚙" },
-  { label: "下書き", screen: "drafts", icon: "📝" },
-  { label: "ログアウト", screen: "logout-confirm", icon: "🚪" },
+  { label: "ログアウト", screen: "logout-confirm", icon: "↩" },
 ];
 
 interface SettingsMenuItem {
@@ -84,7 +83,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
               className="w-8 h-8 flex items-center justify-center text-lg font-bold bg-transparent border-none cursor-pointer"
               style={{ color: "var(--foreground)" }}
             >
-              ＜
+              ←
             </button>
           ) : (
             <span

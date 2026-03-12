@@ -48,7 +48,7 @@ export function DraftsScreen({ onNavigate, onSidebarToggle }: DraftsScreenProps)
           className="w-8 h-8 flex items-center justify-center text-lg font-bold bg-transparent border-none cursor-pointer mb-4"
           style={{ color: "var(--foreground)" }}
         >
-          ＜
+          ←
         </button>
 
         <h1 className="text-xl font-bold mb-6" style={{ color: "var(--foreground)" }}>下書き一覧</h1>

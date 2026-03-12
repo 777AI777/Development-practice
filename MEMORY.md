@@ -37,7 +37,7 @@
 
 - PATCH/DELETEで `expectedUpdatedAt` を送り忘れると409にならず不整合が起きる
 - `supabase-rest.ts` の `ConflictError` を必ずキャッチすること
-- 更新後はレスポンスの `updated_at` でクライアント側の値を必ず更新
+- 更新後はレスポンスの `updatedAt` でクライアント側の値を必ず更新（`supabase-rest.ts` が snake→camelCase変換済み）
 - **SSoT**: `.claude/rules/api.md` の楽観ロック5ステップを参照
 
 ### IndexedDB 下書き管理

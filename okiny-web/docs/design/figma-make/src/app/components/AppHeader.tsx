@@ -48,11 +48,12 @@ export function AppHeader({
   };
 
   return (
+    <>
     <header
-      className="sticky top-0 z-30 h-14 border-b flex items-center px-4"
+      className="fixed top-0 left-1/2 z-30 flex h-14 w-full max-w-[480px] -translate-x-1/2 items-center border-b px-4"
       style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}
     >
-      <div className="flex items-center justify-between w-full max-w-[480px] mx-auto gap-3">
+      <div className="flex items-center justify-between w-full gap-3">
         <button
           onClick={() => onNavigate("rankings")}
           className="font-bold text-lg shrink-0 cursor-pointer bg-transparent border-none"
@@ -101,7 +102,7 @@ export function AppHeader({
         <button
           type="button"
           onClick={onSidebarToggle ?? (() => onNavigate("settings"))}
-          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 cursor-pointer border-none text-xs font-bold md:hidden"
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 cursor-pointer border-none text-xs font-bold min-[1040px]:hidden"
           style={{
             backgroundColor: "var(--primary)",
             color: "var(--primary-foreground)",
@@ -112,5 +113,7 @@ export function AppHeader({
         </button>
       </div>
     </header>
+    <div className="h-14 w-full shrink-0" aria-hidden="true" />
+    </>
   );
 }

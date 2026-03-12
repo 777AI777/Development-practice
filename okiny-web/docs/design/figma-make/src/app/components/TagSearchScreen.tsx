@@ -80,7 +80,7 @@ export function TagSearchScreen({
           className="w-8 h-8 flex items-center justify-center text-lg font-bold bg-transparent border-none cursor-pointer mb-4"
           style={{ color: "var(--foreground)" }}
         >
-          ＜
+          ←
         </button>
 
         <div className="mb-8">

@@ -67,29 +67,46 @@ export function RankingFormScreen({ mode, onNavigate, onSidebarToggle }: Ranking
       <AppHeader onNavigate={onNavigate} onSidebarToggle={onSidebarToggle} />
 
       <div className="max-w-[480px] w-full mx-auto flex-1 flex flex-col overflow-hidden">
-        <div className="shrink-0 p-4 space-y-3">
-          <button
-            onClick={handleBack}
-            className="w-8 h-8 flex items-center justify-center text-lg font-bold bg-transparent border-none cursor-pointer"
-            style={{ color: "var(--foreground)" }}
-          >
-            ＜
-          </button>
+        <div className="shrink-0 p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBack}
+              className="w-8 h-8 flex items-center justify-center text-lg font-bold bg-transparent border-none cursor-pointer"
+              style={{ color: "var(--foreground)" }}
+            >
+              ←
+            </button>
+            <div className="flex-1 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => onNavigate("drafts")}
+              >
+                下書き保存
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => onNavigate("rankings")}
+              >
+                公開する
+              </Button>
+            </div>
+          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="ranking-title">タイトル</Label>
+          <div className="flex items-center gap-3">
+            <Label htmlFor="ranking-title" className="w-16 shrink-0">タイトル</Label>
             <Input
               id="ranking-title"
+              className="flex-1"
               placeholder="ランキングタイトル"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="ranking-tag">タグ選択</Label>
+          <div className="flex items-center gap-3">
+            <Label htmlFor="ranking-tag" className="w-16 shrink-0">タグ</Label>
             <Select value={tag} onValueChange={setTag}>
-              <SelectTrigger id="ranking-tag">
+              <SelectTrigger id="ranking-tag" className="flex-1">
                 <SelectValue placeholder="タグを選択" />
               </SelectTrigger>
               <SelectContent>
@@ -101,36 +118,19 @@ export function RankingFormScreen({ mode, onNavigate, onSidebarToggle }: Ranking
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex gap-3 w-full">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => onNavigate("drafts")}
-            >
-              下書き保存
-            </Button>
-            <Button
-              variant="default"
-              className="flex-1"
-              onClick={() => onNavigate("rankings")}
-            >
-              公開する
-            </Button>
-          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           <Card className="p-6 space-y-3">
             <Label>ランキングアイテム</Label>
             {RANK_LABELS.map((label, index) => (
-              <div key={label} className="space-y-1">
-                <Label htmlFor={`item-${index}`} className="text-sm">
+              <div key={label} className="flex items-center gap-3">
+                <Label htmlFor={`item-${index}`} className="w-10 shrink-0 text-sm">
                   {label}
                 </Label>
                 <Input
                   id={`item-${index}`}
-                  placeholder={`${label}のアイテム名`}
+                  className="flex-1"
                   value={items[index]}
                   onChange={(e) => handleItemChange(index, e.target.value)}
                 />

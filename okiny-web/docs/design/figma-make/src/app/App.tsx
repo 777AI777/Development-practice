@@ -132,142 +132,139 @@ export default function App() {
   const showSidePanel = showSidePanelScreens.includes(currentScreen);
 
   return (
-    <div className="flex min-h-screen md:justify-center">
-      <div className="flex-1 max-w-[480px] mx-auto relative">
-        {renderScreen()}
-      </div>
+    <div
+      className="min-h-screen w-full overflow-x-hidden"
+      style={{ backgroundColor: "#ffffff" }}
+    >
+      <div className="relative min-h-screen">
+        <main className="relative z-10 w-full max-w-[480px] mx-auto">
+          {renderScreen()}
+        </main>
 
-      {showSidePanel && (
-        <aside
-          className="hidden md:flex flex-col w-[320px] border-l shrink-0 sticky top-0 h-screen"
-          style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--border)",
-          }}
-        >
-          <div
-            className="h-14 flex items-center px-4 border-b"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <span
-              className="font-bold text-base"
-              style={{ color: "var(--foreground)" }}
-            >
-              メニュー
-            </span>
-          </div>
-
-          <div
-            className="flex items-center gap-3 px-4 py-4 border-b"
-            style={{ borderColor: "var(--border)" }}
+        {showSidePanel && (
+          <aside
+            className="fixed top-0 z-20 hidden h-screen flex-col border-l min-[1040px]:flex"
+            style={{
+              left: "calc(50% + 240px)",
+              width: "min(320px, calc(50vw - 240px))",
+              backgroundColor: "var(--card)",
+              borderColor: "var(--border)",
+            }}
           >
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-              style={{
-                backgroundColor: "var(--primary)",
-                color: "var(--primary-foreground)",
-              }}
+              className="h-14 flex items-center px-4 border-b"
+              style={{ borderColor: "var(--border)" }}
             >
-              TY
-            </div>
-            <div className="min-w-0">
-              <p
-                className="text-sm font-semibold truncate"
+              <span
+                className="font-bold text-base"
                 style={{ color: "var(--foreground)" }}
               >
-                Taro Yamada
-              </p>
-              <p
-                className="text-xs truncate"
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                user-google-001
-              </p>
-            </div>
-          </div>
-
-          <nav className="flex-1 py-2 overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => setSettingsExpanded((prev) => !prev)}
-              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition bg-transparent border-none cursor-pointer"
-              style={{ color: "var(--foreground)" }}
-            >
-              <span className="text-lg">⚙</span>
-              <span className="text-sm font-medium flex-1">設定</span>
-              <span
-                className={`text-xs font-bold transition-transform ${settingsExpanded ? "rotate-0" : "-rotate-90"}`}
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                ▼
+                メニュー
               </span>
-            </button>
+            </div>
 
-            {settingsExpanded && (
-              <div className="pl-10">
-                {SETTINGS_MENU_ITEMS.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    disabled={item.disabled}
-                    onClick={() => {
-                      if (item.screen) {
-                        handleNavigate(item.screen);
-                      }
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm transition bg-transparent border-none ${
-                      item.disabled
-                        ? "cursor-not-allowed opacity-60"
-                        : item.destructive
-                          ? "cursor-pointer hover:bg-muted"
-                          : "cursor-pointer hover:bg-muted"
-                    }`}
-                    style={{
-                      color: item.destructive
-                        ? "var(--destructive)"
-                        : item.disabled
-                          ? "var(--muted-foreground)"
-                          : "var(--foreground)",
-                    }}
-                  >
-                    <span className="flex items-center gap-2">
-                      {item.label}
-                      {item.comingSoon && (
-                        <span
-                          className="text-xs"
-                          style={{ color: "var(--muted-foreground)" }}
-                        >
-                          (Coming Soon)
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                ))}
+            <div
+              className="flex items-center gap-3 px-4 py-4 border-b"
+              style={{ borderColor: "var(--border)" }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                style={{
+                  backgroundColor: "var(--primary)",
+                  color: "var(--primary-foreground)",
+                }}
+              >
+                TY
               </div>
-            )}
+              <div className="min-w-0">
+                <p
+                  className="text-sm font-semibold truncate"
+                  style={{ color: "var(--foreground)" }}
+                >
+                  Taro Yamada
+                </p>
+                <p
+                  className="text-xs truncate"
+                  style={{ color: "var(--muted-foreground)" }}
+                >
+                  user-google-001
+                </p>
+              </div>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => handleNavigate("drafts")}
-              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition bg-transparent border-none cursor-pointer"
-              style={{ color: "var(--foreground)" }}
-            >
-              <span className="text-lg">📝</span>
-              <span className="text-sm font-medium">下書き</span>
-            </button>
+            <nav className="flex-1 py-2 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => setSettingsExpanded((prev) => !prev)}
+                className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition bg-transparent border-none cursor-pointer"
+                style={{ color: "var(--foreground)" }}
+              >
+                <span className="text-lg">⚙</span>
+                <span className="text-sm font-medium flex-1">設定</span>
+                <span
+                  className={`text-xs font-bold transition-transform ${settingsExpanded ? "rotate-0" : "-rotate-90"}`}
+                  style={{ color: "var(--muted-foreground)" }}
+                >
+                  ▼
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => handleNavigate("logout-confirm")}
-              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition bg-transparent border-none cursor-pointer"
-              style={{ color: "var(--foreground)" }}
-            >
-              <span className="text-lg">🚪</span>
-              <span className="text-sm font-medium">ログアウト</span>
-            </button>
-          </nav>
-        </aside>
-      )}
+              {settingsExpanded && (
+                <div className="pl-10">
+                  {SETTINGS_MENU_ITEMS.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      disabled={item.disabled}
+                      onClick={() => {
+                        if (item.screen) {
+                          handleNavigate(item.screen);
+                        }
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm transition bg-transparent border-none ${
+                        item.disabled
+                          ? "cursor-not-allowed opacity-60"
+                          : item.destructive
+                            ? "cursor-pointer hover:bg-muted"
+                            : "cursor-pointer hover:bg-muted"
+                      }`}
+                      style={{
+                        color: item.destructive
+                          ? "var(--destructive)"
+                          : item.disabled
+                            ? "var(--muted-foreground)"
+                            : "var(--foreground)",
+                      }}
+                    >
+                      <span className="flex items-center gap-2">
+                        {item.label}
+                        {item.comingSoon && (
+                          <span
+                            className="text-xs"
+                            style={{ color: "var(--muted-foreground)" }}
+                          >
+                            (Coming Soon)
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => handleNavigate("logout-confirm")}
+                className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted transition bg-transparent border-none cursor-pointer"
+                style={{ color: "var(--foreground)" }}
+              >
+                <span className="text-lg">↩</span>
+                <span className="text-sm font-medium">ログアウト</span>
+              </button>
+            </nav>
+          </aside>
+        )}
+      </div>
 
       <Sidebar
         isOpen={sidebarOpen}

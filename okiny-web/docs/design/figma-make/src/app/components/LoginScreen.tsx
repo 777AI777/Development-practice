@@ -34,7 +34,7 @@ export function LoginScreen({ onNavigate }: LoginScreenProps) {
       className="min-h-screen flex items-center justify-center px-4"
       style={{ backgroundColor: "var(--background)" }}
     >
-      <div className="w-full max-w-[400px] flex flex-col items-center gap-8">
+      <div className="w-full max-w-[480px] flex flex-col items-center gap-8">
         <div className="text-center flex flex-col gap-2">
           <h1
             className="text-4xl font-bold tracking-tight"
