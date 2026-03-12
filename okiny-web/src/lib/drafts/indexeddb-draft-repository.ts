@@ -159,7 +159,12 @@ export class IndexedDbDraftRepository implements DraftRepository {
 }
 
 export async function __resetDraftDbForTests(): Promise<void> {
+  if (dbPromise) {
+    const db = await dbPromise;
+    db.close();
+  }
   dbPromise = null;
+
   if (typeof indexedDB === "undefined") {
     return;
   }

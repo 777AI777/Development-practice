@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(node:*)",
+      "Bash(echo:*)",
+      "mcp__figma__get_screenshot",
+      "mcp__figma__get_design_context",
+      "Bash(git -C \"C:\\\\Users\\\\hueym\\\\Documents\\\\GitHub\\\\Development-practice\" mv \"ai-pen-playbook.md\" \"okiny-web/docs/design/ai-pen-playbook.md\")",
+      "Bash(git -C \"C:\\\\Users\\\\hueym\\\\Documents\\\\GitHub\\\\Development-practice\" mv \"okiny-web/docs/要件定義.md\" \"okiny-web/docs/requirements/要件定義.md\")",
+      "Bash(npm run build:*)",
+      "Bash(npm run test)",
+      "mcp__figma__get_metadata",
+      "Bash(grep:*)",
+      "WebFetch(domain:qiita.com)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/scripts/update-registry.mjs \"$TOOL_INPUT\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/scripts/update-registry.mjs \"$TOOL_INPUT\""
+          }
+        ]
+      }
+    ]
+  }
+}

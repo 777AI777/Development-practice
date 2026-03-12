@@ -11,24 +11,17 @@ describe("HttpPublishedApiClient.deletePublishedRanking", () => {
     vi.unstubAllGlobals();
   });
 
-  it("succeeds when API returns wrapped delete response", async () => {
+  it("succeeds when API returns 204 No Content", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response(JSON.stringify({ data: { ok: true } }), { status: 200 })),
+      vi.fn(async () => new Response(null, { status: 204 })),
     );
 
     const client = new HttpPublishedApiClient();
-    await expect(client.deletePublishedRanking("user-1", "ranking-1")).resolves.toBeUndefined();
+    await expect(client.deletePublishedRanking("user-1", "ranking-1", "2025-01-01T00:00:00Z")).resolves.toBeUndefined();
   });
 
-  it("succeeds when API returns legacy delete response", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 })));
-
-    const client = new HttpPublishedApiClient();
-    await expect(client.deletePublishedRanking("user-1", "ranking-1")).resolves.toBeUndefined();
-  });
-
-  it("throws PublishedApiError when delete response is not ok", async () => {
+  it("throws PublishedApiError when delete response is not 204", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -41,8 +34,28 @@ describe("HttpPublishedApiClient.deletePublishedRanking", () => {
     );
 
     const client = new HttpPublishedApiClient();
-    await expect(client.deletePublishedRanking("user-1", "ranking-1")).rejects.toBeInstanceOf(
+    await expect(client.deletePublishedRanking("user-1", "ranking-1", "2025-01-01T00:00:00Z")).rejects.toBeInstanceOf(
       PublishedApiError,
     );
+  });
+
+  it("throws PublishedApiError on 409 Conflict", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ error: { code: "CONFLICT", message: "Data has been updated." } }),
+            { status: 409 },
+          ),
+      ),
+    );
+
+    const client = new HttpPublishedApiClient();
+    const error = await client
+      .deletePublishedRanking("user-1", "ranking-1", "2025-01-01T00:00:00Z")
+      .catch((e: PublishedApiError) => e);
+    expect(error).toBeInstanceOf(PublishedApiError);
+    expect(error.code).toBe("CONFLICT");
   });
 });
