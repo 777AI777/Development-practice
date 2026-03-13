@@ -1,0 +1,13 @@
+# Credentials & Secrets
+.env*
+
+# Dependencies & Build Outputs
+node_modules/
+.next/
+dist/
+out/
+build/
+
+# OS Files
+.DS_Store
+Thumbs.db

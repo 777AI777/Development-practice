@@ -143,7 +143,7 @@ export async function DELETE(
   const { id } = await params;
   try {
     await deleteRanking({ rankingId: id, userId, expectedUpdatedAt });
-    return NextResponse.json({ ok: true });
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ConflictError) {
       return NextResponse.json(

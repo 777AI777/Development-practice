@@ -1,0 +1,140 @@
+# OKINY — プロジェクトガイド
+
+## 1. Purpose (The Why)
+
+「好き」を整理・共有するランキングアプリ。
+Phase1: 個人利用（CRUD + 下書き + タグ検索）。
+Phase2: SNS化（フィード・フォロー・リアクション）。
+
+## 2. Repo Map & Progressive Context (The Map)
+
+```
+Development-practice/
+├── okiny-web/                # メインアプリ（Next.js App Router）
+│   ├── CLAUDE.md             # 危険ゾーンガイド（Critical Files詳細はここ）
+│   ├── src/
+│   │   ├── app/              # ページ + APIルート
+│   │   │   └── api/v1/       # 本番API（rankings）とMock API（Phase2）が混在
+│   │   ├── components/       # 共通UIコンポーネント
+│   │   ├── hooks/            # カスタムHooks
+│   │   └── lib/              # ビジネスロジック・ユーティリティ
+│   └── docs/                 # 設計ドキュメント・デザイン資産
+├── docs/memory/              # 成功事例ログ（MEMORY.mdから退避した記録）
+├── .claude/                  # Rules・Skills・Scripts（自動読み込み対象）
+├── CLAUDE.md                 # ← このファイル
+└── MEMORY.md                 # 教訓・課題・未探索領域（運用規則はここに記載）
+```
+
+### Progressive Contextの読み込み順
+
+1. **CLAUDE.md（本ファイル）** — 全体像・Tech Stack・ルール
+2. **MEMORY.md** — 教訓・課題・未探索領域
+3. **okiny-web/CLAUDE.md** — 危険ゾーン・フロントエンド固有事項
+4. **.claude/rules/** — パス別の詳細ルール（自動ロード）
+
+## 3. Tech Stack & Commands
+
+| カテゴリ | 技術 | バージョン |
+|---------|------|-----------|
+| Framework | Next.js (App Router) | 16.1.6 |
+| UI | React | 19.2.3 |
+| Language | TypeScript | 5.9.3 |
+| CSS | Tailwind CSS v4 | ^4 |
+| Validation | Zod | ^4.1.13 (v4系) |
+| DB | Supabase (REST API直接) | — |
+| Local Storage | IndexedDB (okiny-local) | — |
+| Test | Vitest | ^4.0.8 |
+| Design | Figma Make + Pencil (.pen) | — |
+
+```bash
+cd okiny-web
+
+npm run dev          # 開発サーバー起動
+npm run build        # プロダクションビルド
+npm run lint         # ESLint実行
+npm run test         # Vitest実行（run mode）
+npm run test:watch   # Vitest（watch mode）
+```
+
+### API Endpoints（本番: Rankings）
+
+| Method | Path | Description | 楽観ロック |
+|--------|------|-------------|-----------|
+| GET | `/api/v1/rankings` | 一覧取得（tagIdフィルタ可） | — |
+| POST | `/api/v1/rankings` | 新規作成 | — |
+| GET | `/api/v1/rankings/{id}` | 詳細取得 | — |
+| PATCH | `/api/v1/rankings/{id}` | 更新 | `expectedUpdatedAt` 必須 |
+| DELETE | `/api/v1/rankings/{id}` | 削除 | `expectedUpdatedAt` 必須 |
+
+> `api/v1/` 配下にはPhase2用Mock API（feed, follows, profiles等）も混在している。
+> 本番はrankingsのみ。Mock/本番の境界は `okiny-web/CLAUDE.md` を参照。
+
+### 楽観ロック
+
+詳細は `.claude/rules/api.md` にSSoTとして定義。概要:
+PATCH/DELETEでは `expectedUpdatedAt` を送信 → 不一致で 409 Conflict。
+
+## 4. Architectural Rules (The Rules)
+
+### Feature Flags
+
+```typescript
+// src/lib/features.ts
+ENABLE_SNS_EXPANSION    // Phase2 SNS機能の表示切替
+SHOW_STATE_SCREENS      // UI状態デモ画面（dev時は自動ON）
+```
+
+環境変数:
+- `NEXT_PUBLIC_ENABLE_SNS_EXPANSION=true` → SNS機能ON
+- `NEXT_PUBLIC_SHOW_STATE_SCREENS=true` → 状態画面ON
+
+### DB Schema
+
+**Supabase:**
+- `rankings`: id, user_id, title, tag_id, created_at, updated_at
+- `ranking_items`: id, ranking_id, rank, item_text
+- relation: ranking_items.ranking_id → rankings.id
+
+**IndexedDB:**
+- DB: `okiny-local`, Store: `drafts`
+- keyPath: `draftId`, index: `userId`
+- 上限: 1ユーザーあたり5件（`MAX_DRAFTS_PER_USER`）
+
+### Fixed Tags
+
+movie(映画), music(音楽), travel(旅行), cafe(カフェ), cosmetics(化粧品), daily(日用品)
+
+### Session
+
+- Mock認証（Phase1）: LocalStorage `okiny:session:userId`
+- Phase2でGoogle OAuth予定
+- MockUser: user-google-001 (Taro Yamada), user-google-002 (Hanako Sato)
+
+### Environment Variables
+
+| 変数 | 用途 |
+|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクトURL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase サービスロールキー |
+| `NEXT_PUBLIC_ENABLE_SNS_EXPANSION` | SNS機能フラグ |
+| `NEXT_PUBLIC_SHOW_STATE_SCREENS` | 状態画面フラグ |
+
+### Key Patterns
+
+- **Immutable更新**: ミューテーション禁止、常にスプレッドで新規作成
+- **Repository Pattern**: drafts/はinterface → IndexedDB実装
+- **HTTP Client**: publish/にシングルトン、エラーコード体系あり
+- **RankingForm**: autosave（1200ms debounce）+ unload警告 → 詳細: `okiny-web/CLAUDE.md`
+- **Toast**: キューイング方式、type: success/error/warning/info
+
+### Design Assets
+
+- `.pen` ファイル: Pencil互換JSON。UIモック定義
+- `figma-make/`: Figma Makeから同期したReactコンポーネント
+- デザイン仕様は `okiny-web/docs/design/figma-make/guidelines/Guidelines.md`
+
+## 5. Core Principles (The Workflows)
+
+1. **Plan & Verify**: 変更前に影響範囲を確認。楽観ロック・型定義・フラグの副作用を把握してから着手
+2. **Simplicity First**: 最小限の変更で目的を達成。不要な抽象化・先回り実装は避ける
+3. **SSoT (Single Source of Truth)**: 情報は1箇所に定義し、他はポインタで参照。重複定義は禁止

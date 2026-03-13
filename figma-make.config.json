@@ -1,0 +1,11 @@
+{
+  "figmaMakeDir": "okiny-web/docs/design/figma-make",
+  "srcDir": "okiny-web/docs/design/figma-make/src",
+  "stylesDir": "okiny-web/docs/design/figma-make/src/styles",
+  "componentsDir": "okiny-web/docs/design/figma-make/src/app/components",
+  "appEntry": "okiny-web/docs/design/figma-make/src/app/App.tsx",
+  "themeFile": "okiny-web/docs/design/figma-make/src/styles/theme.css",
+  "guidelinesFile": "okiny-web/docs/design/figma-make/guidelines/Guidelines.md",
+  "cssFramework": "tailwind-v4",
+  "uiLibrary": "shadcn"
+}
