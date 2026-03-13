@@ -12,29 +12,18 @@
       "Bash(npm run test)",
       "mcp__figma__get_metadata",
       "Bash(grep:*)",
-      "WebFetch(domain:qiita.com)"
+      "WebFetch(domain:qiita.com)",
+      "Bash(git diff:*)",
+      "Bash(gh pr create:*)",
+      "WebSearch",
+      "Bash(claude --version:*)",
+      "Bash(claude update:*)",
+      "Bash(winget upgrade:*)",
+      "Bash(wc:*)",
+      "Skill(hookify:help)",
+      "Skill(hookify:hookify)",
+      "Bash(jq --version)"
     ]
   },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/scripts/update-registry.mjs \"$TOOL_INPUT\""
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/scripts/update-registry.mjs \"$TOOL_INPUT\""
-          }
-        ]
-      }
-    ]
-  }
+  "hooks": {}
 }
