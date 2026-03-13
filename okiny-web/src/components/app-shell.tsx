@@ -318,7 +318,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Desktop side panel */}
       <aside
-        className="fixed top-0 z-20 hidden h-screen flex-col border-l border-border bg-card min-[1040px]:flex"
+        className="fixed top-0 z-26 hidden h-screen flex-col border-l border-border bg-card min-[1040px]:flex"
         style={{
           left: "calc(50% + 240px)",
           width: "min(320px, calc(50vw - 240px))",

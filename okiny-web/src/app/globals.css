@@ -56,3 +56,8 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+@keyframes page-load-bar {
+  0% { left: -60%; }
+  100% { left: 110%; }
+}

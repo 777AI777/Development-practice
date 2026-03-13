@@ -1,20 +1,4 @@
 {
-  "enabledPlugins": {
-    "claude-md-management@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "github@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "figma@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "claude-code-setup@claude-plugins-official": true,
-    "supabase@claude-plugins-official": true,
-    "hookify@claude-plugins-official": false,
-    "vercel@claude-plugins-official": true,
-    "playground@claude-plugins-official": true
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -35,6 +19,27 @@
           }
         ]
       }
+    ]
+  },
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "figma@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true,
+    "hookify@claude-plugins-official": false,
+    "vercel@claude-plugins-official": true,
+    "playground@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(handle \"Development-practice\\\\okiny-web\\\\.next\\\\dev\\\\lock\")"
     ]
   }
 }

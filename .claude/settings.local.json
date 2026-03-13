@@ -23,7 +23,9 @@
       "Skill(hookify:help)",
       "Skill(hookify:hookify)",
       "Bash(jq --version)",
-      "Bash(cd C:/Users/hueym/Documents/GitHub/Development-practice/okiny-web && npx next dev 2>&1)"
+      "Bash(cd C:/Users/hueym/Documents/GitHub/Development-practice/okiny-web && npx next dev 2>&1)",
+      "Bash(npm run:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate"
     ]
   },
   "hooks": {}
