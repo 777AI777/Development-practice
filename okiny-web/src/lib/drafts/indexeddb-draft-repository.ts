@@ -9,6 +9,7 @@ import type {
   DraftRepository,
   DraftSaveInput,
 } from "@/lib/drafts/draft-repository";
+import { generateId } from "@/lib/generate-id";
 import type { DraftLocalRecord } from "@/lib/types";
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -131,7 +132,7 @@ export class IndexedDbDraftRepository implements DraftRepository {
     const store = transaction.objectStore(DRAFT_STORE_NAME);
 
     const record: DraftLocalRecord = {
-      draftId: normalized.draftId ?? crypto.randomUUID(),
+      draftId: normalized.draftId ?? generateId(),
       userId,
       title: normalized.title,
       tagId: normalized.tagId,

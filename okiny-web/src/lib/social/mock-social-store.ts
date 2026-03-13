@@ -1,3 +1,4 @@
+import { generateId } from "@/lib/generate-id";
 import { MOCK_USERS } from "@/lib/mock-users";
 import type {
   CommentSummary,
@@ -213,10 +214,7 @@ export function listComments(rankingId: string): CommentSummary[] {
 }
 
 function createId(prefix: string): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return `${prefix}-${crypto.randomUUID()}`;
-  }
-  return `${prefix}-${Math.random().toString(36).slice(2)}`;
+  return `${prefix}-${generateId()}`;
 }
 
 export function addComment(input: {
