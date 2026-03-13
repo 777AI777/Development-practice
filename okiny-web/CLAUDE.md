@@ -9,9 +9,9 @@
 
 | ファイル | 役割 | 注意点 |
 |---------|------|--------|
-| `src/lib/types.ts` | 型定義 | ランキング・下書き・API全体が依存。変更時は全箇所確認 |
+| `src/lib/types.ts` | 型定義 | 24ファイルが依存。変更時は `supabase-rest.ts`, `drafts/`, `publish/`, 全page.tsx を確認 |
 | `src/lib/tags.ts` | 固定タグ定義 | DB上のtag_idと1:1対応。追加・削除はDB側と同期必須 |
-| `src/lib/route-map.ts` | ルーティング定義 | ナビゲーション全体が依存。パス変更はリダイレクト考慮 |
+| `src/lib/route-map.ts` | ルーティング定義 | ナビゲーション全体が依存。パス変更時は `app/` 配下の対応ディレクトリも同期 |
 | `src/lib/features.ts` | フラグ制御 | フラグ変更はアプリ全体の表示に影響 |
 | `src/lib/analytics.ts` | イベント計測 | イベント名変更は計測ダッシュボードに影響 |
 
@@ -19,7 +19,7 @@
 
 | ファイル | 役割 | 注意点 |
 |---------|------|--------|
-| `src/lib/supabase-rest.ts` | Supabase REST直接アクセス | SDKなし。`ConflictError`で楽観ロック制御。ranking_items更新はDELETE→INSERT |
+| `src/lib/supabase-rest.ts` | Supabase REST直接アクセス | SDKなし。`ConflictError`で楽観ロック制御。ranking_items更新はDELETE→POST（全件削除→再挿入）。失敗時はロールバック付き |
 | `src/lib/session.ts` | Mock認証（Phase1） | `okiny:session:userId` キー。Phase2でOAuth置換予定。interfaceを壊さない |
 | `src/lib/publish/` | 公開APIクライアント | シングルトンHTTPクライアント。エラーコード体系あり |
 
@@ -29,6 +29,25 @@
 |---------|------|--------|
 | `src/lib/drafts/` | IndexedDB下書き管理 | Repository Pattern。上限5件。公開後のドラフト削除忘れに注意 |
 | `src/lib/social/mock-social-store.ts` | SNS Mockデータ | インメモリ。Phase2本実装時にSupabase連携に切替予定 |
+
+## ページ構造
+
+| パス | 画面 | グループ |
+|------|------|---------|
+| `/login` | ログイン | main |
+| `/rankings` | ランキング一覧 | main |
+| `/rankings/new` | ランキング作成 | main |
+| `/rankings/[id]` | ランキング詳細 | main |
+| `/rankings/[id]/edit` | ランキング編集 | main |
+| `/rankings/[id]/delete` | 削除確認 | main |
+| `/search` | タグ検索 | main |
+| `/drafts` | 下書き一覧 | main |
+| `/settings` | 設定 | main |
+| `/settings/logout` | ログアウト確認 | main |
+| `/feed`, `/composer`, `/profile/[userId]`, `/notifications`, `/onboarding` | SNS系 | sns（フラグ制御） |
+| `/states/*` | UI状態デモ | states（dev時のみ） |
+
+> 全ルート定義: `src/lib/route-map.ts`
 
 ## 楽観ロック
 
