@@ -228,15 +228,15 @@ export function RankingForm({
         <input
           value={form.title}
           onChange={(event) => setTitle(event.target.value)}
-          className="flex-1 rounded-md border border-gray-300 bg-transparent px-2 py-1 text-center text-xl font-bold text-foreground shadow-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:outline-none"
-          style={{ color: "var(--foreground)", fontSize: "1.25rem" }}
+          className="min-w-0 flex-1 rounded-md border border-gray-300 bg-transparent px-2 py-1 text-center text-base font-bold text-foreground shadow-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:outline-none sm:text-xl"
+          style={{ color: "var(--foreground)" }}
           placeholder="ランキングタイトル"
         />
         <div className="h-8 w-8 shrink-0" />
       </div>
 
-      {/* Tag + action buttons row */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Tag row */}
+      <div className="flex items-center gap-2">
         <select
           value={form.tagId}
           onChange={(event) => setTag(event.target.value)}
@@ -248,36 +248,37 @@ export function RankingForm({
             </option>
           ))}
         </select>
+      </div>
 
-        <div className="ml-auto flex gap-2">
-          {onDraftList ? (
-            <button
-              type="button"
-              onClick={onDraftList}
-              className="rounded-lg border border-border bg-card px-3 py-1 text-xs font-semibold text-foreground transition hover:bg-muted"
-            >
-              下書き一覧へ
-            </button>
-          ) : null}
-          {onSaveDraft ? (
-            <button
-              type="button"
-              onClick={() => void saveDraft()}
-              disabled={isSavingDraft}
-              className="rounded-lg border border-border bg-card px-3 py-1 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
-            >
-              {isSavingDraft ? "保存中..." : "下書き保存"}
-            </button>
-          ) : null}
+      {/* Action buttons row */}
+      <div className="flex items-center justify-end gap-2">
+        {onDraftList ? (
           <button
             type="button"
-            onClick={() => void submit()}
-            disabled={isSubmitting}
-            className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+            onClick={onDraftList}
+            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
           >
-            {isSubmitting ? "送信中..." : submitLabel}
+            下書き一覧
           </button>
-        </div>
+        ) : null}
+        {onSaveDraft ? (
+          <button
+            type="button"
+            onClick={() => void saveDraft()}
+            disabled={isSavingDraft}
+            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
+          >
+            {isSavingDraft ? "保存中..." : "下書き保存"}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => void submit()}
+          disabled={isSubmitting}
+          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+        >
+          {isSubmitting ? "送信中..." : submitLabel}
+        </button>
       </div>
 
       {/* Ranking items */}
@@ -289,12 +290,12 @@ export function RankingForm({
           return (
             <div
               key={index}
-              className="flex items-center gap-3 px-6 py-3"
+              className="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6"
               style={{ borderBottom: index < form.items.length - 1 ? "1px solid var(--border)" : "none" }}
             >
               <span className="cursor-grab text-muted-foreground">{"⠿"}</span>
               <span
-                className={`w-8 text-center ${isFirst ? "text-2xl font-bold" : "text-base font-semibold"}`}
+                className={`w-6 shrink-0 text-center sm:w-8 ${isFirst ? "text-xl font-bold sm:text-2xl" : "text-base font-semibold"}`}
                 style={{
                   color: isFirst
                     ? "var(--primary)"
@@ -306,14 +307,14 @@ export function RankingForm({
               <input
                 value={item}
                 onChange={(event) => setItem(index, event.target.value)}
-                className={`flex-1 border border-gray-300 rounded-md px-2 py-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none ${isFirst ? "text-base font-semibold" : "text-sm"}`}
+                className={`min-w-0 flex-1 border border-gray-300 rounded-md px-2 py-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none ${isFirst ? "text-base font-semibold" : "text-sm"}`}
                 placeholder={`順位 ${rank}`}
               />
             </div>
           );
         })}
         <div
-          className="py-3 px-6 flex items-center justify-center cursor-not-allowed opacity-60 transition"
+          className="py-3 px-3 sm:px-6 flex items-center justify-center cursor-not-allowed opacity-60 transition"
           style={{
             backgroundColor: "var(--card)",
             borderTop: "1px solid var(--border)",

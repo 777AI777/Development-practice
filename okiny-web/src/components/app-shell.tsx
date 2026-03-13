@@ -241,8 +241,6 @@ export function AppShell({ children }: AppShellProps) {
     setSettingsExpanded((prev) => !prev);
   }, []);
 
-  const contentReady = isReady && (!!user || pathname === "/login");
-
   const userInitial = user?.name
     ? user.name
         .split(" ")
@@ -315,7 +313,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main content */}
       <main className="mx-auto w-full max-w-[480px] px-4 py-6">
-        {contentReady ? children : null}
+        {children}
       </main>
 
       {/* Desktop side panel */}
