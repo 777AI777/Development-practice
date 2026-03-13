@@ -6,8 +6,6 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { RankingForm } from "@/components/ranking-form";
 import { useToast } from "@/components/toast-provider";
-import { draftRepository } from "@/lib/drafts/client-repository";
-import { saveDraftWithFeedback } from "@/lib/drafts/save-draft-with-feedback";
 import { DEMO_RANKING, DEMO_RANKING_ID } from "@/lib/demo-ranking";
 import { publishedApiClient } from "@/lib/publish/client";
 import { PublishedApiError } from "@/lib/publish/http-published-api-client";
@@ -101,36 +99,24 @@ export default function RankingEditPage() {
     }
   };
 
-  const handleSaveDraft = async (value: RankingInput) => {
-    if (!user) return;
-    const result = await saveDraftWithFeedback(draftRepository, user.id, {
-      ...value,
-      draftId: `edit-${rankingId}`,
-    });
-    pushToast(result.toast);
-  };
-
   return (
-    <AppShell
-      title="ランキング編集"
-      subtitle="作成/編集モック03の編集モード画面です。"
-    >
+    <AppShell>
       {isLoading ? (
         <div className="space-y-3">
-          <div className="h-10 animate-pulse rounded bg-slate-100" />
-          <div className="h-56 animate-pulse rounded bg-slate-100" />
+          <div className="h-10 animate-pulse rounded bg-muted" />
+          <div className="h-56 animate-pulse rounded bg-muted" />
         </div>
       ) : initialValue ? (
         <RankingForm
           initialValue={initialValue}
           submitLabel="更新"
           onSubmit={handleSubmit}
-          onSaveDraft={handleSaveDraft}
           onCancel={() => router.push(`/rankings/${rankingId}`)}
+          onBack={() => router.push(`/rankings/${rankingId}`)}
           autosaveKey={user ? `${user.id}:edit:${rankingId}` : undefined}
         />
       ) : (
-        <p className="text-sm text-slate-600">データがありません。</p>
+        <p className="text-sm text-muted-foreground">データがありません。</p>
       )}
     </AppShell>
   );

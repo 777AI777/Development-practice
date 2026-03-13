@@ -10,7 +10,9 @@ interface RankingFormProps {
   submitLabel: string;
   onSubmit: (value: RankingInput) => Promise<void>;
   onSaveDraft?: (value: RankingInput) => Promise<void>;
+  onDraftList?: () => void;
   onCancel?: () => void;
+  onBack?: () => void;
   autosaveKey?: string;
 }
 
@@ -36,7 +38,9 @@ export function RankingForm({
   submitLabel,
   onSubmit,
   onSaveDraft,
+  onDraftList,
   onCancel,
+  onBack,
   autosaveKey,
 }: RankingFormProps) {
   const [form, setForm] = useState<RankingInput>(
@@ -202,30 +206,41 @@ export function RankingForm({
     return "自動下書き保存: 未変更";
   }, [autosaveKey, autosaveState, autosavedAt]);
 
+  const currentTagLabel = FIXED_TAGS.find((t) => t.id === form.tagId)?.label ?? form.tagId;
+
   return (
     <div className="space-y-4">
-      <div>
-        <label htmlFor="ranking-title" className="mb-1 block text-sm font-semibold text-slate-700">
-          ランキングタイトル
-        </label>
+      {/* Header: [← back] [title input] [spacer] */}
+      <div className="flex items-center justify-between gap-2">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex h-8 w-8 shrink-0 items-center justify-center bg-transparent text-lg font-bold"
+            style={{ color: "var(--foreground)" }}
+            aria-label="戻る"
+          >
+            {"\u2190"}
+          </button>
+        ) : (
+          <div className="h-8 w-8 shrink-0" />
+        )}
         <input
-          id="ranking-title"
           value={form.title}
           onChange={(event) => setTitle(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          placeholder="例: 映画トップ5"
+          className="flex-1 rounded-md border border-gray-300 bg-transparent px-2 py-1 text-center text-xl font-bold text-foreground shadow-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:outline-none"
+          style={{ color: "var(--foreground)", fontSize: "1.25rem" }}
+          placeholder="ランキングタイトル"
         />
+        <div className="h-8 w-8 shrink-0" />
       </div>
 
-      <div>
-        <label htmlFor="ranking-tag" className="mb-1 block text-sm font-semibold text-slate-700">
-          タグ
-        </label>
+      {/* Tag + action buttons row */}
+      <div className="flex flex-wrap items-center gap-2">
         <select
-          id="ranking-tag"
           value={form.tagId}
           onChange={(event) => setTag(event.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {FIXED_TAGS.map((tag) => (
             <option key={tag.id} value={tag.id}>
@@ -233,60 +248,102 @@ export function RankingForm({
             </option>
           ))}
         </select>
+
+        <div className="ml-auto flex gap-2">
+          {onDraftList ? (
+            <button
+              type="button"
+              onClick={onDraftList}
+              className="rounded-lg border border-border bg-card px-3 py-1 text-xs font-semibold text-foreground transition hover:bg-muted"
+            >
+              下書き一覧へ
+            </button>
+          ) : null}
+          {onSaveDraft ? (
+            <button
+              type="button"
+              onClick={() => void saveDraft()}
+              disabled={isSavingDraft}
+              className="rounded-lg border border-border bg-card px-3 py-1 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
+            >
+              {isSavingDraft ? "保存中..." : "下書き保存"}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void submit()}
+            disabled={isSubmitting}
+            className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+          >
+            {isSubmitting ? "送信中..." : submitLabel}
+          </button>
+        </div>
       </div>
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-slate-700">トップ5順位</legend>
-        {form.items.map((item, index) => (
-          <div key={index} className="flex items-center gap-3">
-            <span className="w-6 text-center text-sm font-bold">{index + 1}</span>
-            <input
-              value={item}
-              onChange={(event) => setItem(index, event.target.value)}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              placeholder={`順位 ${index + 1}`}
-            />
-          </div>
-        ))}
-      </fieldset>
+      {/* Ranking items */}
+      <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--card)" }}>
+        {form.items.map((item, index) => {
+          const rank = index + 1;
+          const isFirst = rank === 1;
 
-      {autosaveText ? <p className="text-xs font-medium text-slate-500">{autosaveText}</p> : null}
+          return (
+            <div
+              key={index}
+              className="flex items-center gap-3 px-6 py-3"
+              style={{ borderBottom: index < form.items.length - 1 ? "1px solid var(--border)" : "none" }}
+            >
+              <span className="cursor-grab text-muted-foreground">{"⠿"}</span>
+              <span
+                className={`w-8 text-center ${isFirst ? "text-2xl font-bold" : "text-base font-semibold"}`}
+                style={{
+                  color: isFirst
+                    ? "var(--primary)"
+                    : "var(--muted-foreground)",
+                }}
+              >
+                {rank}
+              </span>
+              <input
+                value={item}
+                onChange={(event) => setItem(index, event.target.value)}
+                className={`flex-1 border border-gray-300 rounded-md px-2 py-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none ${isFirst ? "text-base font-semibold" : "text-sm"}`}
+                placeholder={`順位 ${rank}`}
+              />
+            </div>
+          );
+        })}
+        <div
+          className="py-3 px-6 flex items-center justify-center cursor-not-allowed opacity-60 transition"
+          style={{
+            backgroundColor: "var(--card)",
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          <span className="text-sm font-medium text-muted-foreground">
+            + アイテムを追加 (Coming Soon)
+          </span>
+        </div>
+      </div>
+
+      {autosaveText ? (
+        <p className="text-xs font-medium text-muted-foreground">{autosaveText}</p>
+      ) : null}
 
       {errorMessage ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm font-semibold text-destructive">
           {errorMessage}
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-3 pt-2">
-        {onSaveDraft ? (
-          <button
-            type="button"
-            onClick={() => void saveDraft()}
-            disabled={isSavingDraft}
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold disabled:opacity-60"
-          >
-            {isSavingDraft ? "下書き保存中..." : "下書き保存"}
-          </button>
-        ) : null}
+      {onCancel ? (
         <button
           type="button"
-          onClick={() => void submit()}
-          disabled={isSubmitting}
-          className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          onClick={triggerCancel}
+          className="w-full rounded-lg border border-border bg-card py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
         >
-          {isSubmitting ? "送信中..." : submitLabel}
+          キャンセル
         </button>
-        {onCancel ? (
-          <button
-            type="button"
-            onClick={triggerCancel}
-            className="rounded-md border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold"
-          >
-            キャンセル
-          </button>
-        ) : null}
-      </div>
+      ) : null}
     </div>
   );
 }

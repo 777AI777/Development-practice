@@ -77,17 +77,27 @@ export function RankingFormScreen({ mode, onNavigate, onSidebarToggle }: Ranking
               ←
             </button>
             <div className="flex-1 flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => onNavigate("drafts")}
-              >
-                下書き保存
-              </Button>
+              {!isEdit && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => onNavigate("drafts")}
+                  >
+                    下書き一覧へ
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => onNavigate("drafts")}
+                  >
+                    下書き保存
+                  </Button>
+                </>
+              )}
               <Button
                 variant="default"
                 onClick={() => onNavigate("rankings")}
               >
-                公開する
+                {isEdit ? "更新する" : "公開する"}
               </Button>
             </div>
           </div>

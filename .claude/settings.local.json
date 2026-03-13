@@ -22,7 +22,8 @@
       "Bash(wc:*)",
       "Skill(hookify:help)",
       "Skill(hookify:hookify)",
-      "Bash(jq --version)"
+      "Bash(jq --version)",
+      "Bash(cd C:/Users/hueym/Documents/GitHub/Development-practice/okiny-web && npx next dev 2>&1)"
     ]
   },
   "hooks": {}

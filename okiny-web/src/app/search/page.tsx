@@ -13,6 +13,19 @@ import type { PublishedRanking } from "@/lib/types";
 
 const apiClient = new HttpPublishedApiClient();
 
+const TAG_LABELS_JA: Record<string, string> = {
+  movie: "映画",
+  music: "音楽",
+  travel: "旅行",
+  cafe: "カフェ",
+  cosmetics: "化粧品",
+  daily: "日用品",
+};
+
+function getTagLabel(tagId: string): string {
+  return TAG_LABELS_JA[tagId] ?? tagId;
+}
+
 export default function TagSearchPage() {
   const { user } = useSessionUser();
   const { pushToast } = useToast();
@@ -50,61 +63,85 @@ export default function TagSearchPage() {
   }, [pushToast, tagId, user]);
 
   return (
-    <AppShell
-      title="タグ検索"
-      subtitle="固定タグでランキングを絞り込みます。モック05に対応。"
-    >
+    <AppShell>
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <label htmlFor="tag-filter" className="text-sm font-semibold text-slate-700">
-            タグ
-          </label>
-          <select
-            id="tag-filter"
-            value={tagId}
-            onChange={(event) => setTagId(event.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
+        {/* Header: back */}
+        <Link
+          href="/rankings"
+          className="flex h-8 w-8 items-center justify-center text-lg font-bold text-foreground"
+          aria-label="戻る"
+        >
+          {"\u2190"}
+        </Link>
+
+        {/* Popular tags */}
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">人気のタグ</h2>
+          <div className="mt-2 flex flex-wrap gap-2">
             {FIXED_TAGS.map((tag) => (
-              <option key={tag.id} value={tag.id}>
+              <button
+                key={tag.id}
+                type="button"
+                onClick={() => setTagId(tag.id)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                  tagId === tag.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground"
+                }`}
+              >
                 {tag.label}
-              </option>
+              </button>
             ))}
-          </select>
-          {SHOW_STATE_SCREENS ? (
-            <Link href="/states/empty-search" className="rounded-md border border-slate-300 px-3 py-2 text-sm">
-              空の検索結果画面を開く (10)
-            </Link>
-          ) : null}
+          </div>
         </div>
 
+        {SHOW_STATE_SCREENS ? (
+          <Link
+            href="/states/empty-search"
+            className="inline-flex rounded-md border border-border px-3 py-2 text-xs text-muted-foreground"
+          >
+            空の検索結果画面を開く (10)
+          </Link>
+        ) : null}
+
+        {/* Results */}
         {isLoading ? (
-          <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
+          <div className="h-20 animate-pulse rounded-xl bg-muted" />
         ) : results.length === 0 ? (
-          <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="text-sm text-slate-600">選択したタグのランキングは見つかりませんでした。</p>
+          <div className="rounded-xl border border-border bg-card p-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              選択したタグのランキングは見つかりませんでした。
+            </p>
             <Link
               href={`/rankings/new?tagId=${encodeURIComponent(tagId)}`}
-              className="inline-flex rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white"
+              className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               このタグでランキングを作成
             </Link>
           </div>
         ) : (
-          <ul className="space-y-2">
-            {results.map((ranking) => (
-              <li key={ranking.id} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                <p className="font-semibold text-slate-900">{ranking.title}</p>
-                <p className="text-xs text-slate-600">タグ: {ranking.tagId}</p>
-                <Link
-                  href={`/rankings/${ranking.id}`}
-                  className="mt-2 inline-flex rounded-md border border-blue-300 px-3 py-1 text-xs font-semibold text-blue-700"
+          <>
+            <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--foreground)" }}>「{getTagLabel(tagId)}」の検索結果</h2>
+            <div className="space-y-3">
+              {results.map((ranking) => (
+                <div
+                  key={ranking.id}
+                  className="rounded-xl p-4 cursor-pointer"
+                  style={{ backgroundColor: "var(--card)" }}
                 >
-                  詳細を開く
-                </Link>
-              </li>
-            ))}
-          </ul>
+                  <Link
+                    href={`/rankings/${ranking.id}`}
+                    className="block transition hover:opacity-80"
+                  >
+                    <p className="font-semibold text-foreground">{ranking.title}</p>
+                    <span className="mt-1 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                      {getTagLabel(ranking.tagId)}
+                    </span>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </AppShell>

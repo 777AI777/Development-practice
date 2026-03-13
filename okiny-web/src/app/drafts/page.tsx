@@ -6,11 +6,26 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
+import { formatSmartDate } from "@/lib/format-date";
 import { draftRepository } from "@/lib/drafts/client-repository";
 import { MAX_DRAFTS_PER_USER } from "@/lib/drafts/constants";
 import { publishedApiClient } from "@/lib/publish/client";
 import { publishRanking } from "@/lib/publish/publish-ranking";
+import { FIXED_TAGS } from "@/lib/tags";
 import type { DraftLocalRecord } from "@/lib/types";
+
+const TAG_LABELS_JA: Record<string, string> = {
+  movie: "映画",
+  music: "音楽",
+  travel: "旅行",
+  cafe: "カフェ",
+  cosmetics: "化粧品",
+  daily: "日用品",
+};
+
+function getTagLabel(tagId: string): string {
+  return TAG_LABELS_JA[tagId] ?? tagId;
+}
 
 export default function DraftsPage() {
   const { user } = useSessionUser();
@@ -61,70 +76,91 @@ export default function DraftsPage() {
   };
 
   return (
-    <AppShell
-      title="下書き一覧"
-      subtitle="ユーザーごとのローカルブラウザ下書き一覧。モック06に対応。"
-    >
+    <AppShell>
       <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          <Link href="/rankings/new" className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white">
-            新規ランキング作成
+        {/* Header: back + title */}
+        <div className="flex items-center gap-2">
+          <Link
+            href="/rankings/new"
+            className="flex h-8 w-8 items-center justify-center text-lg font-bold text-foreground"
+            aria-label="戻る"
+          >
+            {"\u2190"}
           </Link>
+          <h1 className="text-xl font-bold text-foreground">下書き一覧</h1>
         </div>
 
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           下書き件数: {drafts.length}/{MAX_DRAFTS_PER_USER}
         </p>
 
         {drafts.length === 0 ? (
-          <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="text-sm text-slate-600">ローカル下書きはありません。</p>
+          <div className="rounded-xl border border-border bg-card p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              ローカル下書きはありません。
+            </p>
             <Link
               href="/rankings/new"
-              className="inline-flex rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white"
+              className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               ランキング作成
             </Link>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {drafts.map((draft) => (
-              <li key={draft.draftId} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-3">
-                <p className="font-semibold text-slate-900">{draft.title || "（無題）"}</p>
-                <p className="text-xs text-slate-600">タグ: {draft.tagId}</p>
-                <ol className="mt-2 space-y-1 text-xs text-slate-700">
-                  {draft.items.slice(0, 3).map((item, index) => (
-                    <li key={`${draft.draftId}-top3-${index}`}>
-                      {index + 1}位: {item.trim() ? item : "未入力"}
-                    </li>
-                  ))}
-                </ol>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    href={`/rankings/new?draftId=${encodeURIComponent(draft.draftId)}`}
-                    className="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold"
-                  >
-                    編集
-                  </Link>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--card)" }}>
+            {drafts.map((draft, idx) => (
+              <div
+                key={draft.draftId}
+                className="p-4"
+                style={{ borderBottom: idx < drafts.length - 1 ? "1px solid var(--border)" : "none" }}
+              >
+                <Link
+                  href={`/rankings/new?draftId=${encodeURIComponent(draft.draftId)}`}
+                  className="block transition hover:opacity-80"
+                >
+                  <p className="font-semibold text-[15px] text-foreground">
+                    {draft.title || "（無題）"}
+                  </p>
+                  <div className="mt-1 space-y-0">
+                    {draft.items.slice(0, 5).map((item, itemIdx) => (
+                      <p
+                        key={`${draft.draftId}-item-${itemIdx}`}
+                        className="text-sm leading-relaxed text-muted-foreground"
+                      >
+                        {itemIdx + 1}. {item.trim() ? item : "未入力"}
+                      </p>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                      {getTagLabel(draft.tagId)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      更新: {formatSmartDate(draft.updatedAt)}
+                    </span>
+                  </div>
+                </Link>
+
+                <div className="mt-3 flex gap-2">
                   <button
                     type="button"
                     onClick={() => void publishDraft(draft)}
                     disabled={publishingId === draft.draftId}
-                    className="rounded-md bg-blue-700 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60"
+                    className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
                   >
                     {publishingId === draft.draftId ? "公開中..." : "公開"}
                   </button>
                   <button
                     type="button"
                     onClick={() => void deleteDraft(draft.draftId)}
-                    className="rounded-md border border-red-300 px-3 py-1 text-xs font-semibold text-red-700"
+                    className="rounded-lg border border-destructive/30 px-3 py-1 text-xs font-semibold text-destructive"
                   >
                     削除
                   </button>
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </AppShell>

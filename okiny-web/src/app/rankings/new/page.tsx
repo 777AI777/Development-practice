@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
@@ -114,25 +113,16 @@ function NewRankingPageContent() {
   };
 
   return (
-    <AppShell
-      title="ランキング作成"
-      subtitle="作成または下書き保存。モック03に対応。"
-      headerActions={
-        <Link
-          href="/drafts"
-          className="inline-flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          下書き一覧へ
-        </Link>
-      }
-    >
+    <AppShell>
       <RankingForm
         key={activeDraftId ?? "new"}
         initialValue={initialDraft}
         submitLabel="作成"
         onSubmit={handlePublish}
         onSaveDraft={handleSaveDraft}
+        onDraftList={() => router.push("/drafts")}
         onCancel={() => router.push("/rankings")}
+        onBack={() => router.push("/rankings")}
         autosaveKey={user ? `${user.id}:${activeDraftId ?? "new"}` : undefined}
       />
     </AppShell>
