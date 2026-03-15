@@ -1,6 +1,11 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
+/** APIリクエスト数の上限（ウィンドウあたり） */
+const RATE_LIMIT_MAX_REQUESTS = 30;
+/** レート制限のウィンドウ期間 */
+const RATE_LIMIT_WINDOW = "1 m";
+
 function createRateLimiter(): Ratelimit | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -13,7 +18,7 @@ function createRateLimiter(): Ratelimit | null {
 
   return new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(30, "1 m"),
+    limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW),
     analytics: true,
     prefix: "okiny:ratelimit",
   });

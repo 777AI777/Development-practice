@@ -17,7 +17,7 @@ MANDATORY workflow:
 3. Write minimal implementation (GREEN)
 4. Run test - it should PASS
 5. Refactor (IMPROVE)
-6. Verify coverage (80%+)
+6. Verify coverage (80%+): `npm run test -- --coverage`
 
 ## Troubleshooting Test Failures
 

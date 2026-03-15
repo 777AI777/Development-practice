@@ -32,6 +32,9 @@ function LoginPageContent() {
     const supabase = createClient();
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    if (!process.env.NEXT_PUBLIC_APP_URL && process.env.NODE_ENV !== "production") {
+      console.warn("[login] NEXT_PUBLIC_APP_URL が未設定です。本番環境では設定を推奨します。");
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

@@ -1,11 +1,41 @@
+import { NextResponse } from "next/server";
+
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthResult =
   | { ok: true; userId: string; accessToken: string }
   | { ok: false; reason: "unauthorized" | "server_error" };
 
+export function authErrorResponse(
+  result: Extract<AuthResult, { ok: false }>,
+): NextResponse {
+  const status = result.reason === "unauthorized" ? 401 : 503;
+  const code = result.reason === "unauthorized" ? "UNAUTHORIZED" : "SERVER";
+  const message =
+    result.reason === "unauthorized"
+      ? "認証が必要です。"
+      : "認証サービスに接続できません。";
+  return NextResponse.json({ error: { code, message } }, { status });
+}
+
 export async function getAuthenticatedUserId(): Promise<AuthResult> {
   const supabase = await createClient();
+
+  // セッションからトークンを先に取得
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError || !session?.access_token) {
+    console.error("[auth-guard] getSession failed");
+    if (process.env.NODE_ENV !== "production" && sessionError) {
+      console.error("[auth-guard] session detail:", sessionError.message);
+    }
+    return { ok: false, reason: "unauthorized" };
+  }
+
+  // ユーザーの存在をサーバーサイドで検証（JWT署名検証）
   const {
     data: { user },
     error,
@@ -20,19 +50,6 @@ export async function getAuthenticatedUserId(): Promise<AuthResult> {
   }
 
   if (!user) {
-    return { ok: false, reason: "unauthorized" };
-  }
-
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-
-  if (sessionError || !session?.access_token) {
-    console.error("[auth-guard] getSession failed");
-    if (process.env.NODE_ENV !== "production" && sessionError) {
-      console.error("[auth-guard] session detail:", sessionError.message);
-    }
     return { ok: false, reason: "unauthorized" };
   }
 

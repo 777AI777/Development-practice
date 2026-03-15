@@ -3,14 +3,17 @@
 ## Mandatory Security Checks
 
 Before ANY commit:
-- [ ] No hardcoded secrets (API keys, passwords, tokens)
-- [ ] All user inputs validated
-- [ ] SQL injection prevention (parameterized queries)
-- [ ] XSS prevention (sanitized HTML)
-- [ ] CSRF protection enabled
-- [ ] Authentication/authorization verified
-- [ ] Rate limiting on all endpoints
-- [ ] Error messages don't leak sensitive data
+
+### 実装済み — 毎回確認
+- [ ] No hardcoded secrets — `.env.local` に集約、コード内にURL/キー直書きなし
+- [ ] User inputs validated — Zod schema でバリデーション（API routes）
+- [ ] Authentication/authorization — Supabase Auth + RLS policies + auth-guard.ts
+- [ ] Error messages safe — エラーレスポンスに内部情報（stack trace, DB構造）を含めない
+- [ ] XSS prevention — React のデフォルトエスケープ + dangerouslySetInnerHTML 禁止
+
+### 自動保護（フレームワーク依存）
+- CSRF — Next.js App Router の SameSite cookie で自動保護
+- SQL injection — Supabase REST API のパラメータ化クエリ（直接SQL記述なし）
 
 ## Secret Management
 

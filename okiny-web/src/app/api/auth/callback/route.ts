@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
     }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
     url.searchParams.set("error", "auth_failed");
-    url.searchParams.delete("code");
     return NextResponse.redirect(url);
   }
 
@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
     }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
     url.searchParams.set("error", "auth_failed");
-    url.searchParams.delete("code");
     return NextResponse.redirect(url);
   }
 
