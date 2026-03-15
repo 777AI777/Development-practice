@@ -11,6 +11,11 @@ function createRateLimiter(): Ratelimit | null {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn(
+        "[rate-limit] UPSTASH_REDIS_REST_URL または UPSTASH_REDIS_REST_TOKEN が未設定です。本番環境ではレート制限が無効になっています。",
+      );
+    }
     return null;
   }
 

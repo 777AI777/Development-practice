@@ -75,6 +75,16 @@ export async function updateSession(request: NextRequest, nonce: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // リクエストヘッダーにCSPを設定（Next.jsが内部スクリプトにnonceを自動付与するため）
+  if (supabaseUrl) {
+    try {
+      const csp = buildContentSecurityPolicy(supabaseUrl, nonce);
+      request.headers.set("content-security-policy", csp);
+    } catch {
+      // CSP構築失敗時はフォールバック（レスポンス側のsetCspHeadersでも設定される）
+    }
+  }
+
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("[middleware] Supabase environment variables are not configured.");
     return setCspHeaders(new NextResponse("Internal Server Error", { status: 500 }), nonce);

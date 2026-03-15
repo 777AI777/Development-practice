@@ -17,11 +17,9 @@ Set these in `.env.local` and Vercel:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_SHOW_STATE_SCREENS=true
 NEXT_PUBLIC_ENABLE_SNS_EXPANSION=false
 ```
 
-- `NEXT_PUBLIC_SHOW_STATE_SCREENS`: 状態検証ルートのナビ表示切り替え。
 - `NEXT_PUBLIC_ENABLE_SNS_EXPANSION`: Feed/Profile/Notifications などSNS拡張導線の有効化。
 
 ## Supabase table assumptions
@@ -44,17 +42,6 @@ NEXT_PUBLIC_ENABLE_SNS_EXPANSION=false
 - `/settings` (07)
 - `/settings/logout` (07a)
 - `/rankings/:id/delete` (08)
-- `/states/empty-list` (09)
-- `/states/empty-search` (10)
-- `/states/empty-drafts` (11)
-- `/states/error-catalog` (12)
-- `/states/loading` (13)
-- `/states/auth-error` (14)
-- `/states/not-found` (15)
-- `/states/draft-limit` (16)
-- `/states/toast-rules` (17)
-- `/states/transition-check` (18)
-- `/states/common-header` (19)
 
 ## Commands
 

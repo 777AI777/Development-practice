@@ -58,7 +58,18 @@ describe("buildContentSecurityPolicy", () => {
 
   it("nonceが指定された場合、script-srcにnonce-xxxが含まれる", () => {
     const csp = buildContentSecurityPolicy("https://abc.supabase.co", "test-nonce-123");
-    expect(csp).toContain("script-src 'self' 'nonce-test-nonce-123'");
+    expect(csp).toContain("'nonce-test-nonce-123'");
+  });
+
+  it("nonceが指定された場合、script-srcにstrict-dynamicが含まれる", () => {
+    const csp = buildContentSecurityPolicy("https://abc.supabase.co", "test-nonce-123");
+    expect(csp).toContain("'strict-dynamic'");
+    expect(csp).toContain("script-src 'self' 'nonce-test-nonce-123' 'strict-dynamic'");
+  });
+
+  it("nonce未指定時、script-srcにstrict-dynamicが含まれない", () => {
+    const csp = buildContentSecurityPolicy("https://abc.supabase.co");
+    expect(csp).not.toContain("'strict-dynamic'");
   });
 
   it("nonceが指定された場合でも、他のディレクティブは変わらない", () => {

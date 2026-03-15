@@ -97,7 +97,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     if (!response.ok || !body.data) {
       throw new PublishedApiError(
         body.error?.code ?? mapStatusToErrorCode(response.status),
-        body.error?.message ?? "Failed to create ranking.",
+        body.error?.message ?? "ランキングの作成に失敗しました。",
       );
     }
     return body.data;
@@ -120,7 +120,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     if (!response.ok || !body.data) {
       throw new PublishedApiError(
         body.error?.code ?? mapStatusToErrorCode(response.status),
-        body.error?.message ?? "Failed to update ranking.",
+        body.error?.message ?? "ランキングの更新に失敗しました。",
       );
     }
     return body.data;
@@ -140,7 +140,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     const body = await parseJson<unknown>(response);
     throw new PublishedApiError(
       body.error?.code ?? mapStatusToErrorCode(response.status),
-      body.error?.message ?? "Failed to delete ranking.",
+      body.error?.message ?? "ランキングの削除に失敗しました。",
     );
   }
 }

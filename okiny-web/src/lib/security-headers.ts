@@ -27,7 +27,7 @@ export function buildContentSecurityPolicy(
   const supabaseDomain = supabaseUrl.replace(/\/$/, "");
 
   const scriptSrc: readonly string[] = nonce
-    ? ["'self'", `'nonce-${nonce}'`]
+    ? ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"]
     : ["'self'"];
 
   const directives: CspDirectives = {

@@ -9,7 +9,12 @@ import { createRanking, listRankingsByUser } from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
 
 const rankingItemsSchema = z
-  .array(z.string().transform((value) => value.trim()))
+  .array(
+    z
+      .string()
+      .transform((value) => value.trim())
+      .pipe(z.string().max(100, "各項目は100文字以内にしてください。")),
+  )
   .length(RANKING_ITEM_COUNT)
   .refine((items) => items.some((item) => item.length > 0), {
     message: "ランキング順位は1つ以上入力してください。",
@@ -17,8 +22,8 @@ const rankingItemsSchema = z
 
 const createSchema = z.object({
   ranking: z.object({
-    title: z.string().trim().min(1, "タイトルは必須です。"),
-    tagId: z.string().trim().min(1, "タグは必須です。"),
+    title: z.string().trim().min(1, "タイトルは必須です。").max(50, "タイトルは50文字以内にしてください。"),
+    tagId: z.string().trim().min(1, "タグは必須です。").max(20, "タグIDは20文字以内にしてください。"),
     items: rankingItemsSchema,
   }),
 });

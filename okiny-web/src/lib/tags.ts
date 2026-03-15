@@ -1,9 +1,4 @@
-export interface FixedTag {
-  id: string;
-  label: string;
-}
-
-export const FIXED_TAGS: FixedTag[] = [
+export const FIXED_TAGS: { id: string; label: string }[] = [
   { id: "movie", label: "映画" },
   { id: "music", label: "音楽" },
   { id: "travel", label: "旅行" },

@@ -15,10 +15,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const headerList = await headers();
+  // カスタム<Script>追加時に nonce prop として渡す。
+  // Next.js内部スクリプトへのnonce付与はCSPヘッダー経由で自動適用される。
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const nonce = headerList.get("x-nonce") ?? "";
 
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body className="antialiased">
         <ToastProvider>
           <PageTransitionProvider>{children}</PageTransitionProvider>

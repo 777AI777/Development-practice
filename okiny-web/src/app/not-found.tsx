@@ -6,7 +6,7 @@ export default function NotFound() {
       <main className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white px-8 py-10 shadow-sm">
         <h1 className="text-3xl font-bold text-slate-900">404 - ページが見つかりません</h1>
         <p className="mt-2 text-sm text-slate-600">
-          これはグローバルのフォールバックページです。モック用の状態画面は `/states/not-found` を確認してください。
+          お探しのページは見つかりませんでした。
         </p>
         <div className="mt-6 flex gap-2">
           <Link href="/login" className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white">
