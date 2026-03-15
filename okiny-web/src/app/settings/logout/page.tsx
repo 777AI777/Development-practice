@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
@@ -8,6 +9,7 @@ import { useSessionUser } from "@/hooks/use-session-user";
 export default function LogoutConfirmPage() {
   const router = useRouter();
   const { signOut } = useSessionUser();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   return (
     <AppShell>
@@ -28,13 +30,21 @@ export default function LogoutConfirmPage() {
           <div className="mt-6 space-y-3">
             <button
               type="button"
-              onClick={() => {
-                signOut();
-                router.push("/login");
+              disabled={isLoggingOut}
+              onClick={async () => {
+                if (isLoggingOut) return;
+                setIsLoggingOut(true);
+                try {
+                  await signOut();
+                  router.push("/login");
+                } catch (error) {
+                  console.error("ログアウトに失敗しました:", error);
+                  setIsLoggingOut(false);
+                }
               }}
-              className="w-full rounded-lg bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground transition hover:opacity-90"
+              className="w-full rounded-lg bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground transition hover:opacity-90 disabled:opacity-50"
             >
-              ログアウトする
+              {isLoggingOut ? "ログアウト中..." : "ログアウトする"}
             </button>
             <button
               type="button"

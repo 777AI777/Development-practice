@@ -30,16 +30,21 @@ function LoginPageContent() {
     setLoginError(null);
 
     const supabase = createClient();
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
+        redirectTo: `${appUrl}/api/auth/callback`,
       },
     });
 
     if (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[login] OAuth error:", error.message);
+      }
       setIsSigningIn(false);
-      setLoginError(error.message);
+      setLoginError("ログインに失敗しました。もう一度お試しください。");
       return;
     }
   };

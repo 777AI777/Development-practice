@@ -129,9 +129,10 @@ function MyRankContent({
       <div className="mb-4 flex justify-end">
         <Link
           href="/rankings/new"
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:opacity-90"
+          aria-label="新規ランキング作成"
+          className="inline-flex items-center justify-center rounded-lg bg-primary px-2.5 py-1 text-sm font-bold text-primary-foreground hover:opacity-90"
         >
-          ＋ 新規ランキング
+＋
         </Link>
       </div>
 

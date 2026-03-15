@@ -41,12 +41,12 @@ export async function GET(
     const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
     return NextResponse.json({ error: { code, message } }, { status });
   }
-  const userId = auth.userId;
+  const { userId, accessToken } = auth;
 
   const { id } = await params;
 
   try {
-    const data = await getRankingById({ userId, rankingId: id });
+    const data = await getRankingById({ userId, rankingId: id, accessToken });
     if (!data) {
       return NextResponse.json(
         { error: { code: "NOT_FOUND", message: "Ranking not found." } },
@@ -74,7 +74,7 @@ export async function PATCH(
     const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
     return NextResponse.json({ error: { code, message } }, { status });
   }
-  const userId = auth.userId;
+  const { userId, accessToken } = auth;
 
   let payload: unknown;
   try {
@@ -109,6 +109,7 @@ export async function PATCH(
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
       expectedUpdatedAt: parsed.data.expectedUpdatedAt,
+      accessToken,
     });
     return NextResponse.json({ data });
   } catch (error) {
@@ -137,7 +138,7 @@ export async function DELETE(
     const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
     return NextResponse.json({ error: { code, message } }, { status });
   }
-  const userId = auth.userId;
+  const { userId, accessToken } = auth;
 
   const url = new URL(request.url);
   const expectedUpdatedAt = url.searchParams.get("expectedUpdatedAt") ?? "";
@@ -151,7 +152,7 @@ export async function DELETE(
 
   const { id } = await params;
   try {
-    await deleteRanking({ rankingId: id, userId, expectedUpdatedAt });
+    await deleteRanking({ rankingId: id, userId, expectedUpdatedAt, accessToken });
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ConflictError) {

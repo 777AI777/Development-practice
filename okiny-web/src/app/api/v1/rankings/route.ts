@@ -32,13 +32,13 @@ export async function GET(request: Request) {
     const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
     return NextResponse.json({ error: { code, message } }, { status });
   }
-  const userId = auth.userId;
+  const { userId, accessToken } = auth;
 
   const url = new URL(request.url);
   const tagId = url.searchParams.get("tagId") ?? undefined;
 
   try {
-    const data = await listRankingsByUser({ userId, tagId });
+    const data = await listRankingsByUser({ userId, tagId, accessToken });
     return NextResponse.json({ data });
   } catch (error) {
     console.error("[GET /api/v1/rankings]", error);
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
     return NextResponse.json({ error: { code, message } }, { status });
   }
-  const userId = auth.userId;
+  const { userId, accessToken } = auth;
 
   let payload: unknown;
   try {
@@ -88,6 +88,7 @@ export async function POST(request: Request) {
       title: parsed.data.ranking.title,
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
+      accessToken,
     });
     return NextResponse.json({ data: created }, { status: 201 });
   } catch (error) {

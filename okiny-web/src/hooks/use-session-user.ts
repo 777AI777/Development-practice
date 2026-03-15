@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AuthUser } from "@/lib/supabase/types";
 
+// モジュールレベルキャッシュ（ページ遷移間で保持、ハードリフレッシュでリセット）
+let cachedUser: AuthUser | null = null;
+let cachedIsReady = false;
+
 interface UseSessionUserResult {
   isReady: boolean;
   user: AuthUser | null;
@@ -35,33 +39,68 @@ function toAuthUser(supabaseUser: {
 }
 
 export function useSessionUser(): UseSessionUserResult {
-  const [isReady, setIsReady] = useState(false);
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isReady, setIsReady] = useState(cachedIsReady);
+  const [user, setUser] = useState<AuthUser | null>(cachedUser);
 
   useEffect(() => {
     const supabase = createClient();
 
     void supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
-      setUser(currentUser ? toAuthUser(currentUser) : null);
+      const userData = currentUser ? toAuthUser(currentUser) : null;
+      cachedUser = userData;
+      cachedIsReady = true;
+      setUser(userData);
       setIsReady(true);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? toAuthUser(session.user) : null);
+      const userData = session?.user ? toAuthUser(session.user) : null;
+      if (_event === "SIGNED_OUT") {
+        cachedUser = null;
+        cachedIsReady = false;
+      } else {
+        cachedUser = userData;
+        cachedIsReady = true;
+      }
+      setUser(userData);
       setIsReady(true);
     });
 
+    // 他タブからのログアウト通知を受信
+    let authChannel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== "undefined") {
+      authChannel = new BroadcastChannel("okiny-auth-sync");
+      authChannel.onmessage = (event: MessageEvent) => {
+        if (event.data.type === "SIGNED_OUT") {
+          cachedUser = null;
+          cachedIsReady = true;
+          setUser(null);
+          setIsReady(true);
+        }
+      };
+    }
+
     return () => {
       subscription.unsubscribe();
+      authChannel?.close();
     };
   }, []);
 
   const signOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    cachedUser = null;
+    cachedIsReady = false;
     setUser(null);
+
+    // 他タブに通知
+    if (typeof BroadcastChannel !== "undefined") {
+      const channel = new BroadcastChannel("okiny-auth-sync");
+      channel.postMessage({ type: "SIGNED_OUT" });
+      channel.close();
+    }
   };
 
   const updateDisplayName = async (displayName: string) => {

@@ -354,57 +354,66 @@ export function AppShell({ children }: AppShellProps) {
       </aside>
 
       {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-50 transition-opacity"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}
+      <div
+        className="fixed inset-0 z-50"
+        onClick={handleSidebarClose}
+        style={{
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
+          opacity: sidebarOpen ? 1 : 0,
+          pointerEvents: sidebarOpen ? "auto" : "none",
+          transition: "opacity 300ms ease-in-out",
+        }}
+      />
+
+      {/* Mobile sidebar */}
+      <aside
+        className="fixed top-0 right-0 z-50 flex h-full w-[80vw] max-w-[320px] flex-col border-l border-border bg-card shadow-lg"
+        aria-hidden={!sidebarOpen}
+        style={{
+          transform: sidebarOpen ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 300ms ease-in-out",
+        }}
+      >
+        <div className="flex h-14 items-center justify-between border-b border-border px-4">
+          <span className="text-base font-bold text-foreground">
+            メニュー
+          </span>
+          <button
+            type="button"
             onClick={handleSidebarClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-lg text-muted-foreground transition hover:bg-muted"
+            aria-label="閉じる"
+          >
+            {"\u2715"}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 border-b border-border px-4 py-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+            {userInitial}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">
+              {user?.name ?? "Unknown"}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {user?.email ?? ""}
+            </p>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto py-2">
+          <SettingsAccordion
+            settingsExpanded={settingsExpanded}
+            onToggle={handleSettingsToggle}
+            nameEditOpen={nameEditOpen}
+            onNameEditToggle={handleNameEditToggle}
+            user={user}
+            updateDisplayName={updateDisplayName}
+            onNavigate={handleSidebarClose}
           />
-
-          <aside className="fixed top-0 right-0 z-50 flex h-full w-[80vw] max-w-[320px] flex-col border-l border-border bg-card shadow-lg">
-            <div className="flex h-14 items-center justify-between border-b border-border px-4">
-              <span className="text-base font-bold text-foreground">
-                メニュー
-              </span>
-              <button
-                type="button"
-                onClick={handleSidebarClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-lg text-muted-foreground transition hover:bg-muted"
-                aria-label="閉じる"
-              >
-                {"\u2715"}
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3 border-b border-border px-4 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                {userInitial}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">
-                  {user?.name ?? "Unknown"}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {user?.email ?? ""}
-                </p>
-              </div>
-            </div>
-
-            <nav className="flex-1 overflow-y-auto py-2">
-              <SettingsAccordion
-                settingsExpanded={settingsExpanded}
-                onToggle={handleSettingsToggle}
-                nameEditOpen={nameEditOpen}
-                onNameEditToggle={handleNameEditToggle}
-                user={user}
-                updateDisplayName={updateDisplayName}
-                onNavigate={handleSidebarClose}
-              />
-            </nav>
-          </aside>
-        </>
-      )}
+        </nav>
+      </aside>
     </div>
   );
 }
