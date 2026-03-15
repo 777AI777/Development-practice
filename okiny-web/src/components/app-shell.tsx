@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useSessionUser } from "@/hooks/use-session-user";
 import { useToast } from "@/components/toast-provider";
+import { getUserInitial } from "@/lib/user-utils";
 
 const APP_BRAND = "OKINY";
 
@@ -147,8 +148,7 @@ function SettingsAccordion({
           <button
             type="button"
             onClick={onNameEditToggle}
-            className="w-full bg-transparent px-4 py-2 text-left text-sm transition cursor-pointer hover:bg-muted"
-            style={{ color: "var(--foreground)" }}
+            className="w-full bg-transparent px-4 py-2 text-left text-sm text-foreground transition cursor-pointer hover:bg-muted"
           >
             表示名編集
           </button>
@@ -241,14 +241,7 @@ export function AppShell({ children }: AppShellProps) {
     setSettingsExpanded((prev) => !prev);
   }, []);
 
-  const userInitial = user?.name
-    ? user.name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "";
+  const userInitial = getUserInitial(user?.name);
 
   return (
     <div className="min-h-screen bg-background text-foreground">

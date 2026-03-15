@@ -11,21 +11,8 @@ import { DEMO_RANKING, DEMO_RANKING_ID } from "@/lib/demo-ranking";
 import { formatSmartDate } from "@/lib/format-date";
 import { publishedApiClient } from "@/lib/publish/client";
 import { PublishedApiError } from "@/lib/publish/http-published-api-client";
-import { FIXED_TAGS } from "@/lib/tags";
+import { getTagLabel } from "@/lib/tags";
 import type { PublishedRanking } from "@/lib/types";
-
-const TAG_LABELS_JA: Record<string, string> = {
-  movie: "映画",
-  music: "音楽",
-  travel: "旅行",
-  cafe: "カフェ",
-  cosmetics: "化粧品",
-  daily: "日用品",
-};
-
-function getTagLabel(tagId: string): string {
-  return TAG_LABELS_JA[tagId] ?? tagId;
-}
 
 export default function RankingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -158,7 +145,7 @@ export default function RankingDetailPage() {
           </div>
 
           {/* Ranking items */}
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--card)" }}>
+          <div className="rounded-xl overflow-hidden bg-card">
             {ranking.items.map((item, index) => {
               const rank = index + 1;
               const isFirst = rank === 1;

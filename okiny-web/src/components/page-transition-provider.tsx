@@ -3,6 +3,13 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
+/** Paths where page transitions should be suppressed entirely. */
+const SUPPRESS_TRANSITION_PATHS = new Set([
+  "/login",
+  "/settings/logout",
+  "/onboarding",
+]);
+
 export function PageTransitionProvider({
   children,
 }: {
@@ -12,40 +19,52 @@ export function PageTransitionProvider({
   const prevPathname = useRef(pathname);
   const contentRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  /** innerHTML captured from the PREVIOUS stable render. */
+  /** innerHTML captured from the PREVIOUS stable render (debounced). */
   const snapshotHtmlRef = useRef<string>("");
   const isTransitioningRef = useRef(false);
+  const snapshotTimerRef = useRef<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
-  // After every stable (non-transitioning) paint, save the live DOM.
-  // Because useEffect runs AFTER useLayoutEffect, this ref still holds
-  // the OLD page's markup when useLayoutEffect fires on a pathname change.
-  // Skip /login — its HTML must never be used as a transition overlay.
+  // Save a debounced snapshot after every render while not transitioning.
+  // 200ms debounce: waits for page to stabilize (avoids capturing loading states).
+  // Skip auth-related paths — their HTML must never appear as transition overlays.
   useEffect(() => {
-    if (!isTransitioningRef.current && contentRef.current && pathname !== "/login") {
-      snapshotHtmlRef.current = contentRef.current.innerHTML;
-    }
+    if (isTransitioningRef.current) return;
+    if (SUPPRESS_TRANSITION_PATHS.has(pathname)) return;
+
+    window.clearTimeout(snapshotTimerRef.current);
+    snapshotTimerRef.current = window.setTimeout(() => {
+      if (!isTransitioningRef.current && contentRef.current) {
+        snapshotHtmlRef.current = contentRef.current.innerHTML;
+      }
+    }, 200);
+
+    return () => window.clearTimeout(snapshotTimerRef.current);
   });
 
-  // On pathname change — runs synchronously BEFORE the browser paints,
-  // so the user never sees the new page's initial empty/loading state.
+  // On pathname change — runs synchronously BEFORE the browser paints.
   useLayoutEffect(() => {
     if (prevPathname.current === pathname) return;
     const fromPath = prevPathname.current;
     prevPathname.current = pathname;
 
-    // Navigating FROM /login is a fresh auth start — no overlay needed.
-    if (fromPath === "/login") return;
+    // Suppress transitions when navigating to OR from auth-related pages.
+    if (
+      SUPPRESS_TRANSITION_PATHS.has(fromPath) ||
+      SUPPRESS_TRANSITION_PATHS.has(pathname)
+    ) {
+      return;
+    }
 
     const overlay = overlayRef.current;
     if (!overlay || !snapshotHtmlRef.current) return;
 
     isTransitioningRef.current = true;
 
-    // Inject the saved OLD page snapshot into the overlay
+    // Inject the saved OLD page snapshot into the overlay.
     overlay.innerHTML = snapshotHtmlRef.current;
     // Remove fixed-position elements to avoid visual duplicates
-    // (the real header/sidebar stay on top via their z-index)
+    // (the real header/sidebar stay on top via their z-index).
     overlay.querySelectorAll(".fixed").forEach((el) => el.remove());
     overlay.style.display = "block";
     overlay.style.opacity = "1";
@@ -53,9 +72,10 @@ export function PageTransitionProvider({
 
     setIsLoading(true);
 
-    // Keep the old page visible for 600ms (enough for API responses),
-    // then instantly remove — no fade.
+    // Keep old page visible for 600ms, then instantly remove (no fade).
+    let cleanupCalled = false;
     const timerId = window.setTimeout(() => {
+      if (cleanupCalled) return;
       overlay.style.display = "none";
       overlay.innerHTML = "";
       isTransitioningRef.current = false;
@@ -63,6 +83,7 @@ export function PageTransitionProvider({
     }, 600);
 
     return () => {
+      cleanupCalled = true;
       window.clearTimeout(timerId);
       overlay.style.display = "none";
       overlay.innerHTML = "";

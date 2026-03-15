@@ -67,7 +67,7 @@ function getDatabase(): Promise<IDBDatabase> {
 }
 
 function toSorted(records: DraftLocalRecord[]): DraftLocalRecord[] {
-  return records.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return records.toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 function normalizeInput(input: DraftSaveInput): DraftSaveInput {

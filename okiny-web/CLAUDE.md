@@ -9,7 +9,7 @@
 
 | ファイル | 役割 | 注意点 |
 |---------|------|--------|
-| `src/lib/types.ts` | 型定義 | 24ファイルが依存。変更時は `supabase-rest.ts`, `drafts/`, `publish/`, 全page.tsx を確認 |
+| `src/lib/types.ts` | 型定義 | 多数のファイルが依存。変更時は `supabase-rest.ts`, `drafts/`, `publish/`, 全page.tsx を確認 |
 | `src/lib/tags.ts` | 固定タグ定義 | DB上のtag_idと1:1対応。追加・削除はDB側と同期必須 |
 | `src/lib/route-map.ts` | ルーティング定義 | ナビゲーション全体が依存。パス変更時は `app/` 配下の対応ディレクトリも同期 |
 | `src/lib/features.ts` | フラグ制御 | フラグ変更はアプリ全体の表示に影響 |
@@ -20,7 +20,7 @@
 | ファイル | 役割 | 注意点 |
 |---------|------|--------|
 | `src/lib/supabase-rest.ts` | Supabase REST直接アクセス | SDKなし。`ConflictError`で楽観ロック制御。ranking_items更新はDELETE→POST（全件削除→再挿入）。失敗時はロールバック付き |
-| `src/lib/session.ts` | Mock認証（Phase1） | `okiny:session:userId` キー。Phase2でOAuth置換予定。interfaceを壊さない |
+| `src/lib/session.ts` | Mock認証（Phase1） | `okiny:session:userId` + `okiny:session:displayNameMap` キー。Phase2でOAuth置換予定。interfaceを壊さない |
 | `src/lib/publish/` | 公開APIクライアント | シングルトンHTTPクライアント。エラーコード体系あり |
 
 ### Local State（データ消失リスク）
@@ -97,6 +97,6 @@
 | API実装ルール・楽観ロック | `.claude/rules/api.md` |
 | フロントエンドUI規約 | `.claude/rules/okiny-web.md` |
 | Figma Make | `.claude/rules/figma-make.md` |
-| デザイン仕様 | `docs/design/figma-make/guidelines/Guidelines.md` |
-| 画面遷移 | `docs/screen-transition.md` |
-| 要件定義 | `docs/requirements/要件定義.md` |
+| デザイン仕様 | `okiny-web/docs/design/figma-make/guidelines/Guidelines.md` |
+| 画面遷移 | `okiny-web/docs/screen-transition.md` |
+| 要件定義 | `okiny-web/docs/requirements/要件定義.md` |

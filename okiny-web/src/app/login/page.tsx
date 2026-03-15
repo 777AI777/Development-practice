@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { useSessionUser } from "@/hooks/use-session-user";
 import { trackEvent } from "@/lib/analytics";
@@ -12,9 +12,12 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, isReady, signInAs } = useSessionUser();
   const nextRoute = ENABLE_SNS_EXPANSION ? "/onboarding" : "/rankings";
+  const hasNavigatedRef = useRef(false);
 
+  // Redirect already-authenticated users who land on /login directly.
   useEffect(() => {
-    if (isReady && user) {
+    if (isReady && user && !hasNavigatedRef.current) {
+      hasNavigatedRef.current = true;
       router.replace(nextRoute);
     }
   }, [isReady, nextRoute, router, user]);
@@ -39,6 +42,8 @@ export default function LoginPage() {
               key={mockUser.id}
               type="button"
               onClick={() => {
+                if (hasNavigatedRef.current) return;
+                hasNavigatedRef.current = true;
                 signInAs(mockUser.id);
                 trackEvent("login_success", {
                   user_id: mockUser.id,

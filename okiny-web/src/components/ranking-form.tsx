@@ -216,8 +216,7 @@ export function RankingForm({
           <button
             type="button"
             onClick={onBack}
-            className="flex h-8 w-8 shrink-0 items-center justify-center bg-transparent text-lg font-bold"
-            style={{ color: "var(--foreground)" }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center bg-transparent text-lg font-bold text-foreground"
             aria-label="戻る"
           >
             {"\u2190"}
@@ -228,8 +227,7 @@ export function RankingForm({
         <input
           value={form.title}
           onChange={(event) => setTitle(event.target.value)}
-          className="min-w-0 flex-1 rounded-md border border-gray-300 bg-transparent px-2 py-1 text-center text-base font-bold text-foreground shadow-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:outline-none sm:text-xl"
-          style={{ color: "var(--foreground)" }}
+          className="min-w-0 flex-1 rounded-md border border-border bg-transparent px-2 py-1 text-center text-base font-bold text-foreground shadow-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:outline-none sm:text-xl"
           placeholder="ランキングタイトル"
         />
         <div className="h-8 w-8 shrink-0" />
@@ -282,7 +280,7 @@ export function RankingForm({
       </div>
 
       {/* Ranking items */}
-      <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--card)" }}>
+      <div className="rounded-xl overflow-hidden bg-card">
         {form.items.map((item, index) => {
           const rank = index + 1;
           const isFirst = rank === 1;
@@ -307,18 +305,15 @@ export function RankingForm({
               <input
                 value={item}
                 onChange={(event) => setItem(index, event.target.value)}
-                className={`min-w-0 flex-1 border border-gray-300 rounded-md px-2 py-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none ${isFirst ? "text-base font-semibold" : "text-sm"}`}
+                className={`min-w-0 flex-1 border border-border rounded-md px-2 py-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none ${isFirst ? "text-base font-semibold" : "text-sm"}`}
                 placeholder={`順位 ${rank}`}
               />
             </div>
           );
         })}
         <div
-          className="py-3 px-3 sm:px-6 flex items-center justify-center cursor-not-allowed opacity-60 transition"
-          style={{
-            backgroundColor: "var(--card)",
-            borderTop: "1px solid var(--border)",
-          }}
+          className="py-3 px-3 sm:px-6 flex items-center justify-center cursor-not-allowed opacity-60 transition bg-card"
+          style={{ borderTop: "1px solid var(--border)" }}
         >
           <span className="text-sm font-medium text-muted-foreground">
             + アイテムを追加 (Coming Soon)

@@ -11,21 +11,8 @@ import { draftRepository } from "@/lib/drafts/client-repository";
 import { MAX_DRAFTS_PER_USER } from "@/lib/drafts/constants";
 import { publishedApiClient } from "@/lib/publish/client";
 import { publishRanking } from "@/lib/publish/publish-ranking";
-import { FIXED_TAGS } from "@/lib/tags";
+import { getTagLabel } from "@/lib/tags";
 import type { DraftLocalRecord } from "@/lib/types";
-
-const TAG_LABELS_JA: Record<string, string> = {
-  movie: "映画",
-  music: "音楽",
-  travel: "旅行",
-  cafe: "カフェ",
-  cosmetics: "化粧品",
-  daily: "日用品",
-};
-
-function getTagLabel(tagId: string): string {
-  return TAG_LABELS_JA[tagId] ?? tagId;
-}
 
 export default function DraftsPage() {
   const { user } = useSessionUser();
@@ -107,7 +94,7 @@ export default function DraftsPage() {
             </Link>
           </div>
         ) : (
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--card)" }}>
+          <div className="rounded-xl overflow-hidden bg-card">
             {drafts.map((draft, idx) => (
               <div
                 key={draft.draftId}

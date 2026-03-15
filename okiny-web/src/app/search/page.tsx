@@ -8,23 +8,10 @@ import { useToast } from "@/components/toast-provider";
 import { SHOW_STATE_SCREENS } from "@/lib/features";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
-import { FIXED_TAGS } from "@/lib/tags";
+import { FIXED_TAGS, getTagLabel } from "@/lib/tags";
 import type { PublishedRanking } from "@/lib/types";
 
 const apiClient = new HttpPublishedApiClient();
-
-const TAG_LABELS_JA: Record<string, string> = {
-  movie: "映画",
-  music: "音楽",
-  travel: "旅行",
-  cafe: "カフェ",
-  cosmetics: "化粧品",
-  daily: "日用品",
-};
-
-function getTagLabel(tagId: string): string {
-  return TAG_LABELS_JA[tagId] ?? tagId;
-}
 
 export default function TagSearchPage() {
   const { user } = useSessionUser();
@@ -121,13 +108,12 @@ export default function TagSearchPage() {
           </div>
         ) : (
           <>
-            <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--foreground)" }}>「{getTagLabel(tagId)}」の検索結果</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-3">「{getTagLabel(tagId)}」の検索結果</h2>
             <div className="space-y-3">
               {results.map((ranking) => (
                 <div
                   key={ranking.id}
-                  className="rounded-xl p-4 cursor-pointer"
-                  style={{ backgroundColor: "var(--card)" }}
+                  className="rounded-xl p-4 cursor-pointer bg-card"
                 >
                   <Link
                     href={`/rankings/${ranking.id}`}

@@ -54,8 +54,8 @@ describe("HttpPublishedApiClient.deletePublishedRanking", () => {
     const client = new HttpPublishedApiClient();
     const error = await client
       .deletePublishedRanking("user-1", "ranking-1", "2025-01-01T00:00:00Z")
-      .catch((e: PublishedApiError) => e);
+      .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(PublishedApiError);
-    expect(error.code).toBe("CONFLICT");
+    expect((error as PublishedApiError).code).toBe("CONFLICT");
   });
 });
