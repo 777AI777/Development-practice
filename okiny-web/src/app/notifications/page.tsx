@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { ENABLE_SNS_EXPANSION } from "@/lib/features";
 
 const SAMPLE_NOTIFICATIONS = [
@@ -27,6 +29,12 @@ const SAMPLE_NOTIFICATIONS = [
 ];
 
 export default function NotificationsPage() {
+  const { signalReady } = usePageTransition();
+
+  useEffect(() => {
+    signalReady();
+  }, [signalReady]);
+
   if (!ENABLE_SNS_EXPANSION) {
     return (
       <AppShell title="通知" subtitle="SNS拡張は無効です。">

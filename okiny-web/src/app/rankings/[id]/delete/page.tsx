@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { DEMO_RANKING_ID } from "@/lib/demo-ranking";
 import { publishedApiClient } from "@/lib/publish/client";
@@ -16,6 +17,7 @@ export default function DeleteRankingPage() {
   const router = useRouter();
   const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
+  const { signalReady } = usePageTransition();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string | undefined>();
@@ -32,13 +34,14 @@ export default function DeleteRankingPage() {
       setExpectedUpdatedAt(undefined);
       setRankingTitle("デモランキング");
       setIsLoading(false);
+      signalReady();
       return;
     }
 
     let canceled = false;
     setIsLoading(true);
     void publishedApiClient
-      .getPublishedRanking(user.id, rankingId)
+      .getPublishedRanking(rankingId)
       .then((ranking) => {
         if (canceled) return;
         setExpectedUpdatedAt(ranking.updatedAt);
@@ -55,12 +58,13 @@ export default function DeleteRankingPage() {
       .finally(() => {
         if (canceled) return;
         setIsLoading(false);
+        signalReady();
       });
 
     return () => {
       canceled = true;
     };
-  }, [isReady, pushToast, rankingId, user]);
+  }, [isReady, pushToast, rankingId, signalReady, user]);
 
   const runDelete = async () => {
     if (!user) return;
@@ -80,7 +84,6 @@ export default function DeleteRankingPage() {
         return;
       }
       await publishedApiClient.deletePublishedRanking(
-        user.id,
         rankingId,
         expectedUpdatedAt,
       );

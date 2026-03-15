@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { RankingForm } from "@/components/ranking-form";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
@@ -21,6 +22,7 @@ function toRankingItems(items: string[]): RankingItems {
 const EMPTY_ITEMS: RankingItems = ["", "", "", "", ""];
 
 function NewRankingPageContent() {
+  const { signalReady } = usePageTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { pushToast } = useToast();
@@ -28,6 +30,10 @@ function NewRankingPageContent() {
   const [initialDraft, setInitialDraft] = useState<RankingInput | undefined>();
   const [activeDraftId, setActiveDraftId] = useState<string | undefined>();
   const trackedRef = useRef(false);
+
+  useEffect(() => {
+    signalReady();
+  }, [signalReady]);
 
   useEffect(() => {
     if (!user) {

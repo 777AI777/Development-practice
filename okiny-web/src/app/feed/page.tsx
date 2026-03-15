@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { trackEvent } from "@/lib/analytics";
 import { ENABLE_SNS_EXPANSION } from "@/lib/features";
@@ -21,6 +22,7 @@ interface FeedResponse {
 
 function FeedPageContent() {
   const searchParams = useSearchParams();
+  const { signalReady } = usePageTransition();
   const { user } = useSessionUser();
   const [isLoading, setIsLoading] = useState(true);
   const [feed, setFeed] = useState<FeedResponse | null>(null);
@@ -66,12 +68,13 @@ function FeedPageContent() {
           return;
         }
         setIsLoading(false);
+        signalReady();
       });
 
     return () => {
       canceled = true;
     };
-  }, [tab, user]);
+  }, [tab, user, signalReady]);
 
   useEffect(() => {
     if (!user || !ENABLE_SNS_EXPANSION) {
@@ -136,12 +139,7 @@ function FeedPageContent() {
           </Link>
         </div>
 
-        {isLoading ? (
-          <div className="space-y-2">
-            <div className="h-20 animate-pulse rounded-md bg-slate-100" />
-            <div className="h-20 animate-pulse rounded-md bg-slate-100" />
-          </div>
-        ) : error ? (
+        {isLoading ? null : error ? (
           <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
             {error}
           </p>

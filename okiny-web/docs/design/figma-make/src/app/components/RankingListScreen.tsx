@@ -148,7 +148,7 @@ export function RankingListScreen({
                 className="rounded-xl"
                 onClick={() => onNavigate("ranking-new")}
               >
-                ＋ 新規ランキング
+                ＋
               </Button>
             </div>
 

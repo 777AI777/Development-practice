@@ -2,38 +2,39 @@
 
 interface SupabaseEnv {
   url: string;
-  serviceRoleKey: string;
+  anonKey: string;
 }
 
 function readSupabaseEnv(): SupabaseEnv {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url) {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL is not configured.");
   }
-  if (!serviceRoleKey) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured.");
+  if (!anonKey) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured.");
   }
 
-  return { url, serviceRoleKey };
+  return { url, anonKey };
 }
 
 interface SupabaseRequestInit {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   prefer?: string;
+  accessToken: string;
 }
 
 async function requestSupabase(
   path: string,
-  init: SupabaseRequestInit = {},
+  init: SupabaseRequestInit,
 ): Promise<Response> {
   const env = readSupabaseEnv();
 
   const headers: Record<string, string> = {
-    apikey: env.serviceRoleKey,
-    Authorization: `Bearer ${env.serviceRoleKey}`,
+    apikey: env.anonKey,
+    Authorization: `Bearer ${init.accessToken}`,
   };
 
   if (init.body !== undefined) {
@@ -87,7 +88,10 @@ async function ensureResponseOk(response: Response): Promise<void> {
     return;
   }
   const detail = await response.text();
-  throw new Error(`Supabase REST failed (${response.status}): ${detail}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.error("[supabase-rest] error detail:", detail);
+  }
+  throw new Error(`Supabase REST failed (${response.status})`);
 }
 
 function buildRankingItemsPayload(params: {
@@ -103,10 +107,11 @@ function buildRankingItemsPayload(params: {
     .filter((item) => item.item_text.length > 0);
 }
 
-async function deleteRankingById(rankingId: string): Promise<void> {
+async function deleteRankingById(rankingId: string, accessToken: string): Promise<void> {
   const query = new URLSearchParams({ id: `eq.${rankingId}` });
   const response = await requestSupabase(`rankings?${query.toString()}`, {
     method: "DELETE",
+    accessToken,
   });
   await ensureResponseOk(response);
 }
@@ -114,6 +119,7 @@ async function deleteRankingById(rankingId: string): Promise<void> {
 export async function listRankingsByUser(params: {
   userId: string;
   tagId?: string;
+  accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
     select: "id,user_id,title,tag_id,created_at,updated_at,ranking_items(rank,item_text)",
@@ -126,6 +132,7 @@ export async function listRankingsByUser(params: {
 
   const response = await requestSupabase(`rankings?${query.toString()}`, {
     method: "GET",
+    accessToken: params.accessToken,
   });
   await ensureResponseOk(response);
   const rows = (await response.json()) as SupabaseRankingRow[];
@@ -135,6 +142,7 @@ export async function listRankingsByUser(params: {
 export async function getRankingById(params: {
   userId: string;
   rankingId: string;
+  accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow> | null> {
   const query = new URLSearchParams({
     select: "id,user_id,title,tag_id,created_at,updated_at,ranking_items(rank,item_text)",
@@ -145,6 +153,7 @@ export async function getRankingById(params: {
 
   const response = await requestSupabase(`rankings?${query.toString()}`, {
     method: "GET",
+    accessToken: params.accessToken,
   });
   await ensureResponseOk(response);
   const rows = (await response.json()) as SupabaseRankingRow[];
@@ -157,10 +166,12 @@ export async function createRanking(params: {
   title: string;
   tagId: string;
   items: [string, string, string, string, string];
+  accessToken: string;
 }) {
   const rankingInsertResponse = await requestSupabase("rankings", {
     method: "POST",
     prefer: "return=representation",
+    accessToken: params.accessToken,
     body: [
       {
         user_id: params.userId,
@@ -181,25 +192,26 @@ export async function createRanking(params: {
     items: params.items,
   });
   if (itemsBody.length === 0) {
-    await deleteRankingById(rankingId);
+    await deleteRankingById(rankingId, params.accessToken);
     throw new Error("Ranking must contain at least one non-empty item.");
   }
 
   try {
     const itemInsertResponse = await requestSupabase("ranking_items", {
       method: "POST",
+      accessToken: params.accessToken,
       body: itemsBody,
     });
     await ensureResponseOk(itemInsertResponse);
   } catch (error) {
     try {
-      await deleteRankingById(rankingId);
+      await deleteRankingById(rankingId, params.accessToken);
     } catch {
       // best-effort rollback
     }
     throw error;
   }
-  const created = await getRankingById({ userId: params.userId, rankingId });
+  const created = await getRankingById({ userId: params.userId, rankingId, accessToken: params.accessToken });
   if (!created) {
     throw new Error("Failed to fetch created ranking.");
   }
@@ -213,10 +225,12 @@ export async function updateRanking(params: {
   tagId: string;
   items: [string, string, string, string, string];
   expectedUpdatedAt: string;
+  accessToken: string;
 }) {
   const previous = await getRankingById({
     userId: params.userId,
     rankingId: params.rankingId,
+    accessToken: params.accessToken,
   });
   if (!previous) {
     throw new Error("Ranking not found.");
@@ -243,6 +257,7 @@ export async function updateRanking(params: {
     {
       method: "PATCH",
       prefer: "return=representation",
+      accessToken: params.accessToken,
       body: {
         title: params.title,
         tag_id: params.tagId,
@@ -262,12 +277,14 @@ export async function updateRanking(params: {
       `ranking_items?${deleteItemsQuery.toString()}`,
       {
         method: "DELETE",
+        accessToken: params.accessToken,
       },
     );
     await ensureResponseOk(deleteItemsResponse);
 
     const itemInsertResponse = await requestSupabase("ranking_items", {
       method: "POST",
+      accessToken: params.accessToken,
       body: itemsBody,
     });
     await ensureResponseOk(itemInsertResponse);
@@ -280,6 +297,7 @@ export async function updateRanking(params: {
         }).toString()}`,
         {
           method: "PATCH",
+          accessToken: params.accessToken,
           body: {
             title: previous.title,
             tag_id: previous.tagId,
@@ -290,6 +308,7 @@ export async function updateRanking(params: {
       await ensureResponseOk(restoreRankingResponse);
       const restoreItemsResponse = await requestSupabase("ranking_items", {
         method: "POST",
+        accessToken: params.accessToken,
         body: previous.items.map((item, index) => ({
           ranking_id: previous.id,
           rank: index + 1,
@@ -306,6 +325,7 @@ export async function updateRanking(params: {
   const updated = await getRankingById({
     userId: params.userId,
     rankingId: params.rankingId,
+    accessToken: params.accessToken,
   });
   if (!updated) {
     throw new Error("Updated ranking could not be loaded.");
@@ -317,10 +337,12 @@ export async function deleteRanking(params: {
   rankingId: string;
   userId: string;
   expectedUpdatedAt: string;
+  accessToken: string;
 }) {
   const existing = await getRankingById({
     userId: params.userId,
     rankingId: params.rankingId,
+    accessToken: params.accessToken,
   });
   if (!existing) {
     return;
@@ -335,6 +357,7 @@ export async function deleteRanking(params: {
       `ranking_items?${deleteItemsQuery.toString()}`,
       {
         method: "DELETE",
+        accessToken: params.accessToken,
       },
     );
     await ensureResponseOk(deleteItemsResponse);
@@ -347,6 +370,7 @@ export async function deleteRanking(params: {
     const response = await requestSupabase(`rankings?${query.toString()}`, {
       method: "DELETE",
       prefer: "return=representation",
+      accessToken: params.accessToken,
     });
     await ensureResponseOk(response);
     const deletedRows = (await response.json()) as Array<{ id: string }>;
@@ -357,6 +381,7 @@ export async function deleteRanking(params: {
     try {
       const restoreItemsResponse = await requestSupabase("ranking_items", {
         method: "POST",
+        accessToken: params.accessToken,
         body: existing.items.map((item, index) => ({
           ranking_id: existing.id,
           rank: index + 1,

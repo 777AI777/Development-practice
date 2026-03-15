@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
 import { createRanking, listRankingsByUser } from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
 
@@ -12,7 +13,6 @@ const rankingItemsSchema = z
   });
 
 const createSchema = z.object({
-  userId: z.string().min(1),
   ranking: z.object({
     title: z.string().trim().min(1, "タイトルは必須です。"),
     tagId: z.string().trim().min(1, "タグは必須です。"),
@@ -25,19 +25,20 @@ function toRankingItems(items: string[]): RankingItems {
 }
 
 export async function GET(request: Request) {
+  const auth = await getAuthenticatedUserId();
+  if (!auth.ok) {
+    const status = auth.reason === "unauthorized" ? 401 : 503;
+    const code = auth.reason === "unauthorized" ? "UNAUTHORIZED" : "SERVER";
+    const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
+    return NextResponse.json({ error: { code, message } }, { status });
+  }
+  const { userId, accessToken } = auth;
+
   const url = new URL(request.url);
-  const userId = url.searchParams.get("userId") ?? "";
   const tagId = url.searchParams.get("tagId") ?? undefined;
 
-  if (!userId) {
-    return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId クエリパラメータは必須です。" } },
-      { status: 422 },
-    );
-  }
-
   try {
-    const data = await listRankingsByUser({ userId, tagId });
+    const data = await listRankingsByUser({ userId, tagId, accessToken });
     return NextResponse.json({ data });
   } catch (error) {
     console.error("[GET /api/v1/rankings]", error);
@@ -49,6 +50,15 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = await getAuthenticatedUserId();
+  if (!auth.ok) {
+    const status = auth.reason === "unauthorized" ? 401 : 503;
+    const code = auth.reason === "unauthorized" ? "UNAUTHORIZED" : "SERVER";
+    const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
+    return NextResponse.json({ error: { code, message } }, { status });
+  }
+  const { userId, accessToken } = auth;
+
   let payload: unknown;
   try {
     payload = await request.json();
@@ -74,10 +84,11 @@ export async function POST(request: Request) {
 
   try {
     const created = await createRanking({
-      userId: parsed.data.userId,
+      userId,
       title: parsed.data.ranking.title,
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
+      accessToken,
     });
     return NextResponse.json({ data: created }, { status: 201 });
   } catch (error) {

@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { RankingForm } from "@/components/ranking-form";
 import { useToast } from "@/components/toast-provider";
 import { DEMO_RANKING, DEMO_RANKING_ID } from "@/lib/demo-ranking";
@@ -18,6 +19,7 @@ export default function RankingEditPage() {
   const router = useRouter();
   const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
+  const { signalReady } = usePageTransition();
 
   const [isLoading, setIsLoading] = useState(true);
   const [initialValue, setInitialValue] = useState<RankingInput | undefined>();
@@ -38,13 +40,14 @@ export default function RankingEditPage() {
       });
       setExpectedUpdatedAt(undefined);
       setIsLoading(false);
+      signalReady();
       return;
     }
 
     let canceled = false;
     setIsLoading(true);
     void publishedApiClient
-      .getPublishedRanking(user.id, rankingId)
+      .getPublishedRanking(rankingId)
       .then((ranking) => {
         if (canceled) return;
         setInitialValue({
@@ -65,12 +68,13 @@ export default function RankingEditPage() {
       .finally(() => {
         if (canceled) return;
         setIsLoading(false);
+        signalReady();
       });
 
     return () => {
       canceled = true;
     };
-  }, [isReady, pushToast, rankingId, user]);
+  }, [isReady, pushToast, rankingId, signalReady, user]);
 
   const handleSubmit = async (value: RankingInput) => {
     if (!user) return;
@@ -83,7 +87,6 @@ export default function RankingEditPage() {
     }
     try {
       await publishedApiClient.updatePublishedRanking({
-        userId: user.id,
         rankingId,
         ranking: value,
         expectedUpdatedAt,
@@ -101,12 +104,7 @@ export default function RankingEditPage() {
 
   return (
     <AppShell>
-      {isLoading ? (
-        <div className="space-y-3">
-          <div className="h-10 animate-pulse rounded bg-muted" />
-          <div className="h-56 animate-pulse rounded bg-muted" />
-        </div>
-      ) : initialValue ? (
+      {isLoading ? null : initialValue ? (
         <RankingForm
           initialValue={initialValue}
           submitLabel="更新"

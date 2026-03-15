@@ -1,4 +1,11 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(handle \"Development-practice\\\\okiny-web\\\\.next\\\\dev\\\\lock\")",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "Read(//c/Users/hueym/AppData/Local/Temp/claude/c--Users-hueym-Documents-GitHub-Development-practice/934a3e17-abe8-4347-90c2-3605c5f1955e/tasks/**)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -36,10 +43,5 @@
     "hookify@claude-plugins-official": false,
     "vercel@claude-plugins-official": true,
     "playground@claude-plugins-official": true
-  },
-  "permissions": {
-    "allow": [
-      "Bash(handle \"Development-practice\\\\okiny-web\\\\.next\\\\dev\\\\lock\")"
-    ]
   }
 }

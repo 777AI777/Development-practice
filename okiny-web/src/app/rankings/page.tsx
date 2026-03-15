@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useState } 
 
 import { AppShell } from "@/components/app-shell";
 import { ComingSoon } from "@/components/coming-soon";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { formatSmartDate } from "@/lib/format-date";
 import { getUserInitial } from "@/lib/user-utils";
@@ -75,17 +76,7 @@ function MyRankContent({
   const userInitial = getUserInitial(userName, "??");
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[0, 1].map((group) => (
-          <div key={group} className="space-y-2">
-            <div className="h-9 animate-pulse rounded-lg border border-border bg-muted" />
-            <div className="h-[84px] animate-pulse rounded-xl border border-border bg-card" />
-            <div className="h-[84px] animate-pulse rounded-xl border border-border bg-card" />
-          </div>
-        ))}
-      </div>
-    );
+    return null;
   }
 
   if (errorMessage) {
@@ -138,9 +129,10 @@ function MyRankContent({
       <div className="mb-4 flex justify-end">
         <Link
           href="/rankings/new"
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:opacity-90"
+          aria-label="新規ランキング作成"
+          className="inline-flex items-center justify-center rounded-lg bg-primary px-2.5 py-1 text-sm font-bold text-primary-foreground hover:opacity-90"
         >
-          ＋ 新規ランキング
+＋
         </Link>
       </div>
 
@@ -224,6 +216,7 @@ function RankingsPageContent() {
   const searchParams = useSearchParams();
   const requestedState = searchParams.get("state");
   const { isReady, user } = useSessionUser();
+  const { signalReady } = usePageTransition();
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -252,16 +245,19 @@ function RankingsPageContent() {
     }
 
     if (requestedState === "loading") {
+      signalReady();
       return;
     }
     if (requestedState === "error") {
       setIsLoading(false);
       setErrorMessage("シミュレーション用のエラー状態です。");
+      signalReady();
       return;
     }
     if (requestedState === "empty") {
       setIsLoading(false);
       setErrorMessage(null);
+      signalReady();
       return;
     }
 
@@ -270,7 +266,7 @@ function RankingsPageContent() {
     setErrorMessage(null);
 
     void apiClient
-      .listPublishedRankings(user.id)
+      .listPublishedRankings()
       .then((data) => {
         if (canceled) {
           return;
@@ -292,12 +288,13 @@ function RankingsPageContent() {
           return;
         }
         setIsLoading(false);
+        signalReady();
       });
 
     return () => {
       canceled = true;
     };
-  }, [isReady, requestedState, user]);
+  }, [isReady, requestedState, signalReady, user]);
 
   const groupedRankings = useMemo(() => groupRankingsByTag(rankings), [rankings]);
   const isEmpty = !isLoading && !errorMessage && rankings.length === 0;

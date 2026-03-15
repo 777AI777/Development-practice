@@ -18,7 +18,7 @@ describe("HttpPublishedApiClient.deletePublishedRanking", () => {
     );
 
     const client = new HttpPublishedApiClient();
-    await expect(client.deletePublishedRanking("user-1", "ranking-1", "2025-01-01T00:00:00Z")).resolves.toBeUndefined();
+    await expect(client.deletePublishedRanking("ranking-1", "2025-01-01T00:00:00Z")).resolves.toBeUndefined();
   });
 
   it("throws PublishedApiError when delete response is not 204", async () => {
@@ -34,7 +34,7 @@ describe("HttpPublishedApiClient.deletePublishedRanking", () => {
     );
 
     const client = new HttpPublishedApiClient();
-    await expect(client.deletePublishedRanking("user-1", "ranking-1", "2025-01-01T00:00:00Z")).rejects.toBeInstanceOf(
+    await expect(client.deletePublishedRanking("ranking-1", "2025-01-01T00:00:00Z")).rejects.toBeInstanceOf(
       PublishedApiError,
     );
   });
@@ -53,7 +53,7 @@ describe("HttpPublishedApiClient.deletePublishedRanking", () => {
 
     const client = new HttpPublishedApiClient();
     const error = await client
-      .deletePublishedRanking("user-1", "ranking-1", "2025-01-01T00:00:00Z")
+      .deletePublishedRanking("ranking-1", "2025-01-01T00:00:00Z")
       .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(PublishedApiError);
     expect((error as PublishedApiError).code).toBe("CONFLICT");

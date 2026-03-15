@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { trackEvent } from "@/lib/analytics";
@@ -14,6 +15,7 @@ import type { CommentSummary, FeedItem, Reaction } from "@/lib/types";
 export default function FeedDetailPage() {
   const params = useParams<{ id: string }>();
   const rankingId = params.id;
+  const { signalReady } = usePageTransition();
   const { user } = useSessionUser();
   const { pushToast } = useToast();
   const [item, setItem] = useState<FeedItem | null>(null);
@@ -65,12 +67,13 @@ export default function FeedDetailPage() {
           return;
         }
         setIsLoading(false);
+        signalReady();
       });
 
     return () => {
       canceled = true;
     };
-  }, [rankingId, user]);
+  }, [rankingId, user, signalReady]);
 
   const reactionMap = useMemo(() => {
     const map = new Map<Reaction["type"], Reaction>();
@@ -179,12 +182,7 @@ export default function FeedDetailPage() {
       title="投稿詳細"
       subtitle="リアクション・保存・共有・通報・コメントを集約した拡張詳細画面。"
     >
-      {isLoading ? (
-        <div className="space-y-2">
-          <div className="h-8 animate-pulse rounded bg-slate-100" />
-          <div className="h-24 animate-pulse rounded bg-slate-100" />
-        </div>
-      ) : error ? (
+      {isLoading ? null : error ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
           {error}
         </p>

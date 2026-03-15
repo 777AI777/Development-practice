@@ -66,8 +66,8 @@ const expectedUpdatedAt = url.searchParams.get("expectedUpdatedAt") ?? ""
 ## Supabase REST
 
 - `supabase-rest.ts` 経由でアクセス。直接fetchしない
-- 環境変数: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
-- サービスロールキーはサーバーサイドのみ使用（クライアントに露出させない）
+- 環境変数: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- anon key + ユーザーJWT（access_token）で認証。RLSがDB側でアクセス制御
 
 ## ranking_items 更新パターン
 
