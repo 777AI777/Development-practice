@@ -38,7 +38,10 @@ export default function LogoutConfirmPage() {
                   await signOut();
                   router.push("/login");
                 } catch (error) {
-                  console.error("ログアウトに失敗しました:", error);
+                  console.error("ログアウトに失敗しました");
+                  if (process.env.NODE_ENV !== "production") {
+                    console.error("detail:", error);
+                  }
                   setIsLoggingOut(false);
                 }
               }}

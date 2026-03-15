@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
-import { SHOW_STATE_SCREENS } from "@/lib/features";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
 import { FIXED_TAGS, getTagLabel } from "@/lib/tags";
@@ -84,15 +83,6 @@ export default function TagSearchPage() {
             ))}
           </div>
         </div>
-
-        {SHOW_STATE_SCREENS ? (
-          <Link
-            href="/states/empty-search"
-            className="inline-flex rounded-md border border-border px-3 py-2 text-xs text-muted-foreground"
-          >
-            空の検索結果画面を開く (10)
-          </Link>
-        ) : null}
 
         {/* Results */}
         {isLoading ? null : results.length === 0 ? (

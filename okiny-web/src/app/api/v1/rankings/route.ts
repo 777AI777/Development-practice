@@ -1,12 +1,20 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
+import {
+  getAuthenticatedUserId,
+  authErrorResponse,
+} from "@/lib/supabase/auth-guard";
 import { createRanking, listRankingsByUser } from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
 
 const rankingItemsSchema = z
-  .array(z.string().transform((value) => value.trim()))
+  .array(
+    z
+      .string()
+      .transform((value) => value.trim())
+      .pipe(z.string().max(100, "各項目は100文字以内にしてください。")),
+  )
   .length(RANKING_ITEM_COUNT)
   .refine((items) => items.some((item) => item.length > 0), {
     message: "ランキング順位は1つ以上入力してください。",
@@ -14,8 +22,8 @@ const rankingItemsSchema = z
 
 const createSchema = z.object({
   ranking: z.object({
-    title: z.string().trim().min(1, "タイトルは必須です。"),
-    tagId: z.string().trim().min(1, "タグは必須です。"),
+    title: z.string().trim().min(1, "タイトルは必須です。").max(50, "タイトルは50文字以内にしてください。"),
+    tagId: z.string().trim().min(1, "タグは必須です。").max(20, "タグIDは20文字以内にしてください。"),
     items: rankingItemsSchema,
   }),
 });
@@ -27,10 +35,7 @@ function toRankingItems(items: string[]): RankingItems {
 export async function GET(request: Request) {
   const auth = await getAuthenticatedUserId();
   if (!auth.ok) {
-    const status = auth.reason === "unauthorized" ? 401 : 503;
-    const code = auth.reason === "unauthorized" ? "UNAUTHORIZED" : "SERVER";
-    const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
-    return NextResponse.json({ error: { code, message } }, { status });
+    return authErrorResponse(auth);
   }
   const { userId, accessToken } = auth;
 
@@ -41,7 +46,10 @@ export async function GET(request: Request) {
     const data = await listRankingsByUser({ userId, tagId, accessToken });
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("[GET /api/v1/rankings]", error);
+    console.error("[GET /api/v1/rankings] failed");
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[GET /api/v1/rankings] detail:", error);
+    }
     return NextResponse.json(
       { error: { code: "SERVER", message: "ランキングの読み込みに失敗しました。" } },
       { status: 500 },
@@ -52,10 +60,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const auth = await getAuthenticatedUserId();
   if (!auth.ok) {
-    const status = auth.reason === "unauthorized" ? 401 : 503;
-    const code = auth.reason === "unauthorized" ? "UNAUTHORIZED" : "SERVER";
-    const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
-    return NextResponse.json({ error: { code, message } }, { status });
+    return authErrorResponse(auth);
   }
   const { userId, accessToken } = auth;
 
@@ -92,7 +97,10 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ data: created }, { status: 201 });
   } catch (error) {
-    console.error("[POST /api/v1/rankings]", error);
+    console.error("[POST /api/v1/rankings] failed");
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[POST /api/v1/rankings] detail:", error);
+    }
     return NextResponse.json(
       { error: { code: "SERVER", message: "ランキングの作成に失敗しました。" } },
       { status: 500 },

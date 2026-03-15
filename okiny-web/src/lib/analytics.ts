@@ -2,10 +2,7 @@ type AnalyticsEventName =
   | "login_success"
   | "ranking_create_start"
   | "ranking_publish_success"
-  | "draft_save_success"
-  | "return_visit_d1"
-  | "feed_open"
-  | "reaction_sent";
+  | "draft_save_success";
 
 interface AnalyticsRecord {
   event: AnalyticsEventName;

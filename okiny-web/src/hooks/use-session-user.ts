@@ -9,6 +9,16 @@ import type { AuthUser } from "@/lib/supabase/types";
 let cachedUser: AuthUser | null = null;
 let cachedIsReady = false;
 
+/** キャッシュ更新を単一関数に集約（競合リスク軽減） */
+function updateCache(user: AuthUser | null, ready: boolean): void {
+  cachedUser = user;
+  cachedIsReady = ready;
+}
+
+interface AuthSyncMessage {
+  type: "SIGNED_OUT";
+}
+
 interface UseSessionUserResult {
   isReady: boolean;
   user: AuthUser | null;
@@ -47,8 +57,7 @@ export function useSessionUser(): UseSessionUserResult {
 
     void supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
       const userData = currentUser ? toAuthUser(currentUser) : null;
-      cachedUser = userData;
-      cachedIsReady = true;
+      updateCache(userData, true);
       setUser(userData);
       setIsReady(true);
     });
@@ -58,11 +67,9 @@ export function useSessionUser(): UseSessionUserResult {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       const userData = session?.user ? toAuthUser(session.user) : null;
       if (_event === "SIGNED_OUT") {
-        cachedUser = null;
-        cachedIsReady = false;
+        updateCache(null, false);
       } else {
-        cachedUser = userData;
-        cachedIsReady = true;
+        updateCache(userData, true);
       }
       setUser(userData);
       setIsReady(true);
@@ -72,10 +79,9 @@ export function useSessionUser(): UseSessionUserResult {
     let authChannel: BroadcastChannel | null = null;
     if (typeof BroadcastChannel !== "undefined") {
       authChannel = new BroadcastChannel("okiny-auth-sync");
-      authChannel.onmessage = (event: MessageEvent) => {
+      authChannel.onmessage = (event: MessageEvent<AuthSyncMessage>) => {
         if (event.data.type === "SIGNED_OUT") {
-          cachedUser = null;
-          cachedIsReady = true;
+          updateCache(null, true);
           setUser(null);
           setIsReady(true);
         }
@@ -91,8 +97,7 @@ export function useSessionUser(): UseSessionUserResult {
   const signOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    cachedUser = null;
-    cachedIsReady = false;
+    updateCache(null, false);
     setUser(null);
 
     // 他タブに通知
@@ -112,7 +117,9 @@ export function useSessionUser(): UseSessionUserResult {
       data: { display_name: normalized },
     });
     if (data.user) {
-      setUser(toAuthUser(data.user));
+      const updatedUser = toAuthUser(data.user);
+      updateCache(updatedUser, true);
+      setUser(updatedUser);
     }
   };
 

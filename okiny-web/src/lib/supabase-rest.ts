@@ -218,6 +218,63 @@ export async function createRanking(params: {
   return created;
 }
 
+async function replaceRankingItems(params: {
+  rankingId: string;
+  itemsBody: Array<{ ranking_id: string; rank: number; item_text: string }>;
+  accessToken: string;
+}): Promise<void> {
+  const deleteQuery = new URLSearchParams({ ranking_id: `eq.${params.rankingId}` });
+  const deleteResponse = await requestSupabase(
+    `ranking_items?${deleteQuery.toString()}`,
+    {
+      method: "DELETE",
+      accessToken: params.accessToken,
+    },
+  );
+  await ensureResponseOk(deleteResponse);
+
+  const insertResponse = await requestSupabase("ranking_items", {
+    method: "POST",
+    accessToken: params.accessToken,
+    body: params.itemsBody,
+  });
+  await ensureResponseOk(insertResponse);
+}
+
+async function restoreRankingItems(params: {
+  ranking: ReturnType<typeof mapRankingRow>;
+  userId: string;
+  accessToken: string;
+}): Promise<void> {
+  const restoreRankingResponse = await requestSupabase(
+    `rankings?${new URLSearchParams({
+      id: `eq.${params.ranking.id}`,
+      user_id: `eq.${params.userId}`,
+    }).toString()}`,
+    {
+      method: "PATCH",
+      accessToken: params.accessToken,
+      body: {
+        title: params.ranking.title,
+        tag_id: params.ranking.tagId,
+        updated_at: params.ranking.updatedAt,
+      },
+    },
+  );
+  await ensureResponseOk(restoreRankingResponse);
+
+  const restoreItemsResponse = await requestSupabase("ranking_items", {
+    method: "POST",
+    accessToken: params.accessToken,
+    body: params.ranking.items.map((item, index) => ({
+      ranking_id: params.ranking.id,
+      rank: index + 1,
+      item_text: item,
+    })),
+  });
+  await ensureResponseOk(restoreItemsResponse);
+}
+
 export async function updateRanking(params: {
   rankingId: string;
   userId: string;
@@ -271,51 +328,19 @@ export async function updateRanking(params: {
     throw new ConflictError("Ranking was modified by another request.");
   }
 
-  const deleteItemsQuery = new URLSearchParams({ ranking_id: `eq.${params.rankingId}` });
   try {
-    const deleteItemsResponse = await requestSupabase(
-      `ranking_items?${deleteItemsQuery.toString()}`,
-      {
-        method: "DELETE",
-        accessToken: params.accessToken,
-      },
-    );
-    await ensureResponseOk(deleteItemsResponse);
-
-    const itemInsertResponse = await requestSupabase("ranking_items", {
-      method: "POST",
+    await replaceRankingItems({
+      rankingId: params.rankingId,
+      itemsBody,
       accessToken: params.accessToken,
-      body: itemsBody,
     });
-    await ensureResponseOk(itemInsertResponse);
   } catch (error) {
     try {
-      const restoreRankingResponse = await requestSupabase(
-        `rankings?${new URLSearchParams({
-          id: `eq.${previous.id}`,
-          user_id: `eq.${params.userId}`,
-        }).toString()}`,
-        {
-          method: "PATCH",
-          accessToken: params.accessToken,
-          body: {
-            title: previous.title,
-            tag_id: previous.tagId,
-            updated_at: previous.updatedAt,
-          },
-        },
-      );
-      await ensureResponseOk(restoreRankingResponse);
-      const restoreItemsResponse = await requestSupabase("ranking_items", {
-        method: "POST",
+      await restoreRankingItems({
+        ranking: previous,
+        userId: params.userId,
         accessToken: params.accessToken,
-        body: previous.items.map((item, index) => ({
-          ranking_id: previous.id,
-          rank: index + 1,
-          item_text: item,
-        })),
       });
-      await ensureResponseOk(restoreItemsResponse);
     } catch {
       // best-effort rollback
     }

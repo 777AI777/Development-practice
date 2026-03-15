@@ -40,7 +40,7 @@ export async function publishRanking(params: {
       await params.draftRepository.delete(params.userId, params.draftId);
     }
 
-    return { ok: true, published, toast: { type: "success", message: "Published." } };
+    return { ok: true, published, toast: { type: "success", message: "ランキングを公開しました。" } };
   } catch (error) {
     return { ok: false, toast: buildErrorToast(error) };
   }

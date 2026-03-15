@@ -3,7 +3,8 @@ import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  return updateSession(request);
+  const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64");
+  return updateSession(request, nonce);
 }
 
 export const config = {

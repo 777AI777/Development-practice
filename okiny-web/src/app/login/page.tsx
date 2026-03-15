@@ -4,14 +4,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { useSessionUser } from "@/hooks/use-session-user";
-import { ENABLE_SNS_EXPANSION } from "@/lib/features";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isReady } = useSessionUser();
-  const nextRoute = ENABLE_SNS_EXPANSION ? "/onboarding" : "/rankings";
+  const nextRoute = "/rankings";
   const hasNavigatedRef = useRef(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -30,6 +29,13 @@ function LoginPageContent() {
     setLoginError(null);
 
     const supabase = createClient();
+
+    if (!process.env.NEXT_PUBLIC_APP_URL && process.env.NODE_ENV === "production") {
+      setIsSigningIn(false);
+      setLoginError("システム設定エラーが発生しました。管理者にお問い合わせください。");
+      return;
+    }
+
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({

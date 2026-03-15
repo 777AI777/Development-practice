@@ -33,7 +33,6 @@ paths:
 
 - `features.ts` のフラグで機能の表示/非表示を制御
 - `ENABLE_SNS_EXPANSION`: false → SNS系ルート/UIが全て非表示
-- `SHOW_STATE_SCREENS`: production以外は自動ON
 - Phase2機能のコードは残すがフラグOFF時にアクセス不可にする
 - 新しいフラグを追加する場合は `features.ts` に集約
 
