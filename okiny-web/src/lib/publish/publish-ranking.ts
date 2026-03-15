@@ -33,7 +33,6 @@ export async function publishRanking(params: {
 }): Promise<PublishRankingResult> {
   try {
     const published = await params.apiClient.createPublishedRanking({
-      userId: params.userId,
       ranking: params.ranking,
     });
 
@@ -46,4 +45,3 @@ export async function publishRanking(params: {
     return { ok: false, toast: buildErrorToast(error) };
   }
 }
-

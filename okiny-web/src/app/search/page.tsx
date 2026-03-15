@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { SHOW_STATE_SCREENS } from "@/lib/features";
 import { useSessionUser } from "@/hooks/use-session-user";
@@ -16,6 +17,7 @@ const apiClient = new HttpPublishedApiClient();
 export default function TagSearchPage() {
   const { user } = useSessionUser();
   const { pushToast } = useToast();
+  const { signalReady } = usePageTransition();
   const [tagId, setTagId] = useState(FIXED_TAGS[0]?.id ?? "");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<PublishedRanking[]>([]);
@@ -28,7 +30,7 @@ export default function TagSearchPage() {
     let canceled = false;
     setIsLoading(true);
     void apiClient
-      .listPublishedRankings(user.id, tagId)
+      .listPublishedRankings(tagId)
       .then((data) => {
         if (canceled) return;
         setResults(data);
@@ -42,12 +44,13 @@ export default function TagSearchPage() {
       .finally(() => {
         if (canceled) return;
         setIsLoading(false);
+        signalReady();
       });
 
     return () => {
       canceled = true;
     };
-  }, [pushToast, tagId, user]);
+  }, [pushToast, signalReady, tagId, user]);
 
   return (
     <AppShell>
@@ -92,9 +95,7 @@ export default function TagSearchPage() {
         ) : null}
 
         {/* Results */}
-        {isLoading ? (
-          <div className="h-20 animate-pulse rounded-xl bg-muted" />
-        ) : results.length === 0 ? (
+        {isLoading ? null : results.length === 0 ? (
           <div className="rounded-xl border border-border bg-card p-6 text-center">
             <p className="text-sm text-muted-foreground">
               選択したタグのランキングは見つかりませんでした。

@@ -31,7 +31,14 @@
       "WebFetch(domain:docs.anthropic.com)",
       "Bash(find \"C:/Users/hueym/Documents/GitHub/Development-practice\" -maxdepth 3 -name \".claudeignore\" -o -name \"*env*ignore\" -o -name \"*block*env*\" 2>/dev/null | head -20)",
       "Bash(dd if=okiny-web/.env.local 2>/dev/null)",
-      "Bash(echo \"normal command\"; npm --version)"
+      "Bash(echo \"normal command\"; npm --version)",
+      "Read(//c/Users/hueym/AppData/Local/Temp/claude//**)",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "Bash(cd:*)",
+      "Bash(xxd:*)",
+      "Bash(npx tsc:*)",
+      "Bash(rm:*)"
     ]
   },
   "hooks": {}

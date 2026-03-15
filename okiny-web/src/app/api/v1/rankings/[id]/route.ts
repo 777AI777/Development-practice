@@ -1,6 +1,7 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
 import {
   ConflictError,
   deleteRanking,
@@ -17,7 +18,6 @@ const rankingItemsSchema = z
   });
 
 const updateSchema = z.object({
-  userId: z.string().min(1),
   expectedUpdatedAt: z.string().min(1),
   ranking: z.object({
     title: z.string().trim().min(1, "Title is required."),
@@ -31,19 +31,19 @@ function toRankingItems(items: string[]): RankingItems {
 }
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const url = new URL(request.url);
-  const userId = url.searchParams.get("userId") ?? "";
-  const { id } = await params;
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId is required." } },
-      { status: 422 },
-    );
+  const auth = await getAuthenticatedUserId();
+  if (!auth.ok) {
+    const status = auth.reason === "unauthorized" ? 401 : 503;
+    const code = auth.reason === "unauthorized" ? "UNAUTHORIZED" : "SERVER";
+    const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
+    return NextResponse.json({ error: { code, message } }, { status });
   }
+  const userId = auth.userId;
+
+  const { id } = await params;
 
   try {
     const data = await getRankingById({ userId, rankingId: id });
@@ -67,6 +67,15 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await getAuthenticatedUserId();
+  if (!auth.ok) {
+    const status = auth.reason === "unauthorized" ? 401 : 503;
+    const code = auth.reason === "unauthorized" ? "UNAUTHORIZED" : "SERVER";
+    const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
+    return NextResponse.json({ error: { code, message } }, { status });
+  }
+  const userId = auth.userId;
+
   let payload: unknown;
   try {
     payload = await request.json();
@@ -95,7 +104,7 @@ export async function PATCH(
   try {
     const data = await updateRanking({
       rankingId: id,
-      userId: parsed.data.userId,
+      userId,
       title: parsed.data.ranking.title,
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
@@ -121,13 +130,21 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await getAuthenticatedUserId();
+  if (!auth.ok) {
+    const status = auth.reason === "unauthorized" ? 401 : 503;
+    const code = auth.reason === "unauthorized" ? "UNAUTHORIZED" : "SERVER";
+    const message = auth.reason === "unauthorized" ? "認証が必要です。" : "認証サービスに接続できません。";
+    return NextResponse.json({ error: { code, message } }, { status });
+  }
+  const userId = auth.userId;
+
   const url = new URL(request.url);
-  const userId = url.searchParams.get("userId") ?? "";
   const expectedUpdatedAt = url.searchParams.get("expectedUpdatedAt") ?? "";
 
-  if (!userId || !expectedUpdatedAt) {
+  if (!expectedUpdatedAt) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "userId and expectedUpdatedAt are required." } },
+      { error: { code: "VALIDATION", message: "expectedUpdatedAt is required." } },
       { status: 422 },
     );
   }

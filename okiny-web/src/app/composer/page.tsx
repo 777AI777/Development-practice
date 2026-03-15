@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { ENABLE_SNS_EXPANSION } from "@/lib/features";
 
 export default function ComposerPage() {
+  const { signalReady } = usePageTransition();
+
+  useEffect(() => {
+    signalReady();
+  }, [signalReady]);
   if (!ENABLE_SNS_EXPANSION) {
     return (
       <AppShell title="投稿作成" subtitle="SNS拡張は無効です。">

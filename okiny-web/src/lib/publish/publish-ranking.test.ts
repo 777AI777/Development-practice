@@ -43,7 +43,7 @@ describe("publishRanking", () => {
       updatePublishedRanking: async (_input) => {
         throw new Error("not used in this test");
       },
-      deletePublishedRanking: async (_userId, _rankingId, _expectedUpdatedAt) => {},
+      deletePublishedRanking: async (_rankingId, _expectedUpdatedAt) => {},
     };
 
     const result = await publishRanking({

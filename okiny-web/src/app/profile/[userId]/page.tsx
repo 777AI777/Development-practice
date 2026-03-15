@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { ENABLE_SNS_EXPANSION } from "@/lib/features";
@@ -13,6 +14,7 @@ import type { UserProfile } from "@/lib/types";
 export default function ProfilePage() {
   const params = useParams<{ userId: string }>();
   const targetUserId = params.userId;
+  const { signalReady } = usePageTransition();
   const { user } = useSessionUser();
   const { pushToast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -50,12 +52,13 @@ export default function ProfilePage() {
           return;
         }
         setIsLoading(false);
+        signalReady();
       });
 
     return () => {
       canceled = true;
     };
-  }, [targetUserId, user]);
+  }, [targetUserId, user, signalReady]);
 
   const toggleFollow = async () => {
     if (!user || !profile || profile.id === user.id) {
@@ -99,9 +102,7 @@ export default function ProfilePage() {
       title="プロフィール"
       subtitle="ユーザープロフィールとフォロー導線。投稿から関係性構築へつなげる画面。"
     >
-      {isLoading ? (
-        <div className="h-24 animate-pulse rounded-md bg-slate-100" />
-      ) : error ? (
+      {isLoading ? null : error ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
           {error}
         </p>

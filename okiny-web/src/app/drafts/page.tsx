@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { formatSmartDate } from "@/lib/format-date";
@@ -15,10 +16,15 @@ import { getTagLabel } from "@/lib/tags";
 import type { DraftLocalRecord } from "@/lib/types";
 
 export default function DraftsPage() {
+  const { signalReady } = usePageTransition();
   const { user } = useSessionUser();
   const { pushToast } = useToast();
   const [drafts, setDrafts] = useState<DraftLocalRecord[]>([]);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    signalReady();
+  }, [signalReady]);
 
   const loadDrafts = useCallback(async () => {
     if (!user) {

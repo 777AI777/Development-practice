@@ -49,6 +49,8 @@ const SETTINGS_MENU_ITEMS: SidebarMenuItemConfig[] = [
   { label: "プライバシーポリシー", disabled: true },
 ];
 
+const MAX_DISPLAY_NAME_LENGTH = 30;
+
 function DisplayNameEditor({
   user,
   updateDisplayName,
@@ -86,9 +88,13 @@ function DisplayNameEditor({
         id="sidebar-display-name"
         value={displayName}
         onChange={(e) => setDisplayName(e.target.value)}
+        maxLength={MAX_DISPLAY_NAME_LENGTH}
         className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         placeholder="表示名"
       />
+      <p className="mt-1 text-right text-xs text-muted-foreground">
+        {displayName.length}/{MAX_DISPLAY_NAME_LENGTH}
+      </p>
       <div className="mt-2 flex gap-2">
         <button
           type="button"
@@ -330,7 +336,7 @@ export function AppShell({ children }: AppShellProps) {
               {user?.name ?? "Unknown"}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {user?.id ?? ""}
+              {user?.email ?? ""}
             </p>
           </div>
         </div>
@@ -380,7 +386,7 @@ export function AppShell({ children }: AppShellProps) {
                   {user?.name ?? "Unknown"}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {user?.id ?? ""}
+                  {user?.email ?? ""}
                 </p>
               </div>
             </div>

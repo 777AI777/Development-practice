@@ -20,7 +20,7 @@
 | ファイル | 役割 | 注意点 |
 |---------|------|--------|
 | `src/lib/supabase-rest.ts` | Supabase REST直接アクセス | SDKなし。`ConflictError`で楽観ロック制御。ranking_items更新はDELETE→POST（全件削除→再挿入）。失敗時はロールバック付き |
-| `src/lib/session.ts` | Mock認証（Phase1） | `okiny:session:userId` + `okiny:session:displayNameMap` キー。Phase2でOAuth置換予定。interfaceを壊さない |
+| `src/lib/supabase/` | Supabase Auth認証基盤 | client.ts(ブラウザ), server.ts(APIルート), middleware.ts(セッション更新), auth-guard.ts(認証検証)。cookie操作はmiddlewareとserver clientが担当 |
 | `src/lib/publish/` | 公開APIクライアント | シングルトンHTTPクライアント。エラーコード体系あり |
 
 ### Local State（データ消失リスク）

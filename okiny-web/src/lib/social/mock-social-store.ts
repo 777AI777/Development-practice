@@ -1,5 +1,4 @@
 import { generateId } from "@/lib/generate-id";
-import { MOCK_USERS } from "@/lib/mock-users";
 import type {
   CommentSummary,
   FeedItem,
@@ -21,10 +20,10 @@ interface SocialStore {
   feedItems: FeedItem[];
 }
 
-const ALL_USERS: UserMini[] = MOCK_USERS.map((user) => ({
-  id: user.id,
-  name: user.name,
-}));
+const ALL_USERS: UserMini[] = [
+  { id: "mock-user-001", name: "Taro Yamada" },
+  { id: "mock-user-002", name: "Hanako Sato" },
+];
 
 const now = new Date();
 

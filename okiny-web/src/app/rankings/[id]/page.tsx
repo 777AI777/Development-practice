@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { DEMO_RANKING, DEMO_RANKING_ID } from "@/lib/demo-ranking";
@@ -20,6 +21,7 @@ export default function RankingDetailPage() {
   const router = useRouter();
   const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
+  const { signalReady } = usePageTransition();
 
   const [isLoading, setIsLoading] = useState(true);
   const [ranking, setRanking] = useState<PublishedRanking | null>(null);
@@ -37,6 +39,7 @@ export default function RankingDetailPage() {
       setRanking(DEMO_RANKING);
       setErrorMessage(null);
       setIsLoading(false);
+      signalReady();
       return;
     }
 
@@ -45,7 +48,7 @@ export default function RankingDetailPage() {
     setErrorMessage(null);
 
     void publishedApiClient
-      .getPublishedRanking(user.id, rankingId)
+      .getPublishedRanking(rankingId)
       .then((data) => {
         if (canceled) return;
         setRanking(data);
@@ -62,21 +65,17 @@ export default function RankingDetailPage() {
       .finally(() => {
         if (canceled) return;
         setIsLoading(false);
+        signalReady();
       });
 
     return () => {
       canceled = true;
     };
-  }, [isReady, pushToast, rankingId, user]);
+  }, [isReady, pushToast, rankingId, signalReady, user]);
 
   return (
     <AppShell>
-      {isLoading ? (
-        <div className="space-y-3">
-          <div className="h-8 w-56 animate-pulse rounded bg-muted" />
-          <div className="h-48 animate-pulse rounded bg-muted" />
-        </div>
-      ) : errorMessage ? (
+      {isLoading ? null : errorMessage ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-semibold text-destructive">
           {errorMessage}
         </div>
