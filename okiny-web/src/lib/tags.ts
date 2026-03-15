@@ -12,3 +12,7 @@ export const FIXED_TAGS: FixedTag[] = [
   { id: "daily", label: "日用品" },
 ];
 
+export function getTagLabel(tagId: string): string {
+  return FIXED_TAGS.find((tag) => tag.id === tagId)?.label ?? tagId;
+}
+

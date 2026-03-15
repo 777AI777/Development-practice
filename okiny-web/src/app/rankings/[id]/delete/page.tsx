@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -20,6 +19,7 @@ export default function DeleteRankingPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [expectedUpdatedAt, setExpectedUpdatedAt] = useState<string | undefined>();
+  const [rankingTitle, setRankingTitle] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isReady) {
@@ -30,6 +30,7 @@ export default function DeleteRankingPage() {
     }
     if (rankingId === DEMO_RANKING_ID) {
       setExpectedUpdatedAt(undefined);
+      setRankingTitle("デモランキング");
       setIsLoading(false);
       return;
     }
@@ -41,6 +42,7 @@ export default function DeleteRankingPage() {
       .then((ranking) => {
         if (canceled) return;
         setExpectedUpdatedAt(ranking.updatedAt);
+        setRankingTitle(ranking.title);
       })
       .catch((error: unknown) => {
         if (canceled) return;
@@ -94,29 +96,44 @@ export default function DeleteRankingPage() {
   };
 
   return (
-    <AppShell
-      title="削除確認"
-      subtitle="モック08の削除確認画面です。"
-    >
-      <div className="space-y-4">
-        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          このランキングを削除すると元に戻せません。
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => void runDelete()}
-            disabled={isDeleting || isLoading}
-            className="rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-          >
-            {isDeleting ? "削除中..." : "完全に削除する"}
-          </button>
-          <Link
-            href={`/rankings/${rankingId}`}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold"
-          >
-            キャンセル
-          </Link>
+    <AppShell>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-3xl">
+            {"\u26A0\uFE0F"}
+          </div>
+
+          <h1 className="mt-4 text-xl font-bold text-foreground">
+            ランキングを削除しますか？
+          </h1>
+
+          {rankingTitle && (
+            <p className="mt-2 text-sm font-medium text-foreground">
+              {rankingTitle}
+            </p>
+          )}
+
+          <p className="mt-3 text-sm text-destructive">
+            この操作は取り消せません
+          </p>
+
+          <div className="mt-6 space-y-3">
+            <button
+              type="button"
+              onClick={() => void runDelete()}
+              disabled={isDeleting || isLoading}
+              className="w-full rounded-lg bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground transition hover:opacity-90 disabled:opacity-60"
+            >
+              {isDeleting ? "削除中..." : "削除する"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(`/rankings/${rankingId}`)}
+              className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
+            >
+              キャンセル
+            </button>
+          </div>
         </div>
       </div>
     </AppShell>

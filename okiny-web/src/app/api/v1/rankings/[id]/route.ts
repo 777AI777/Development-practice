@@ -55,13 +55,9 @@ export async function GET(
     }
     return NextResponse.json({ data });
   } catch (error) {
+    console.error("[GET /api/v1/rankings/:id]", error);
     return NextResponse.json(
-      {
-        error: {
-          code: "SERVER",
-          message: error instanceof Error ? error.message : "Failed to load ranking.",
-        },
-      },
+      { error: { code: "SERVER", message: "ランキングの読み込みに失敗しました。" } },
       { status: 500 },
     );
   }
@@ -113,13 +109,9 @@ export async function PATCH(
         { status: 409 },
       );
     }
+    console.error("[PATCH /api/v1/rankings/:id]", error);
     return NextResponse.json(
-      {
-        error: {
-          code: "SERVER",
-          message: error instanceof Error ? error.message : "Failed to update ranking.",
-        },
-      },
+      { error: { code: "SERVER", message: "ランキングの更新に失敗しました。" } },
       { status: 500 },
     );
   }
@@ -151,13 +143,9 @@ export async function DELETE(
         { status: 409 },
       );
     }
+    console.error("[DELETE /api/v1/rankings/:id]", error);
     return NextResponse.json(
-      {
-        error: {
-          code: "SERVER",
-          message: error instanceof Error ? error.message : "Failed to delete ranking.",
-        },
-      },
+      { error: { code: "SERVER", message: "ランキングの削除に失敗しました。" } },
       { status: 500 },
     );
   }

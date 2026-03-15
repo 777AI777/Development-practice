@@ -40,16 +40,9 @@ export async function GET(request: Request) {
     const data = await listRankingsByUser({ userId, tagId });
     return NextResponse.json({ data });
   } catch (error) {
+    console.error("[GET /api/v1/rankings]", error);
     return NextResponse.json(
-      {
-        error: {
-          code: "SERVER",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Supabase からランキングの読み込みに失敗しました。",
-        },
-      },
+      { error: { code: "SERVER", message: "ランキングの読み込みに失敗しました。" } },
       { status: 500 },
     );
   }
@@ -88,13 +81,9 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ data: created }, { status: 201 });
   } catch (error) {
+    console.error("[POST /api/v1/rankings]", error);
     return NextResponse.json(
-      {
-        error: {
-          code: "SERVER",
-          message: error instanceof Error ? error.message : "ランキングの作成に失敗しました。",
-        },
-      },
+      { error: { code: "SERVER", message: "ランキングの作成に失敗しました。" } },
       { status: 500 },
     );
   }

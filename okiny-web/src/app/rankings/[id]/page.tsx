@@ -1,26 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { DEMO_RANKING, DEMO_RANKING_ID } from "@/lib/demo-ranking";
+import { formatSmartDate } from "@/lib/format-date";
 import { publishedApiClient } from "@/lib/publish/client";
 import { PublishedApiError } from "@/lib/publish/http-published-api-client";
+import { getTagLabel } from "@/lib/tags";
 import type { PublishedRanking } from "@/lib/types";
 
 export default function RankingDetailPage() {
   const params = useParams<{ id: string }>();
   const rankingId = params.id;
+  const router = useRouter();
   const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
   const [ranking, setRanking] = useState<PublishedRanking | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isReady) {
@@ -66,52 +70,110 @@ export default function RankingDetailPage() {
   }, [isReady, pushToast, rankingId, user]);
 
   return (
-    <AppShell
-      title="ランキング詳細"
-      subtitle="閲覧専用の詳細画面。編集・削除アクション付き（モック04）。"
-    >
+    <AppShell>
       {isLoading ? (
         <div className="space-y-3">
-          <div className="h-8 w-56 animate-pulse rounded bg-slate-100" />
-          <div className="h-48 animate-pulse rounded bg-slate-100" />
+          <div className="h-8 w-56 animate-pulse rounded bg-muted" />
+          <div className="h-48 animate-pulse rounded bg-muted" />
         </div>
       ) : errorMessage ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-semibold text-destructive">
           {errorMessage}
         </div>
       ) : ranking ? (
         <div className="space-y-4">
-          <h2 className="text-3xl font-bold text-slate-900">{ranking.title}</h2>
-          <p className="text-sm text-slate-600">タグ: {ranking.tagId}</p>
-          <ol className="space-y-2">
-            {ranking.items.map((item, index) => (
-              <li
-                key={`${ranking.id}-${index}`}
-                className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+          {/* Header row: back + title + menu */}
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => router.push("/rankings")}
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center bg-transparent text-lg font-bold text-foreground"
+              aria-label="戻る"
+            >
+              {"\u2190"}
+            </button>
+            <div className="flex-1 justify-center">
+              <h1 className="truncate text-center text-xl font-bold text-foreground">
+                {ranking.title}
+              </h1>
+            </div>
+            <div className="relative flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((prev) => !prev)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-xl font-black text-foreground transition hover:bg-muted"
+                aria-label="メニュー"
               >
-                {index + 1}. {item}
-              </li>
-            ))}
-          </ol>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={`/rankings/${ranking.id}/edit`}
-              className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white"
-            >
-              編集
-            </Link>
-            <Link
-              href={`/rankings/${ranking.id}/delete`}
-              className="rounded-md border border-red-300 px-4 py-2 text-sm font-semibold text-red-700"
-            >
-              削除
-            </Link>
-            <Link
-              href="/rankings"
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold"
-            >
-              戻る
-            </Link>
+                <span className="leading-none">{"\u22EF"}</span>
+              </button>
+
+              {menuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full z-50 mt-1 w-36 rounded-lg border border-border bg-card py-1 shadow-md">
+                    <Link
+                      href={`/rankings/${ranking.id}/edit`}
+                      onClick={() => setMenuOpen(false)}
+                      className="block w-full px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
+                    >
+                      編集
+                    </Link>
+                    <Link
+                      href={`/rankings/${ranking.id}/delete`}
+                      onClick={() => setMenuOpen(false)}
+                      className="block w-full px-4 py-2 text-left text-sm text-destructive transition hover:bg-muted"
+                    >
+                      削除
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Tag + date */}
+          <div className="flex items-center gap-3">
+            <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+              {getTagLabel(ranking.tagId)}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {formatSmartDate(ranking.createdAt)}
+            </span>
+          </div>
+
+          {/* Ranking items */}
+          <div className="rounded-xl overflow-hidden bg-card">
+            {ranking.items.map((item, index) => {
+              const rank = index + 1;
+              const isFirst = rank === 1;
+
+              return (
+                <div
+                  key={`${ranking.id}-${index}`}
+                  className="flex items-center gap-3 px-6 py-3"
+                  style={{ borderBottom: index < ranking.items.length - 1 ? "1px solid var(--border)" : "none" }}
+                >
+                  <span
+                    className={`w-8 text-center ${isFirst ? "text-2xl font-bold" : "text-base font-semibold"}`}
+                    style={{
+                      color: isFirst
+                        ? "var(--primary)"
+                        : "var(--muted-foreground)",
+                    }}
+                  >
+                    {rank}
+                  </span>
+                  <span
+                    className={isFirst ? "text-base font-bold text-foreground" : "text-sm text-foreground"}
+                  >
+                    {item}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}

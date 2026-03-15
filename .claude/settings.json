@@ -1,4 +1,26 @@
 {
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/scripts/pre-block-env.mjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/scripts/pre-block-env-bash.mjs"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
@@ -15,26 +37,9 @@
     "vercel@claude-plugins-official": true,
     "playground@claude-plugins-official": true
   },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Read|Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node -e \"const d=[];process.stdin.on('data',c=>d.push(c));process.stdin.on('end',()=>{const j=JSON.parse(Buffer.concat(d));const f=j.tool_input?.file_path||'';if(/\\.env(\\.[a-zA-Z0-9_-]+)?$/i.test(f)){process.stderr.write('BLOCK: .env系ファイルへのアクセスは禁止です。環境変数の確認・変更はユーザーに依頼してください。');process.exit(2)}})\""
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node -e \"const d=[];process.stdin.on('data',c=>d.push(c));process.stdin.on('end',()=>{const j=JSON.parse(Buffer.concat(d));const cmd=j.tool_input?.command||'';if(/(cat|head|tail|less|more|type|sed|awk|grep|rg|bat)\\s+.*\\.env(\\s|\\.|$)/i.test(cmd)){process.stderr.write('BLOCK: .env系ファイルへのBash参照は禁止です。');process.exit(2)}})\""
-          }
-        ]
-      }
+  "permissions": {
+    "allow": [
+      "Bash(handle \"Development-practice\\\\okiny-web\\\\.next\\\\dev\\\\lock\")"
     ]
   }
 }

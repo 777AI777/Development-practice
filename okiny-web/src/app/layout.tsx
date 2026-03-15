@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageTransitionProvider } from "@/components/page-transition-provider";
 import { ToastProvider } from "@/components/toast-provider";
 import "./globals.css";
 
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="antialiased">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <PageTransitionProvider>{children}</PageTransitionProvider>
+        </ToastProvider>
       </body>
     </html>
   );

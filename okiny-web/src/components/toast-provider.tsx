@@ -4,6 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import type { ToastMessage, ToastType } from "@/lib/types";
 
+let toastCounter = 0;
+
 interface ToastRecord extends ToastMessage {
   id: string;
 }
@@ -76,7 +78,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const pushToast = useCallback((message: ToastMessage) => {
     const toast: ToastRecord = {
       ...message,
-      id: crypto.randomUUID(),
+      id: `toast-${++toastCounter}`,
     };
 
     setToasts((current) => {

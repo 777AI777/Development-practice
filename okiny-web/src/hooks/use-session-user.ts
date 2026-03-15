@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 
 import { MOCK_USERS, type MockUser } from "@/lib/mock-users";
 import {
@@ -23,7 +23,7 @@ export function useSessionUser(): UseSessionUserResult {
   const [userId, setUserId] = useState<string | null>(null);
   const [displayNameMap, setDisplayNameMap] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const value = window.localStorage.getItem(SESSION_USER_ID_KEY);
     setUserId(value);
     setDisplayNameMap(getDisplayNameMap());

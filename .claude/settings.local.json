@@ -22,7 +22,16 @@
       "Bash(wc:*)",
       "Skill(hookify:help)",
       "Skill(hookify:hookify)",
-      "Bash(jq --version)"
+      "Bash(jq --version)",
+      "Bash(cd C:/Users/hueym/Documents/GitHub/Development-practice/okiny-web && npx next dev 2>&1)",
+      "Bash(npm run:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "Bash(cd okiny-web:*)",
+      "Bash(cd C:/Users/hueym/Documents/GitHub/Development-practice/okiny-web && npx tsc --noEmit --pretty 2>&1 | head -30)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(find \"C:/Users/hueym/Documents/GitHub/Development-practice\" -maxdepth 3 -name \".claudeignore\" -o -name \"*env*ignore\" -o -name \"*block*env*\" 2>/dev/null | head -20)",
+      "Bash(dd if=okiny-web/.env.local 2>/dev/null)",
+      "Bash(echo \"normal command\"; npm --version)"
     ]
   },
   "hooks": {}

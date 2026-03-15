@@ -44,7 +44,7 @@ export function DraftsScreen({ onNavigate, onSidebarToggle }: DraftsScreenProps)
 
       <div className="max-w-[480px] mx-auto p-4">
         <button
-          onClick={() => onNavigate("rankings")}
+          onClick={() => onNavigate("ranking-new")}
           className="w-8 h-8 flex items-center justify-center text-lg font-bold bg-transparent border-none cursor-pointer mb-4"
           style={{ color: "var(--foreground)" }}
         >
