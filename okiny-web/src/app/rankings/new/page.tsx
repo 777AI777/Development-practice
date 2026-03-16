@@ -26,17 +26,18 @@ function NewRankingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { pushToast } = useToast();
-  const { user } = useSessionUser();
+  const { isReady, user } = useSessionUser();
   const [initialDraft, setInitialDraft] = useState<RankingInput | undefined>();
+  const [initialNewTagName, setInitialNewTagName] = useState<string | undefined>();
   const [activeDraftId, setActiveDraftId] = useState<string | undefined>();
   const trackedRef = useRef(false);
 
   useEffect(() => {
-    signalReady();
-  }, [signalReady]);
-
-  useEffect(() => {
+    if (!isReady) {
+      return;
+    }
     if (!user) {
+      signalReady();
       return;
     }
     const draftId = searchParams.get("draftId");
@@ -51,13 +52,16 @@ function NewRankingPageContent() {
       } else {
         setInitialDraft(undefined);
       }
+      setInitialNewTagName(undefined);
       setActiveDraftId(undefined);
+      signalReady();
       return;
     }
 
     void draftRepository.list(user.id).then((drafts) => {
       const target = drafts.find((draft) => draft.draftId === draftId);
       if (!target) {
+        signalReady();
         return;
       }
       setInitialDraft({
@@ -65,9 +69,13 @@ function NewRankingPageContent() {
         tagId: target.tagId,
         items: toRankingItems([...target.items]),
       });
+      setInitialNewTagName(target.newTagName);
       setActiveDraftId(target.draftId);
+      signalReady();
+    }).catch(() => {
+      signalReady();
     });
-  }, [searchParams, user]);
+  }, [isReady, searchParams, signalReady, user]);
 
   useEffect(() => {
     if (!user || trackedRef.current) {
@@ -100,7 +108,7 @@ function NewRankingPageContent() {
     }
   };
 
-  const handleSaveDraft = async (value: RankingInput) => {
+  const handleSaveDraft = async (value: RankingInput & { newTagName?: string }) => {
     if (!user) return;
     const result = await saveDraftWithFeedback(draftRepository, user.id, {
       ...value,
@@ -123,6 +131,7 @@ function NewRankingPageContent() {
       <RankingForm
         key={activeDraftId ?? "new"}
         initialValue={initialDraft}
+        initialNewTagName={initialNewTagName}
         submitLabel="作成"
         onSubmit={handlePublish}
         onSaveDraft={handleSaveDraft}

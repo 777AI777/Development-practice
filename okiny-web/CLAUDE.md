@@ -10,8 +10,8 @@
 | ファイル | 役割 | 注意点 |
 |---------|------|--------|
 | `src/lib/types.ts` | 型定義 | 多数のファイルが依存。変更時は `supabase-rest.ts`, `drafts/`, `publish/`, 全page.tsx を確認 |
-| `src/lib/tags.ts` | 固定タグ定義 | DB上のtag_idと1:1対応。追加・削除はDB側と同期必須 |
-| `src/lib/route-map.ts` | ルーティング定義 | ナビゲーション全体が依存。パス変更時は `app/` 配下の対応ディレクトリも同期 |
+| `src/lib/tag-utils.ts` | タグ名正規化（NFKC）・表示ラベル取得 | tag-validation, tag-combobox, API が依存 |
+| `src/lib/tag-validation.ts` | Zodスキーマ + 禁止ワード検査 | フロント・API両方で使用 |
 | `src/lib/analytics.ts` | イベント計測 | イベント名変更は計測ダッシュボードに影響 |
 
 ### Core Logic（バグが直結）
@@ -21,6 +21,8 @@
 | `src/lib/supabase-rest.ts` | Supabase REST直接アクセス | SDKなし。`ConflictError`で楽観ロック制御。ranking_items更新はDELETE→POST（全件削除→再挿入）。失敗時はロールバック付き |
 | `src/lib/supabase/` | Supabase Auth認証基盤 | client.ts(ブラウザ), server.ts(APIルート), middleware.ts(セッション更新), auth-guard.ts(認証検証)。cookie操作はmiddlewareとserver clientが担当 |
 | `src/lib/publish/` | 公開APIクライアント | シングルトンHTTPクライアント。エラーコード体系あり |
+| `src/hooks/use-tags.ts` | タグ取得・検索フック（300ms debounce） | tag-combobox が依存 |
+| `src/components/tag-combobox.tsx` | タグ選択・検索・新規作成UI | use-tags, tag-validation, tag-utils に依存 |
 
 ### Local State（データ消失リスク）
 
@@ -42,8 +44,6 @@
 | `/drafts` | 下書き一覧 | main |
 | `/settings` | 設定 | main |
 | `/settings/logout` | ログアウト確認 | main |
-
-> 全ルート定義: `src/lib/route-map.ts`
 
 ## 楽観ロック
 

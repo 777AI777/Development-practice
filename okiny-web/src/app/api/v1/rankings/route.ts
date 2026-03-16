@@ -23,7 +23,7 @@ const rankingItemsSchema = z
 const createSchema = z.object({
   ranking: z.object({
     title: z.string().trim().min(1, "タイトルは必須です。").max(50, "タイトルは50文字以内にしてください。"),
-    tagId: z.string().trim().min(1, "タグは必須です。").max(20, "タグIDは20文字以内にしてください。"),
+    tagId: z.string().uuid("タグIDはUUID形式で指定してください。"),
     items: rankingItemsSchema,
   }),
 });
@@ -40,7 +40,14 @@ export async function GET(request: Request) {
   const { userId, accessToken } = auth;
 
   const url = new URL(request.url);
-  const tagId = url.searchParams.get("tagId") ?? undefined;
+  const rawTagId = url.searchParams.get("tagId");
+  if (rawTagId !== null && !z.string().uuid().safeParse(rawTagId).success) {
+    return NextResponse.json(
+      { error: { code: "VALIDATION", message: "タグIDはUUID形式で指定してください。" } },
+      { status: 422 },
+    );
+  }
+  const tagId = rawTagId ?? undefined;
 
   try {
     const data = await listRankingsByUser({ userId, tagId, accessToken });

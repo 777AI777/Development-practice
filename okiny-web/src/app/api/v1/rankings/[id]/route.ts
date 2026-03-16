@@ -29,7 +29,7 @@ const updateSchema = z.object({
   expectedUpdatedAt: z.string().min(1),
   ranking: z.object({
     title: z.string().trim().min(1, "タイトルは必須です。").max(50, "タイトルは50文字以内にしてください。"),
-    tagId: z.string().trim().min(1, "タグは必須です。").max(20, "タグIDは20文字以内にしてください。"),
+    tagId: z.string().uuid("タグIDはUUID形式で指定してください。"),
     items: rankingItemsSchema,
   }),
 });

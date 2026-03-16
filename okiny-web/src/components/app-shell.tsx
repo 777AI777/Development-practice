@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useSessionUser } from "@/hooks/use-session-user";
@@ -211,6 +211,7 @@ function SettingsAccordion({
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isReady, user, updateDisplayName } = useSessionUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
@@ -222,6 +223,13 @@ export function AppShell({ children }: AppShellProps) {
       router.replace("/login");
     }
   }, [isReady, pathname, router, user]);
+
+  useEffect(() => {
+    if (pathname === "/search") {
+      const q = searchParams.get("q") ?? "";
+      setSearchQuery(q);
+    }
+  }, [pathname, searchParams]);
 
   const handleSidebarToggle = useCallback(() => {
     setSidebarOpen((prev) => !prev);
@@ -264,7 +272,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="relative min-w-0 flex-1">
             <input
               type="text"
-              placeholder="タグで検索... (Coming Soon)"
+              placeholder="タグで検索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -278,7 +286,12 @@ export function AppShell({ children }: AppShellProps) {
               {searchQuery.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => {
+                    setSearchQuery("");
+                    if (pathname === "/search") {
+                      router.push("/search");
+                    }
+                  }}
                   className="flex h-6 w-6 items-center justify-center rounded-full bg-transparent text-muted-foreground transition hover:bg-muted"
                   aria-label="クリア"
                 >

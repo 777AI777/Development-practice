@@ -3,10 +3,12 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginPageContent() {
+  const { signalReady } = usePageTransition();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isReady } = useSessionUser();
@@ -15,6 +17,10 @@ function LoginPageContent() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const authError = searchParams.get("error");
+
+  useEffect(() => {
+    signalReady();
+  }, [signalReady]);
 
   useEffect(() => {
     if (isReady && user && !hasNavigatedRef.current) {
@@ -44,6 +50,10 @@ function LoginPageContent() {
         redirectTo: `${appUrl}/api/auth/callback`,
       },
     });
+
+    if (!error) {
+      sessionStorage.setItem("okiny:login_pending", "google");
+    }
 
     if (error) {
       if (process.env.NODE_ENV !== "production") {

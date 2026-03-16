@@ -14,11 +14,9 @@ import {
   HttpPublishedApiClient,
   PublishedApiError,
 } from "@/lib/publish/http-published-api-client";
-import { FIXED_TAGS, getTagLabel } from "@/lib/tags";
 import type { PublishedRanking } from "@/lib/types";
 
 const apiClient = new HttpPublishedApiClient();
-const TAG_ORDER = FIXED_TAGS.map((tag) => tag.id);
 
 type TabId = "myrank" | "recommend" | "following";
 
@@ -29,31 +27,23 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
 ];
 
 function groupRankingsByTag(rankings: PublishedRanking[]) {
-  const groups = new Map<string, PublishedRanking[]>();
+  const groups = new Map<string, { tagName: string; items: PublishedRanking[] }>();
 
   for (const ranking of rankings) {
-    const bucket = groups.get(ranking.tagId);
-    if (bucket) {
-      bucket.push(ranking);
-      continue;
+    const existing = groups.get(ranking.tagId);
+    if (existing) {
+      groups.set(ranking.tagId, { ...existing, items: [...existing.items, ranking] });
+    } else {
+      groups.set(ranking.tagId, {
+        tagName: ranking.tagName ?? ranking.tagId,
+        items: [ranking],
+      });
     }
-    groups.set(ranking.tagId, [ranking]);
   }
 
   return Array.from(groups.entries())
-    .map(([tagId, items]) => ({ tagId, items }))
-    .sort((a, b) => {
-      const aIndex = TAG_ORDER.indexOf(a.tagId);
-      const bIndex = TAG_ORDER.indexOf(b.tagId);
-      const aRank = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
-      const bRank = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
-
-      if (aRank !== bRank) {
-        return aRank - bRank;
-      }
-
-      return a.tagId.localeCompare(b.tagId);
-    });
+    .map(([tagId, group]) => ({ tagId, tagName: group.tagName, items: group.items }))
+    .sort((a, b) => a.tagId.localeCompare(b.tagId));
 }
 
 function MyRankContent({
@@ -68,7 +58,7 @@ function MyRankContent({
   isLoading: boolean;
   errorMessage: string | null;
   isEmpty: boolean;
-  groupedRankings: { tagId: string; items: PublishedRanking[] }[];
+  groupedRankings: { tagId: string; tagName: string; items: PublishedRanking[] }[];
   collapsedTagIds: string[];
   toggleTagAccordion: (tagId: string) => void;
   userName: string | undefined;
@@ -151,7 +141,7 @@ function MyRankContent({
                 className="flex h-9 w-full cursor-pointer items-center justify-between rounded-lg border border-border bg-muted px-4 text-left transition hover:opacity-80"
               >
                 <span className="text-sm font-bold text-foreground">
-                  {getTagLabel(group.tagId)}
+                  {group.tagName}
                 </span>
                 <span
                   className={`text-xs font-bold text-muted-foreground transition-transform ${isCollapsed ? "-rotate-90" : "rotate-0"}`}
@@ -241,6 +231,7 @@ function RankingsPageContent() {
       return;
     }
     if (!user) {
+      signalReady();
       return;
     }
 

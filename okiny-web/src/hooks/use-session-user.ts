@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { trackEvent } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
 import type { AuthUser } from "@/lib/supabase/types";
 
@@ -73,6 +74,18 @@ export function useSessionUser(): UseSessionUserResult {
       }
       setUser(userData);
       setIsReady(true);
+
+      if (_event === "SIGNED_IN" && userData) {
+        const loginProvider = sessionStorage.getItem("okiny:login_pending");
+        if (loginProvider) {
+          sessionStorage.removeItem("okiny:login_pending");
+          trackEvent("login_success", {
+            user_id: userData.id,
+            provider: loginProvider,
+            entry_route: window.location.pathname,
+          });
+        }
+      }
     });
 
     // 他タブからのログアウト通知を受信

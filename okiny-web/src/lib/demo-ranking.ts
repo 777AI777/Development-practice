@@ -7,6 +7,7 @@ export const DEMO_RANKING: PublishedRanking = {
   userId: "user-google-001",
   title: "Movie Top 5",
   tagId: "movie",
+  tagName: "映画",
   items: [
     "Inception",
     "Spirited Away",
