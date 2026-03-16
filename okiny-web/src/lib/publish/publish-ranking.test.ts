@@ -44,6 +44,9 @@ describe("publishRanking", () => {
         throw new Error("not used in this test");
       },
       deletePublishedRanking: async (_rankingId, _expectedUpdatedAt) => {},
+      createTag: async () => {
+        throw new Error("not used in this test");
+      },
     };
 
     const result = await publishRanking({

@@ -12,7 +12,6 @@ import { DEMO_RANKING, DEMO_RANKING_ID } from "@/lib/demo-ranking";
 import { formatSmartDate } from "@/lib/format-date";
 import { publishedApiClient } from "@/lib/publish/client";
 import { PublishedApiError } from "@/lib/publish/http-published-api-client";
-import { getTagLabel } from "@/lib/tags";
 import type { PublishedRanking } from "@/lib/types";
 
 export default function RankingDetailPage() {
@@ -33,6 +32,7 @@ export default function RankingDetailPage() {
       return;
     }
     if (!user) {
+      signalReady();
       return;
     }
     if (rankingId === DEMO_RANKING_ID) {
@@ -136,7 +136,7 @@ export default function RankingDetailPage() {
           {/* Tag + date */}
           <div className="flex items-center gap-3">
             <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-              {getTagLabel(ranking.tagId)}
+              {ranking.tagName ?? ranking.tagId}
             </span>
             <span className="text-sm text-muted-foreground">
               {formatSmartDate(ranking.createdAt)}

@@ -24,11 +24,13 @@ export interface DraftLocalRecord extends RankingInput {
   draftId: string;
   userId: string;
   updatedAt: string;
+  newTagName?: string;
 }
 
 export interface PublishedRanking extends RankingInput {
   id: string;
   userId: string;
+  tagName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,6 +39,23 @@ export interface ToastMessage {
   type: ToastType;
   message: string;
   persistent?: boolean;
+}
+
+export interface TagItem {
+  id: string;
+  name: string;
+  readings: string[];
+  usageCount: number;
+  myUsageCount: number;
+  createdAt: string;
+}
+
+export interface SupabaseTagRow {
+  id: string;
+  name: string;
+  readings: string[];
+  usage_count: number;
+  created_at: string;
 }
 
 export interface SupabaseRankingRow {
@@ -50,4 +69,5 @@ export interface SupabaseRankingRow {
     rank: number;
     item_text: string;
   }>;
+  tags?: { name: string };
 }

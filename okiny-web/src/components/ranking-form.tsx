@@ -2,14 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { FIXED_TAGS } from "@/lib/tags";
+import { TagCombobox } from "@/components/tag-combobox";
+import { HttpPublishedApiClient } from "@/lib/publish/http-published-api-client";
 import type { RankingInput, RankingItems } from "@/lib/types";
+
+const apiClient = new HttpPublishedApiClient();
 
 interface RankingFormProps {
   initialValue?: RankingInput;
+  initialNewTagName?: string;
   submitLabel: string;
   onSubmit: (value: RankingInput) => Promise<void>;
-  onSaveDraft?: (value: RankingInput) => Promise<void>;
+  onSaveDraft?: (value: RankingInput & { newTagName?: string }) => Promise<void>;
   onDraftList?: () => void;
   onCancel?: () => void;
   onBack?: () => void;
@@ -20,11 +24,11 @@ function toRankingItems(items: string[]): RankingItems {
   return [items[0] ?? "", items[1] ?? "", items[2] ?? "", items[3] ?? "", items[4] ?? ""];
 }
 
-function validateInput(value: RankingInput): string | null {
+function validateInput(value: RankingInput, newTagName: string): string | null {
   if (!value.title.trim()) {
     return "タイトルは必須です。";
   }
-  if (!value.tagId.trim()) {
+  if (!value.tagId.trim() && !newTagName.trim()) {
     return "タグは必須です。";
   }
   if (!value.items.some((item) => item.trim().length > 0)) {
@@ -35,6 +39,7 @@ function validateInput(value: RankingInput): string | null {
 
 export function RankingForm({
   initialValue,
+  initialNewTagName,
   submitLabel,
   onSubmit,
   onSaveDraft,
@@ -46,10 +51,12 @@ export function RankingForm({
   const [form, setForm] = useState<RankingInput>(
     initialValue ?? {
       title: "",
-      tagId: FIXED_TAGS[0]?.id ?? "",
+      tagId: "",
       items: ["", "", "", "", ""],
     },
   );
+  const [newTagName, setNewTagName] = useState(initialNewTagName ?? "");
+  const [tagDisplayName, setTagDisplayName] = useState(initialNewTagName ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -74,11 +81,15 @@ export function RankingForm({
       const parsed = JSON.parse(raw) as {
         form?: RankingInput;
         updatedAt?: string;
+        newTagName?: string;
+        tagDisplayName?: string;
       };
       if (!parsed.form) {
         return;
       }
       setForm(parsed.form);
+      setNewTagName(parsed.newTagName ?? "");
+      setTagDisplayName(parsed.tagDisplayName ?? "");
       setAutosaveState("saved");
       setAutosavedAt(parsed.updatedAt ?? null);
       setIsDirty(false);
@@ -99,6 +110,8 @@ export function RankingForm({
         JSON.stringify({
           form,
           updatedAt,
+          newTagName,
+          tagDisplayName,
         }),
       );
       setAutosaveState("saved");
@@ -107,7 +120,7 @@ export function RankingForm({
     return () => {
       window.clearTimeout(timer);
     };
-  }, [autosaveStorageKey, form, isDirty]);
+  }, [autosaveStorageKey, form, isDirty, newTagName, tagDisplayName]);
 
   useEffect(() => {
     if (!isDirty) {
@@ -124,7 +137,7 @@ export function RankingForm({
   }, [isDirty]);
 
   const submit = async () => {
-    const validation = validateInput(form);
+    const validation = validateInput(form, newTagName);
     if (validation) {
       setErrorMessage(validation);
       return;
@@ -133,7 +146,28 @@ export function RankingForm({
     setErrorMessage(null);
     setIsSubmitting(true);
     try {
-      await onSubmit(form);
+      let resolvedTagId = form.tagId;
+
+      if (!resolvedTagId && newTagName.trim()) {
+        try {
+          const createdTag = await apiClient.createTag(newTagName.trim());
+          resolvedTagId = createdTag.id;
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "タグの作成に失敗しました。";
+          setErrorMessage(message);
+          return;
+        }
+      }
+
+      const resolvedForm: RankingInput = {
+        ...form,
+        tagId: resolvedTagId,
+      };
+
+      await onSubmit(resolvedForm);
       if (autosaveStorageKey) {
         window.localStorage.removeItem(autosaveStorageKey);
       }
@@ -152,7 +186,10 @@ export function RankingForm({
     setErrorMessage(null);
     setIsSavingDraft(true);
     try {
-      await onSaveDraft(form);
+      await onSaveDraft({
+        ...form,
+        ...(newTagName.trim() ? { newTagName: newTagName.trim() } : {}),
+      });
       if (autosaveStorageKey) {
         window.localStorage.removeItem(autosaveStorageKey);
       }
@@ -169,9 +206,18 @@ export function RankingForm({
     setForm((prev) => ({ ...prev, title }));
   };
 
-  const setTag = (tagId: string) => {
+  const handleTagSelect = (tagId: string, tagName: string) => {
     setIsDirty(true);
     setForm((prev) => ({ ...prev, tagId }));
+    setTagDisplayName(tagName);
+    setNewTagName("");
+  };
+
+  const handleTagCreate = (name: string) => {
+    setIsDirty(true);
+    setForm((prev) => ({ ...prev, tagId: "" }));
+    setNewTagName(name);
+    setTagDisplayName(name);
   };
 
   const setItem = (index: number, value: string) => {
@@ -206,8 +252,6 @@ export function RankingForm({
     return "自動下書き保存: 未変更";
   }, [autosaveKey, autosaveState, autosavedAt]);
 
-  const currentTagLabel = FIXED_TAGS.find((t) => t.id === form.tagId)?.label ?? form.tagId;
-
   return (
     <div className="space-y-4">
       {/* Header: [← back] [title input] [spacer] */}
@@ -233,28 +277,22 @@ export function RankingForm({
         <div className="h-8 w-8 shrink-0" />
       </div>
 
-      {/* Tag row */}
+      {/* Tag + action buttons row */}
       <div className="flex items-center gap-2">
-        <select
-          value={form.tagId}
-          onChange={(event) => setTag(event.target.value)}
-          className="rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          {FIXED_TAGS.map((tag) => (
-            <option key={tag.id} value={tag.id}>
-              {tag.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Action buttons row */}
-      <div className="flex items-center justify-end gap-2">
+        <div className="min-w-0 flex-1">
+          <TagCombobox
+            value={form.tagId}
+            displayName={tagDisplayName}
+            newTagName={newTagName || undefined}
+            onSelect={handleTagSelect}
+            onCreate={handleTagCreate}
+          />
+        </div>
         {onDraftList ? (
           <button
             type="button"
             onClick={onDraftList}
-            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+            className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
           >
             下書き一覧
           </button>
@@ -264,7 +302,7 @@ export function RankingForm({
             type="button"
             onClick={() => void saveDraft()}
             disabled={isSavingDraft}
-            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
+            className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
           >
             {isSavingDraft ? "保存中..." : "下書き保存"}
           </button>
@@ -273,7 +311,7 @@ export function RankingForm({
           type="button"
           onClick={() => void submit()}
           disabled={isSubmitting}
-          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+          className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
         >
           {isSubmitting ? "送信中..." : submitLabel}
         </button>

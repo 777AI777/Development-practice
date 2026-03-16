@@ -1,4 +1,4 @@
-﻿import type { SupabaseRankingRow } from "@/lib/types";
+﻿import type { SupabaseRankingRow, SupabaseTagRow } from "@/lib/types";
 
 interface SupabaseEnv {
   url: string;
@@ -70,6 +70,7 @@ export function mapRankingRow(row: SupabaseRankingRow) {
     userId: row.user_id,
     title: row.title,
     tagId: row.tag_id,
+    tagName: row.tags?.name,
     items: parseItems(row),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -122,7 +123,7 @@ export async function listRankingsByUser(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,created_at,updated_at,ranking_items(rank,item_text)",
+    select: "id,user_id,title,tag_id,created_at,updated_at,ranking_items(rank,item_text),tags(name)",
     user_id: `eq.${params.userId}`,
     order: "updated_at.desc",
   });
@@ -145,7 +146,7 @@ export async function getRankingById(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow> | null> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,created_at,updated_at,ranking_items(rank,item_text)",
+    select: "id,user_id,title,tag_id,created_at,updated_at,ranking_items(rank,item_text),tags(name)",
     id: `eq.${params.rankingId}`,
     user_id: `eq.${params.userId}`,
     limit: "1",
@@ -419,4 +420,138 @@ export async function deleteRanking(params: {
     }
     throw error;
   }
+}
+
+/**
+ * ユーザーのランキングからtag_idのみを取得し、使用回数マップを返す
+ */
+export async function countTagUsageByUser(params: {
+  userId: string;
+  accessToken: string;
+}): Promise<Map<string, number>> {
+  const query = new URLSearchParams({
+    select: "tag_id",
+    user_id: `eq.${params.userId}`,
+  });
+  const response = await requestSupabase(
+    `rankings?${query.toString()}`,
+    {
+      method: "GET",
+      accessToken: params.accessToken,
+    },
+  );
+  await ensureResponseOk(response);
+  const rows = (await response.json()) as Array<{ tag_id: string }>;
+  const usageMap = new Map<string, number>();
+  for (const row of rows) {
+    usageMap.set(row.tag_id, (usageMap.get(row.tag_id) ?? 0) + 1);
+  }
+  return usageMap;
+}
+
+export async function listTags(accessToken: string): Promise<SupabaseTagRow[]> {
+  const query = new URLSearchParams({
+    select: "*",
+    order: "usage_count.desc,created_at.asc",
+  });
+  const res = await requestSupabase(`tags?${query.toString()}`, {
+    method: "GET",
+    accessToken,
+  });
+  await ensureResponseOk(res);
+  return (await res.json()) as SupabaseTagRow[];
+}
+
+export async function searchTagsByReading(
+  query: string,
+  accessToken: string,
+): Promise<SupabaseTagRow[]> {
+  const res = await requestSupabase("rpc/search_tags_by_reading", {
+    method: "POST",
+    accessToken,
+    body: { query },
+  });
+  await ensureResponseOk(res);
+  return (await res.json()) as SupabaseTagRow[];
+}
+
+export async function createTag(
+  tag: { name: string; readings: string[] },
+  accessToken: string,
+): Promise<SupabaseTagRow> {
+  const res = await requestSupabase("tags", {
+    method: "POST",
+    prefer: "return=representation",
+    accessToken,
+    body: [tag],
+  });
+  await ensureResponseOk(res);
+  const rows = (await res.json()) as SupabaseTagRow[];
+  const created = rows[0];
+  if (!created) {
+    throw new Error("Tag creation did not return a row");
+  }
+  return created;
+}
+
+export async function appendTagReading(
+  tagId: string,
+  newReadings: string[],
+  existingReadings: string[],
+  accessToken: string,
+): Promise<void> {
+  // Filter to only truly new readings
+  const uniqueNew = newReadings.filter((r) => !existingReadings.includes(r));
+  if (uniqueNew.length === 0) return;
+
+  const res = await requestSupabase("rpc/append_tag_readings", {
+    method: "POST",
+    accessToken,
+    body: {
+      p_tag_id: tagId,
+      p_new_readings: uniqueNew,
+    },
+  });
+  await ensureResponseOk(res);
+}
+
+export async function getTagByName(
+  name: string,
+  accessToken: string,
+): Promise<SupabaseTagRow | null> {
+  const query = new URLSearchParams({
+    name: `eq.${name}`,
+    select: "*",
+  });
+  const res = await requestSupabase(`tags?${query.toString()}`, {
+    method: "GET",
+    accessToken,
+  });
+  await ensureResponseOk(res);
+  const rows = (await res.json()) as SupabaseTagRow[];
+  return rows[0] ?? null;
+}
+
+function escapeIlike(input: string): string {
+  return input
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
+
+export async function searchTagsByName(
+  query: string,
+  accessToken: string,
+): Promise<SupabaseTagRow[]> {
+  const query_ = new URLSearchParams({
+    name: `ilike.${escapeIlike(query)}*`,
+    select: "*",
+    order: "usage_count.desc,created_at.asc",
+  });
+  const res = await requestSupabase(`tags?${query_.toString()}`, {
+    method: "GET",
+    accessToken,
+  });
+  await ensureResponseOk(res);
+  return (await res.json()) as SupabaseTagRow[];
 }

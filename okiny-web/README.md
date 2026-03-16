@@ -17,10 +17,7 @@ Set these in `.env.local` and Vercel:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_ENABLE_SNS_EXPANSION=false
 ```
-
-- `NEXT_PUBLIC_ENABLE_SNS_EXPANSION`: Feed/Profile/Notifications などSNS拡張導線の有効化。
 
 ## Supabase table assumptions
 

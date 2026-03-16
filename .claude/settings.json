@@ -13,7 +13,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/scripts/pre-block-env.mjs"
+            "command": "node -e \"var p=require('path').join(process.env.CLAUDE_PROJECT_DIR||'.','.claude','scripts','pre-block-env.mjs');try{require('child_process').execFileSync('node',[p],{stdio:'inherit'})}catch(e){process.exit(e.status===2?2:0)}\""
           }
         ]
       },
@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/scripts/pre-block-env-bash.mjs"
+            "command": "node -e \"var p=require('path').join(process.env.CLAUDE_PROJECT_DIR||'.','.claude','scripts','pre-block-env-bash.mjs');try{require('child_process').execFileSync('node',[p],{stdio:'inherit'})}catch(e){process.exit(e.status===2?2:0)}\""
           }
         ]
       }

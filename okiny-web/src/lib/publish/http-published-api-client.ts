@@ -1,4 +1,4 @@
-import type { AppErrorCode, PublishedRanking, RankingInput } from "@/lib/types";
+import type { AppErrorCode, PublishedRanking, RankingInput, TagItem } from "@/lib/types";
 
 interface ApiResponse<T> {
   data?: T;
@@ -48,6 +48,7 @@ export interface PublishedApiClient {
     expectedUpdatedAt: string;
   }): Promise<PublishedRanking>;
   deletePublishedRanking(rankingId: string, expectedUpdatedAt: string): Promise<void>;
+  createTag(name: string): Promise<TagItem>;
 }
 
 export class HttpPublishedApiClient implements PublishedApiClient {
@@ -142,5 +143,21 @@ export class HttpPublishedApiClient implements PublishedApiClient {
       body.error?.code ?? mapStatusToErrorCode(response.status),
       body.error?.message ?? "ランキングの削除に失敗しました。",
     );
+  }
+
+  async createTag(name: string): Promise<TagItem> {
+    const response = await fetch("/api/v1/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    const body = await parseJson<TagItem>(response);
+    if (!response.ok || !body.data) {
+      throw new PublishedApiError(
+        body.error?.code ?? mapStatusToErrorCode(response.status),
+        body.error?.message ?? "タグの作成に失敗しました。",
+      );
+    }
+    return body.data;
   }
 }

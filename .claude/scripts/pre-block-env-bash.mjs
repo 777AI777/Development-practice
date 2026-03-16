@@ -16,7 +16,13 @@
 // 堅牢な防御にはOS レベルのファイルパーミッションを併用すること。
 
 import { readFileSync } from "fs";
-import { resolve } from "path";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+
+// スクリプト自身の位置からプロジェクトルートを算出（CWD非依存）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const PROJECT_ROOT = resolve(__dirname, "..", "..");  // .claude/scripts/ → project root
 
 // env設定ファイルパターン（リテラルドット + env + オプション拡張子）
 const ENV_LITERAL = /\.env(\.[a-zA-Z0-9_-]+)?/i;
@@ -93,7 +99,7 @@ function block(message) {
 
 function checkScriptContent(scriptPath) {
   try {
-    const content = readFileSync(resolve(scriptPath), "utf8");
+    const content = readFileSync(resolve(PROJECT_ROOT, scriptPath), "utf8");
     return ENV_LITERAL.test(content);
   } catch {
     return false;

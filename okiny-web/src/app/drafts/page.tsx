@@ -12,24 +12,17 @@ import { draftRepository } from "@/lib/drafts/client-repository";
 import { MAX_DRAFTS_PER_USER } from "@/lib/drafts/constants";
 import { publishedApiClient } from "@/lib/publish/client";
 import { publishRanking } from "@/lib/publish/publish-ranking";
-import { getTagLabel } from "@/lib/tags";
 import type { DraftLocalRecord } from "@/lib/types";
 
 export default function DraftsPage() {
   const { signalReady } = usePageTransition();
-  const { user } = useSessionUser();
+  const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
   const [drafts, setDrafts] = useState<DraftLocalRecord[]>([]);
   const [publishingId, setPublishingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    signalReady();
-  }, [signalReady]);
-
   const loadDrafts = useCallback(async () => {
-    if (!user) {
-      return;
-    }
+    if (!user) return;
     try {
       const data = await draftRepository.list(user.id);
       setDrafts(data);
@@ -43,8 +36,13 @@ export default function DraftsPage() {
   }, [pushToast, user]);
 
   useEffect(() => {
-    void loadDrafts();
-  }, [loadDrafts]);
+    if (!isReady) return;
+    if (!user) {
+      signalReady();
+      return;
+    }
+    void loadDrafts().finally(() => signalReady());
+  }, [isReady, loadDrafts, signalReady, user]);
 
   const deleteDraft = async (draftId: string) => {
     if (!user) return;
@@ -126,7 +124,7 @@ export default function DraftsPage() {
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                      {getTagLabel(draft.tagId)}
+                      {draft.newTagName ?? draft.tagId}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       更新: {formatSmartDate(draft.updatedAt)}
