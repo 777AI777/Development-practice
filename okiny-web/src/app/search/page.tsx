@@ -9,6 +9,7 @@ import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { useTags, separateTags, getRecommendedTags } from "@/hooks/use-tags";
+import { TAG_QUERY_LIMITS } from "@/lib/constants";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
 import type { PublishedRanking, TagItem } from "@/lib/types";
 
@@ -110,7 +111,13 @@ function SearchPageContent() {
   };
 
   // Separate tags for initial view (State 1)
-  const { myTags, popularTags } = useMemo(() => separateTags(tags), [tags]);
+  const { myTags, popularTags } = useMemo(() => {
+    const separated = separateTags(tags);
+    return {
+      myTags: separated.myTags.slice(0, TAG_QUERY_LIMITS.MINE),
+      popularTags: separated.popularTags.slice(0, TAG_QUERY_LIMITS.POPULAR),
+    };
+  }, [tags]);
 
   // Recommended tags for search view (States 3/4)
   const matchedTagIds = useMemo(
@@ -118,7 +125,7 @@ function SearchPageContent() {
     [searchResults],
   );
   const recommendedTags = useMemo(
-    () => getRecommendedTags(tags, matchedTagIds),
+    () => getRecommendedTags(tags, matchedTagIds).slice(0, TAG_QUERY_LIMITS.MINE + TAG_QUERY_LIMITS.POPULAR),
     [tags, matchedTagIds],
   );
 
@@ -162,7 +169,7 @@ function SearchPageContent() {
         ) : q ? (
           /* ── States 3/4: Search results ── */
           <SearchResultsView
-            searchResults={searchResults}
+            searchResults={searchResults.slice(0, TAG_QUERY_LIMITS.SEARCH)}
             recommendedTags={recommendedTags}
             onTagSelect={handleTagSelect}
             selectedTagId={null}
@@ -275,6 +282,9 @@ function SearchResultsView({
   onTagSelect: (tag: TagItem) => void;
   selectedTagId: string | null;
 }) {
+  const recentTags = recommendedTags.filter((t) => t.myUsageCount > 0);
+  const popularRecommended = recommendedTags.filter((t) => t.myUsageCount === 0);
+
   return (
     <>
       {searchResults.length > 0 ? (
@@ -289,11 +299,21 @@ function SearchResultsView({
         </p>
       )}
 
-      {recommendedTags.length > 0 && (
+      {recentTags.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-medium text-foreground">おすすめ</h2>
+          <h2 className="text-sm font-medium text-foreground">最近</h2>
           <TagChipList
-            tags={recommendedTags}
+            tags={recentTags}
+            selectedTagId={selectedTagId}
+            onTagSelect={onTagSelect}
+          />
+        </section>
+      )}
+      {popularRecommended.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium text-foreground">人気</h2>
+          <TagChipList
+            tags={popularRecommended}
             selectedTagId={selectedTagId}
             onTagSelect={onTagSelect}
           />

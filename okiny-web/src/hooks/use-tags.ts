@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { TagItem } from "@/lib/types";
+import { deduplicateByKey } from "@/lib/tag-mappers";
 
 interface UseTagsReturn {
   /** All tags (only populated after fetchTags is called) */
@@ -40,10 +41,23 @@ export function useTags(): UseTagsReturn {
   const fetchTags = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/tags");
-      if (!res.ok) throw new Error("Failed to fetch tags");
-      const json = await res.json();
-      setTags(json.data ?? []);
+      const [mineRes, popularRes] = await Promise.all([
+        fetch("/api/v1/tags/mine"),
+        fetch("/api/v1/tags/popular"),
+      ]);
+      if (!mineRes.ok) throw new Error("Failed to fetch my tags");
+      if (!popularRes.ok) throw new Error("Failed to fetch popular tags");
+      const [mineJson, popularJson] = await Promise.all([
+        mineRes.json(),
+        popularRes.json(),
+      ]);
+      const mineTags: TagItem[] = mineJson.data ?? [];
+      const popularTags: TagItem[] = popularJson.data ?? [];
+      const merged = deduplicateByKey(
+        [...mineTags, ...popularTags],
+        (t) => t.id,
+      );
+      setTags(merged);
     } catch {
       // silently fail
     } finally {
@@ -68,7 +82,7 @@ export function useTags(): UseTagsReturn {
       setIsLoading(true);
       try {
         const res = await fetch(
-          `/api/v1/tags?q=${encodeURIComponent(query)}`,
+          `/api/v1/tags/search?q=${encodeURIComponent(query)}`,
           { signal: controller.signal },
         );
         if (!res.ok) throw new Error("Failed to search tags");
