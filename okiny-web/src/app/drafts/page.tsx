@@ -54,9 +54,35 @@ export default function DraftsPage() {
   const publishDraft = async (draft: DraftLocalRecord) => {
     if (!user) return;
     setPublishingId(draft.draftId);
+
+    let resolvedTagId = draft.tagId;
+
+    if (!resolvedTagId && !draft.newTagName?.trim()) {
+      setPublishingId(null);
+      pushToast({ type: "error", message: "タグが未設定です。", persistent: true });
+      return;
+    }
+
+    if (!resolvedTagId && draft.newTagName?.trim()) {
+      try {
+        const createdTag = await publishedApiClient.createTag(
+          draft.newTagName.trim(),
+        );
+        resolvedTagId = createdTag.id;
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "タグの作成に失敗しました。";
+        setPublishingId(null);
+        pushToast({ type: "error", message, persistent: true });
+        return;
+      }
+    }
+
     const result = await publishRanking({
       userId: user.id,
-      ranking: { title: draft.title, tagId: draft.tagId, items: draft.items },
+      ranking: { title: draft.title, tagId: resolvedTagId, items: draft.items },
       draftId: draft.draftId,
       draftRepository,
       apiClient: publishedApiClient,

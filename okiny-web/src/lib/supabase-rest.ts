@@ -1,4 +1,5 @@
 ﻿import type { SupabaseRankingRow, SupabaseTagRow } from "@/lib/types";
+import { RANKING_ITEMS_PREVIEW_LIMIT } from "@/lib/constants";
 
 interface SupabaseEnv {
   url: string;
@@ -130,6 +131,8 @@ export async function listRankingsByUser(params: {
   if (params.tagId) {
     query.set("tag_id", `eq.${params.tagId}`);
   }
+  query.set("ranking_items.order", "rank.asc");
+  query.set("ranking_items.limit", String(RANKING_ITEMS_PREVIEW_LIMIT));
 
   const response = await requestSupabase(`rankings?${query.toString()}`, {
     method: "GET",
@@ -423,37 +426,51 @@ export async function deleteRanking(params: {
 }
 
 /**
- * ユーザーのランキングからtag_idのみを取得し、使用回数マップを返す
+ * ユーザーが使用したタグの詳細+使用回数を取得（RPC: GROUP BY + JOIN）
  */
-export async function countTagUsageByUser(params: {
+export async function getUserTagUsage(params: {
   userId: string;
   accessToken: string;
-}): Promise<Map<string, number>> {
-  const query = new URLSearchParams({
-    select: "tag_id",
-    user_id: `eq.${params.userId}`,
+  limit: number;
+}): Promise<Array<{
+  tag_id: string;
+  tag_name: string;
+  tag_readings: string[];
+  tag_usage_count: number;
+  tag_created_at: string;
+  my_usage_count: number;
+}>> {
+  const body = {
+    p_user_id: params.userId,
+    p_limit: params.limit,
+  };
+  const res = await requestSupabase("rpc/get_user_tag_usage", {
+    method: "POST",
+    accessToken: params.accessToken,
+    body,
   });
-  const response = await requestSupabase(
-    `rankings?${query.toString()}`,
-    {
-      method: "GET",
-      accessToken: params.accessToken,
-    },
-  );
-  await ensureResponseOk(response);
-  const rows = (await response.json()) as Array<{ tag_id: string }>;
-  const usageMap = new Map<string, number>();
-  for (const row of rows) {
-    usageMap.set(row.tag_id, (usageMap.get(row.tag_id) ?? 0) + 1);
-  }
-  return usageMap;
+  await ensureResponseOk(res);
+  return (await res.json()) as Array<{
+    tag_id: string;
+    tag_name: string;
+    tag_readings: string[];
+    tag_usage_count: number;
+    tag_created_at: string;
+    my_usage_count: number;
+  }>;
 }
 
-export async function listTags(accessToken: string): Promise<SupabaseTagRow[]> {
+export async function listTags(
+  accessToken: string,
+  options?: { limit?: number },
+): Promise<SupabaseTagRow[]> {
   const query = new URLSearchParams({
     select: "*",
     order: "usage_count.desc,created_at.asc",
   });
+  if (options?.limit !== undefined) {
+    query.set("limit", String(options.limit));
+  }
   const res = await requestSupabase(`tags?${query.toString()}`, {
     method: "GET",
     accessToken,
@@ -462,14 +479,20 @@ export async function listTags(accessToken: string): Promise<SupabaseTagRow[]> {
   return (await res.json()) as SupabaseTagRow[];
 }
 
-export async function searchTagsByReading(
-  query: string,
-  accessToken: string,
-): Promise<SupabaseTagRow[]> {
-  const res = await requestSupabase("rpc/search_tags_by_reading", {
+export async function searchTagsUnified(params: {
+  query: string;
+  katakanaQuery: string;
+  limit: number;
+  accessToken: string;
+}): Promise<SupabaseTagRow[]> {
+  const res = await requestSupabase("rpc/search_tags_unified", {
     method: "POST",
-    accessToken,
-    body: { query },
+    accessToken: params.accessToken,
+    body: {
+      p_query: params.query,
+      p_katakana_query: params.katakanaQuery,
+      p_limit: params.limit,
+    },
   });
   await ensureResponseOk(res);
   return (await res.json()) as SupabaseTagRow[];
@@ -532,26 +555,3 @@ export async function getTagByName(
   return rows[0] ?? null;
 }
 
-function escapeIlike(input: string): string {
-  return input
-    .replace(/\\/g, "\\\\")
-    .replace(/%/g, "\\%")
-    .replace(/_/g, "\\_");
-}
-
-export async function searchTagsByName(
-  query: string,
-  accessToken: string,
-): Promise<SupabaseTagRow[]> {
-  const query_ = new URLSearchParams({
-    name: `ilike.${escapeIlike(query)}*`,
-    select: "*",
-    order: "usage_count.desc,created_at.asc",
-  });
-  const res = await requestSupabase(`tags?${query_.toString()}`, {
-    method: "GET",
-    accessToken,
-  });
-  await ensureResponseOk(res);
-  return (await res.json()) as SupabaseTagRow[];
-}

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { TagItem } from "@/lib/types";
+import { deduplicateByKey } from "@/lib/tag-mappers";
 
 interface UseTagsReturn {
   /** All tags (only populated after fetchTags is called) */
@@ -40,12 +41,41 @@ export function useTags(): UseTagsReturn {
   const fetchTags = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/tags");
-      if (!res.ok) throw new Error("Failed to fetch tags");
-      const json = await res.json();
-      setTags(json.data ?? []);
+      const [mineResult, popularResult] = await Promise.allSettled([
+        fetch("/api/v1/tags/mine").then(async (res) => {
+          if (!res.ok) throw new Error("Failed to fetch my tags");
+          const json = await res.json();
+          return (json.data ?? []) as TagItem[];
+        }),
+        fetch("/api/v1/tags/popular").then(async (res) => {
+          if (!res.ok) throw new Error("Failed to fetch popular tags");
+          const json = await res.json();
+          return (json.data ?? []) as TagItem[];
+        }),
+      ]);
+      const mineTags =
+        mineResult.status === "fulfilled" ? mineResult.value : [];
+      const popularTags =
+        popularResult.status === "fulfilled" ? popularResult.value : [];
+
+      if (
+        mineResult.status === "rejected" &&
+        popularResult.status === "rejected"
+      ) {
+        console.error(
+          "[use-tags] Both mine and popular tags failed:",
+          mineResult.reason,
+          popularResult.reason,
+        );
+      }
+
+      const merged = deduplicateByKey(
+        [...mineTags, ...popularTags],
+        (t) => t.id,
+      );
+      setTags(merged);
     } catch {
-      // silently fail
+      // unexpected error (should not reach here due to allSettled)
     } finally {
       setIsLoading(false);
     }
@@ -62,13 +92,14 @@ export function useTags(): UseTagsReturn {
       setSearchResults([]);
       return;
     }
+    setSearchResults([]);
     debounceRef.current = setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
       setIsLoading(true);
       try {
         const res = await fetch(
-          `/api/v1/tags?q=${encodeURIComponent(query)}`,
+          `/api/v1/tags/search?q=${encodeURIComponent(query)}`,
           { signal: controller.signal },
         );
         if (!res.ok) throw new Error("Failed to search tags");
@@ -93,6 +124,7 @@ export function useTags(): UseTagsReturn {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
+    abortRef.current?.abort();
   }, []);
 
   return { tags, searchResults, isLoading, fetchTags, search, clearSearch };

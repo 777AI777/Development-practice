@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTags } from "@/hooks/use-tags";
+import { TAG_QUERY_LIMITS } from "@/lib/constants";
 import { containsBannedWord } from "@/lib/tag-validation";
 import { normalizeTagName } from "@/lib/tag-utils";
 import type { TagItem } from "@/lib/types";
@@ -29,6 +30,7 @@ export function TagCombobox({
   const { tags, searchResults, isLoading, fetchTags, search, clearSearch } = useTags();
   const [inputValue, setInputValue] = useState(displayName || newTagName || "");
   const [isOpen, setIsOpen] = useState(false);
+  const [isUserSearching, setIsUserSearching] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,6 +47,7 @@ export function TagCombobox({
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setIsUserSearching(false);
         clearSearch();
       }
     }
@@ -55,6 +58,7 @@ export function TagCombobox({
   // Update input when external value changes
   useEffect(() => {
     setInputValue(displayName || newTagName || "");
+    setIsUserSearching(false);
   }, [displayName, newTagName]);
 
   // Resolve tag name from tagId when tags are loaded
@@ -71,6 +75,7 @@ export function TagCombobox({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
       setInputValue(val);
+      setIsUserSearching(true);
       setValidationError(null);
 
       const normalized = normalizeTagName(val);
@@ -89,6 +94,7 @@ export function TagCombobox({
       if (val.trim()) {
         search(val.trim());
       } else {
+        setIsUserSearching(false);
         clearSearch();
       }
     },
@@ -107,6 +113,7 @@ export function TagCombobox({
     (tag: TagItem) => {
       setInputValue(tag.name);
       setIsOpen(false);
+      setIsUserSearching(false);
       clearSearch();
       onSelect(tag.id, tag.name);
     },
@@ -120,15 +127,16 @@ export function TagCombobox({
     }
     setInputValue(normalized);
     setIsOpen(false);
+    setIsUserSearching(false);
     clearSearch();
     onCreate(normalized);
   }, [inputValue, onCreate, clearSearch]);
 
   // Determine which tags to show
-  const displayTags = inputValue.trim() ? searchResults : tags;
-  const isSearching = inputValue.trim().length > 0;
-  const recentTags = displayTags.filter((t) => t.myUsageCount > 0);
-  const popularTags = displayTags.filter((t) => t.myUsageCount === 0);
+  const displayTags = isUserSearching && inputValue.trim() ? searchResults : tags;
+  const isSearching = isUserSearching && inputValue.trim().length > 0;
+  const recentTags = displayTags.filter((t) => t.myUsageCount > 0).slice(0, TAG_QUERY_LIMITS.MINE);
+  const popularTags = displayTags.filter((t) => t.myUsageCount === 0).slice(0, TAG_QUERY_LIMITS.POPULAR);
   const normalizedInput = normalizeTagName(inputValue);
   const exactMatch = displayTags.some(
     (t) => t.name === normalizedInput,
@@ -215,7 +223,7 @@ export function TagCombobox({
                 </button>
               )}
 
-              {displayTags.length === 0 && !showCreateOption && !isLoading && (
+              {isUserSearching && displayTags.length === 0 && !showCreateOption && !isLoading && (
                 <div className="p-3 text-center text-sm text-muted-foreground">
                   タグが見つかりません
                 </div>

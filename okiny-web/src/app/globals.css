@@ -57,6 +57,31 @@ body {
   font-family: var(--font-sans);
 }
 
+.page-transition-loading-bar {
+  position: fixed;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, 480px);
+  height: 2px;
+  z-index: 29;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.page-transition-loading-bar-indicator {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 60%;
+  background: var(--primary);
+  animation: page-load-bar 0.8s ease-in-out infinite;
+}
+
+.page-transition-frozen-layer {
+  pointer-events: none;
+}
+
 @keyframes page-load-bar {
   0% { left: -60%; }
   100% { left: 110%; }

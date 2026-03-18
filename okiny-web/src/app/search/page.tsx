@@ -9,6 +9,7 @@ import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { useTags, separateTags, getRecommendedTags } from "@/hooks/use-tags";
+import { TAG_QUERY_LIMITS } from "@/lib/constants";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
 import type { PublishedRanking, TagItem } from "@/lib/types";
 
@@ -35,6 +36,8 @@ function SearchPageContent() {
   const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
   const [isRankingsLoading, setIsRankingsLoading] = useState(false);
   const [results, setResults] = useState<PublishedRanking[]>([]);
+  const [rankingsError, setRankingsError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [hasStartedLoading, setHasStartedLoading] = useState(false);
 
   // Fetch all tags on mount (for sections / recommendations)
@@ -65,22 +68,26 @@ function SearchPageContent() {
   useEffect(() => {
     if (!user || !selectedTag) {
       setResults([]);
+      setRankingsError(null);
       return;
     }
 
     let canceled = false;
     setIsRankingsLoading(true);
+    setRankingsError(null);
 
     void apiClient
       .listPublishedRankings(selectedTag.id)
       .then((data) => {
         if (canceled) return;
         setResults(data);
+        setRankingsError(null);
       })
       .catch((error: unknown) => {
         if (canceled) return;
         const message =
-          error instanceof PublishedApiError ? error.message : "ランキング検索に失敗しました。";
+          error instanceof PublishedApiError ? error.message : "ランキングの取得に失敗しました";
+        setRankingsError(message);
         pushToast({ type: "error", message });
       })
       .finally(() => {
@@ -91,7 +98,12 @@ function SearchPageContent() {
     return () => {
       canceled = true;
     };
-  }, [pushToast, selectedTag, user]);
+  }, [pushToast, selectedTag, user, retryCount]);
+
+  // Retry handler for rankings fetch
+  const handleRetryRankings = () => {
+    setRetryCount((prev) => prev + 1);
+  };
 
   // Tag click handler
   const handleTagSelect = (tag: TagItem) => {
@@ -110,7 +122,13 @@ function SearchPageContent() {
   };
 
   // Separate tags for initial view (State 1)
-  const { myTags, popularTags } = useMemo(() => separateTags(tags), [tags]);
+  const { myTags, popularTags } = useMemo(() => {
+    const separated = separateTags(tags);
+    return {
+      myTags: separated.myTags.slice(0, TAG_QUERY_LIMITS.MINE),
+      popularTags: separated.popularTags.slice(0, TAG_QUERY_LIMITS.POPULAR),
+    };
+  }, [tags]);
 
   // Recommended tags for search view (States 3/4)
   const matchedTagIds = useMemo(
@@ -118,7 +136,7 @@ function SearchPageContent() {
     [searchResults],
   );
   const recommendedTags = useMemo(
-    () => getRecommendedTags(tags, matchedTagIds),
+    () => getRecommendedTags(tags, matchedTagIds).slice(0, TAG_QUERY_LIMITS.MINE + TAG_QUERY_LIMITS.POPULAR),
     [tags, matchedTagIds],
   );
 
@@ -158,11 +176,13 @@ function SearchPageContent() {
             selectedTag={selectedTag}
             isLoading={isRankingsLoading}
             results={results}
+            error={rankingsError}
+            onRetry={handleRetryRankings}
           />
         ) : q ? (
           /* ── States 3/4: Search results ── */
           <SearchResultsView
-            searchResults={searchResults}
+            searchResults={searchResults.slice(0, TAG_QUERY_LIMITS.SEARCH)}
             recommendedTags={recommendedTags}
             onTagSelect={handleTagSelect}
             selectedTagId={null}
@@ -275,6 +295,9 @@ function SearchResultsView({
   onTagSelect: (tag: TagItem) => void;
   selectedTagId: string | null;
 }) {
+  const recentTags = recommendedTags.filter((t) => t.myUsageCount > 0);
+  const popularRecommended = recommendedTags.filter((t) => t.myUsageCount === 0);
+
   return (
     <>
       {searchResults.length > 0 ? (
@@ -289,11 +312,21 @@ function SearchResultsView({
         </p>
       )}
 
-      {recommendedTags.length > 0 && (
+      {recentTags.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-medium text-foreground">おすすめ</h2>
+          <h2 className="text-sm font-medium text-foreground">最近</h2>
           <TagChipList
-            tags={recommendedTags}
+            tags={recentTags}
+            selectedTagId={selectedTagId}
+            onTagSelect={onTagSelect}
+          />
+        </section>
+      )}
+      {popularRecommended.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium text-foreground">人気</h2>
+          <TagChipList
+            tags={popularRecommended}
             selectedTagId={selectedTagId}
             onTagSelect={onTagSelect}
           />
@@ -308,13 +341,32 @@ function SelectedTagView({
   selectedTag,
   isLoading,
   results,
+  error,
+  onRetry,
 }: {
   selectedTag: TagItem;
   isLoading: boolean;
   results: PublishedRanking[];
+  error: string | null;
+  onRetry: () => void;
 }) {
   if (isLoading) {
     return <p className="text-xs text-muted-foreground">読み込み中...</p>;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-6 text-center">
+        <p className="text-sm text-destructive">{error}</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          再読み込み
+        </button>
+      </div>
+    );
   }
 
   if (results.length === 0) {
