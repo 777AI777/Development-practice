@@ -12,8 +12,8 @@ function createRateLimiter(): Ratelimit | null {
 
   if (!url || !token) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "[rate-limit] UPSTASH_REDIS_REST_URL または UPSTASH_REDIS_REST_TOKEN が未設定です。本番環境ではレート制限を無効にできません。",
+      console.warn(
+        "[rate-limit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN が未設定です。レートリミットは無効化されます。",
       );
     }
     return null;
