@@ -65,6 +65,7 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
     <AppShell>
       <RankingForm
         initialValue={initialValue}
+        initialTagName={ranking.tagName}
         submitLabel="更新"
         onSubmit={handleSubmit}
         onCancel={() => router.push(`/rankings/${rankingId}`)}

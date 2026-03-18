@@ -10,6 +10,7 @@ const apiClient = new HttpPublishedApiClient();
 
 interface RankingFormProps {
   initialValue?: RankingInput;
+  initialTagName?: string;
   initialNewTagName?: string;
   submitLabel: string;
   onSubmit: (value: RankingInput) => Promise<void>;
@@ -39,6 +40,7 @@ function validateInput(value: RankingInput, newTagName: string): string | null {
 
 export function RankingForm({
   initialValue,
+  initialTagName,
   initialNewTagName,
   submitLabel,
   onSubmit,
@@ -56,7 +58,7 @@ export function RankingForm({
     },
   );
   const [newTagName, setNewTagName] = useState(initialNewTagName ?? "");
-  const [tagDisplayName, setTagDisplayName] = useState(initialNewTagName ?? "");
+  const [tagDisplayName, setTagDisplayName] = useState(initialTagName ?? initialNewTagName ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);

@@ -36,8 +36,9 @@ export function TagCombobox({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch tags eagerly when a value (tagId) is already set (edit mode)
+  // Skip if displayName is already provided (tag name resolved by server)
   useEffect(() => {
-    if (value && tags.length === 0) {
+    if (value && !displayName && tags.length === 0) {
       fetchTags();
     }
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
