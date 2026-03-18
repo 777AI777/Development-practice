@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import type { AuthChangeEvent, Session, User } from "@supabase/auth-js";
+
 import { trackEvent } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
 import type { AuthUser } from "@/lib/supabase/types";
@@ -63,13 +65,13 @@ export function useSessionUser(): UseSessionUserResult {
     if (!cachedAuthPromise) {
       cachedAuthPromise = supabase.auth
         .getUser()
-        .then(({ data: { user: currentUser } }) => {
+        .then(({ data: { user: currentUser } }: { data: { user: User | null } }) => {
           return currentUser ? toAuthUser(currentUser) : null;
         })
         .catch(() => null);
     }
 
-    void cachedAuthPromise.then((userData) => {
+    void cachedAuthPromise!.then((userData) => {
       updateCache(userData, true);
       setUser(userData);
       setIsReady(true);
@@ -77,7 +79,7 @@ export function useSessionUser(): UseSessionUserResult {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       const userData = session?.user ? toAuthUser(session.user) : null;
       if (_event === "SIGNED_OUT") {
         updateCache(null, false, true);

@@ -37,6 +37,7 @@ describe("getAuthenticatedUserId", () => {
       ok: true,
       userId: "user-google-001",
       accessToken: "jwt-token-abc",
+      userName: null,
     });
   });
 
