@@ -9,11 +9,15 @@ import type { AuthUser } from "@/lib/supabase/types";
 // モジュールレベルキャッシュ（ページ遷移間で保持、ハードリフレッシュでリセット）
 let cachedUser: AuthUser | null = null;
 let cachedIsReady = false;
+let cachedAuthPromise: Promise<AuthUser | null> | null = null;
 
 /** キャッシュ更新を単一関数に集約（競合リスク軽減） */
-function updateCache(user: AuthUser | null, ready: boolean): void {
+function updateCache(user: AuthUser | null, ready: boolean, resetPromise = false): void {
   cachedUser = user;
   cachedIsReady = ready;
+  if (resetPromise) {
+    cachedAuthPromise = null;
+  }
 }
 
 interface AuthSyncMessage {
@@ -56,26 +60,27 @@ export function useSessionUser(): UseSessionUserResult {
   useEffect(() => {
     const supabase = createClient();
 
-    void supabase.auth
-      .getUser()
-      .then(({ data: { user: currentUser } }) => {
-        const userData = currentUser ? toAuthUser(currentUser) : null;
-        updateCache(userData, true);
-        setUser(userData);
-        setIsReady(true);
-      })
-      .catch(() => {
-        updateCache(null, true);
-        setUser(null);
-        setIsReady(true);
-      });
+    if (!cachedAuthPromise) {
+      cachedAuthPromise = supabase.auth
+        .getUser()
+        .then(({ data: { user: currentUser } }) => {
+          return currentUser ? toAuthUser(currentUser) : null;
+        })
+        .catch(() => null);
+    }
+
+    void cachedAuthPromise.then((userData) => {
+      updateCache(userData, true);
+      setUser(userData);
+      setIsReady(true);
+    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       const userData = session?.user ? toAuthUser(session.user) : null;
       if (_event === "SIGNED_OUT") {
-        updateCache(null, false);
+        updateCache(null, false, true);
       } else {
         updateCache(userData, true);
       }
@@ -101,7 +106,7 @@ export function useSessionUser(): UseSessionUserResult {
       authChannel = new BroadcastChannel("okiny-auth-sync");
       authChannel.onmessage = (event: MessageEvent<AuthSyncMessage>) => {
         if (event.data.type === "SIGNED_OUT") {
-          updateCache(null, true);
+          updateCache(null, true, true); // Promiseキャッシュもリセット
           setUser(null);
           setIsReady(true);
         }
@@ -117,7 +122,7 @@ export function useSessionUser(): UseSessionUserResult {
   const signOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    updateCache(null, false);
+    updateCache(null, false, true);
     setUser(null);
 
     // 他タブに通知

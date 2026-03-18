@@ -78,6 +78,7 @@ export function PageTransitionProvider({
   // --------------------------------------------------
   const captureSnapshot = useCallback(() => {
     if (!contentRef.current) return;
+    if (supportsViewTransitions()) return; // View Transitions API対応ブラウザではスキップ
     lastSnapshotRef.current = contentRef.current.cloneNode(true);
   }, []);
 
