@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthResult =
-  | { ok: true; userId: string; accessToken: string }
+  | { ok: true; userId: string; accessToken: string; userName: string | null }
   | { ok: false; reason: "unauthorized" | "server_error" };
 
 export function authErrorResponse(
@@ -53,5 +53,11 @@ export async function getAuthenticatedUserId(): Promise<AuthResult> {
     return { ok: false, reason: "unauthorized" };
   }
 
-  return { ok: true, userId: user.id, accessToken: session.access_token };
+  return {
+    ok: true,
+    userId: user.id,
+    accessToken: session.access_token,
+    userName:
+      user.user_metadata?.name ?? user.user_metadata?.full_name ?? null,
+  };
 }

@@ -20,10 +20,12 @@ const SAFETY_TIMEOUT_MS = 10_000;
 
 interface PageTransitionContextValue {
   signalReady: () => void;
+  startTransitionLoading: () => void;
 }
 
 const PageTransitionContext = createContext<PageTransitionContextValue>({
   signalReady: () => {},
+  startTransitionLoading: () => {},
 });
 
 export function usePageTransition(): PageTransitionContextValue {
@@ -121,6 +123,52 @@ export function PageTransitionProvider({
   }, [captureSnapshot]);
 
   // --------------------------------------------------
+  // 遷移開始: frozen layer表示 + ローディングバー開始
+  // --------------------------------------------------
+  const startTransitionLoading = useCallback(() => {
+    if (isTransitioningRef.current) return;
+
+    isTransitioningRef.current = true;
+    setIsLoading(true);
+
+    const frozen = frozenRef.current;
+    const content = contentRef.current;
+    if (!frozen || !content) return;
+
+    // frozen layer にスナップショットを表示
+    if (lastSnapshotRef.current) {
+      frozen.replaceChildren();
+      const snapshot = lastSnapshotRef.current;
+      if (snapshot instanceof HTMLElement) {
+        while (snapshot.firstChild) {
+          frozen.appendChild(snapshot.firstChild);
+        }
+      }
+      lastSnapshotRef.current = null;
+
+      frozen.style.display = "block";
+      content.style.visibility = "hidden";
+      content.style.position = "absolute";
+      content.style.top = "0";
+      content.style.left = "0";
+      content.style.right = "0";
+    }
+
+    // Safety timeout
+    if (safetyTimerRef.current !== null) {
+      window.clearTimeout(safetyTimerRef.current);
+    }
+    safetyTimerRef.current = window.setTimeout(() => {
+      resolveTransitionRef.current = null;
+      commitTransition();
+    }, SAFETY_TIMEOUT_MS);
+
+    resolveTransitionRef.current = () => {
+      commitTransition();
+    };
+  }, [commitTransition]);
+
+  // --------------------------------------------------
   // signalReady
   // --------------------------------------------------
   const signalReady = useCallback(() => {
@@ -136,7 +184,8 @@ export function PageTransitionProvider({
   }, [commitTransition]);
 
   // --------------------------------------------------
-  // pathname変更検知 → 遷移開始
+  // pathname変更検知 → 遷移開始（フォールバック）
+  // リンククリック検知で既に遷移開始済みの場合はスキップ
   // --------------------------------------------------
   useLayoutEffect(() => {
     if (prevPathnameRef.current === pathname) return;
@@ -148,6 +197,9 @@ export function PageTransitionProvider({
       });
       return;
     }
+
+    // リンククリック検知で既に遷移開始済みの場合はスキップ
+    if (isTransitioningRef.current) return;
 
     const frozen = frozenRef.current;
     const content = contentRef.current;
@@ -176,39 +228,55 @@ export function PageTransitionProvider({
       return;
     }
 
-    // --- 遷移開始 ---
-    isTransitioningRef.current = true;
-    setIsLoading(true);
+    // --- 遷移開始（router.push / ブラウザ戻る・進むのフォールバック） ---
+    startTransitionLoading();
+  }, [pathname, captureSnapshot, startTransitionLoading]);
 
-    // frozenLayerに前回スナップショットを表示
-    frozen.replaceChildren();
-    const snapshot = lastSnapshotRef.current;
-    if (snapshot instanceof HTMLElement) {
-      while (snapshot.firstChild) {
-        frozen.appendChild(snapshot.firstChild);
-      }
-    }
-    lastSnapshotRef.current = null;
+  // --------------------------------------------------
+  // リンククリック検知 → 遷移開始
+  // --------------------------------------------------
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      // 遷移中なら無視
+      if (isTransitioningRef.current) return;
 
-    frozen.style.display = "block";
+      // クリックされた要素から最も近い <a> タグを探す
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (!anchor) return;
 
-    // contentLayerを不可視にする（DOMは存在するが見えない）
-    content.style.visibility = "hidden";
-    content.style.position = "absolute";
-    content.style.top = "0";
-    content.style.left = "0";
-    content.style.right = "0";
+      // 内部リンクかチェック
+      const href = anchor.getAttribute("href");
+      if (
+        !href ||
+        href.startsWith("http") ||
+        href.startsWith("mailto:") ||
+        href.startsWith("tel:")
+      )
+        return;
 
-    // Safety timeout
-    safetyTimerRef.current = window.setTimeout(() => {
-      resolveTransitionRef.current = null;
-      commitTransition();
-    }, SAFETY_TIMEOUT_MS);
+      // 現在と同じパスなら無視
+      if (href === pathname) return;
 
-    resolveTransitionRef.current = () => {
-      commitTransition();
+      // SUPPRESS_TRANSITION_PATHS に該当するなら無視
+      if (SUPPRESS_TRANSITION_PATHS.has(href)) return;
+
+      // 新しいタブで開く場合は無視（target="_blank" や cmd/ctrl+click）
+      if (
+        anchor.target === "_blank" ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      )
+        return;
+
+      // ローディング開始（スナップショット取得 + frozen layer 表示）
+      startTransitionLoading();
     };
-  }, [pathname, captureSnapshot, commitTransition]);
+
+    document.addEventListener("click", handleClick, true); // capture phase
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [pathname, startTransitionLoading]);
 
   // --------------------------------------------------
   // 初回マウント: paint後にスナップショット取得
@@ -233,7 +301,7 @@ export function PageTransitionProvider({
   }, []);
 
   return (
-    <PageTransitionContext.Provider value={{ signalReady }}>
+    <PageTransitionContext.Provider value={{ signalReady, startTransitionLoading }}>
       {isLoading && (
         <div aria-hidden="true" className="page-transition-loading-bar">
           <div className="page-transition-loading-bar-indicator" />
