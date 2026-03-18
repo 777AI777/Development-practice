@@ -15,7 +15,9 @@ import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(createClient).mockResolvedValue(mockSupabase as any);
+  vi.mocked(createClient).mockResolvedValue(
+    mockSupabase as unknown as Awaited<ReturnType<typeof createClient>>,
+  );
 });
 
 describe("getAuthenticatedUserId", () => {

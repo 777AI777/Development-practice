@@ -112,9 +112,16 @@ export class IndexedDbDraftRepository implements DraftRepository {
 
   async save(userId: string, draft: DraftSaveInput): Promise<DraftLocalRecord> {
     const normalized = normalizeInput(draft);
+
+    const database = await getDatabase();
+    const transaction = database.transaction(DRAFT_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(DRAFT_STORE_NAME);
+
     const existing =
       normalized.draftId !== undefined
-        ? await this.readById(normalized.draftId)
+        ? ((await requestToPromise(store.get(normalized.draftId))) as
+            | DraftLocalRecord
+            | undefined)
         : undefined;
 
     if (existing && existing.userId !== userId) {
@@ -122,15 +129,14 @@ export class IndexedDbDraftRepository implements DraftRepository {
     }
 
     if (!existing) {
-      const draftCount = await this.count(userId);
+      const index = store.index("userId");
+      const draftCount = await requestToPromise(
+        index.count(IDBKeyRange.only(userId)),
+      );
       if (draftCount >= MAX_DRAFTS_PER_USER) {
         throw new DraftLimitError("Draft limit reached (max 5).");
       }
     }
-
-    const database = await getDatabase();
-    const transaction = database.transaction(DRAFT_STORE_NAME, "readwrite");
-    const store = transaction.objectStore(DRAFT_STORE_NAME);
 
     const record: DraftLocalRecord = {
       draftId: normalized.draftId ?? generateId(),

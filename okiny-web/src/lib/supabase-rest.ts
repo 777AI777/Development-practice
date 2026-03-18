@@ -479,16 +479,20 @@ export async function listTags(
   return (await res.json()) as SupabaseTagRow[];
 }
 
-export async function searchTagsByReading(
-  query: string,
-  accessToken: string,
-  options?: { limit?: number },
-): Promise<SupabaseTagRow[]> {
-  const limitParam = options?.limit !== undefined ? `?limit=${options.limit}` : "";
-  const res = await requestSupabase(`rpc/search_tags_by_reading${limitParam}`, {
+export async function searchTagsUnified(params: {
+  query: string;
+  katakanaQuery: string;
+  limit: number;
+  accessToken: string;
+}): Promise<SupabaseTagRow[]> {
+  const res = await requestSupabase("rpc/search_tags_unified", {
     method: "POST",
-    accessToken,
-    body: { query },
+    accessToken: params.accessToken,
+    body: {
+      p_query: params.query,
+      p_katakana_query: params.katakanaQuery,
+      p_limit: params.limit,
+    },
   });
   await ensureResponseOk(res);
   return (await res.json()) as SupabaseTagRow[];
@@ -551,30 +555,3 @@ export async function getTagByName(
   return rows[0] ?? null;
 }
 
-function escapeIlike(input: string): string {
-  return input
-    .replace(/\\/g, "\\\\")
-    .replace(/%/g, "\\%")
-    .replace(/_/g, "\\_");
-}
-
-export async function searchTagsByName(
-  query: string,
-  accessToken: string,
-  options?: { limit?: number },
-): Promise<SupabaseTagRow[]> {
-  const query_ = new URLSearchParams({
-    name: `ilike.${escapeIlike(query)}*`,
-    select: "*",
-    order: "usage_count.desc,created_at.asc",
-  });
-  if (options?.limit !== undefined) {
-    query_.set("limit", String(options.limit));
-  }
-  const res = await requestSupabase(`tags?${query_.toString()}`, {
-    method: "GET",
-    accessToken,
-  });
-  await ensureResponseOk(res);
-  return (await res.json()) as SupabaseTagRow[];
-}

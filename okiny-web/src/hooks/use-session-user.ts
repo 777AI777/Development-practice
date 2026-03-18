@@ -24,7 +24,7 @@ interface UseSessionUserResult {
   isReady: boolean;
   user: AuthUser | null;
   signOut: () => Promise<void>;
-  updateDisplayName: (displayName: string) => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<boolean>;
 }
 
 function safeString(value: unknown): string | undefined {
@@ -56,12 +56,19 @@ export function useSessionUser(): UseSessionUserResult {
   useEffect(() => {
     const supabase = createClient();
 
-    void supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
-      const userData = currentUser ? toAuthUser(currentUser) : null;
-      updateCache(userData, true);
-      setUser(userData);
-      setIsReady(true);
-    });
+    void supabase.auth
+      .getUser()
+      .then(({ data: { user: currentUser } }) => {
+        const userData = currentUser ? toAuthUser(currentUser) : null;
+        updateCache(userData, true);
+        setUser(userData);
+        setIsReady(true);
+      })
+      .catch(() => {
+        updateCache(null, true);
+        setUser(null);
+        setIsReady(true);
+      });
 
     const {
       data: { subscription },
@@ -121,18 +128,26 @@ export function useSessionUser(): UseSessionUserResult {
     }
   };
 
-  const updateDisplayName = async (displayName: string) => {
+  const updateDisplayName = async (
+    displayName: string,
+  ): Promise<boolean> => {
     const MAX_DISPLAY_NAME_LENGTH = 30;
     const normalized = displayName.trim();
-    if (!normalized || normalized.length > MAX_DISPLAY_NAME_LENGTH) return;
-    const supabase = createClient();
-    const { data } = await supabase.auth.updateUser({
-      data: { display_name: normalized },
-    });
-    if (data.user) {
-      const updatedUser = toAuthUser(data.user);
-      updateCache(updatedUser, true);
-      setUser(updatedUser);
+    if (!normalized || normalized.length > MAX_DISPLAY_NAME_LENGTH)
+      return false;
+    try {
+      const supabase = createClient();
+      const { data } = await supabase.auth.updateUser({
+        data: { display_name: normalized },
+      });
+      if (data.user) {
+        const updatedUser = toAuthUser(data.user);
+        updateCache(updatedUser, true);
+        setUser(updatedUser);
+      }
+      return true;
+    } catch {
+      return false;
     }
   };
 

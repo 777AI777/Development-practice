@@ -57,7 +57,7 @@ function DisplayNameEditor({
   onDone,
 }: {
   user: { name?: string; email?: string } | null;
-  updateDisplayName: (name: string) => void;
+  updateDisplayName: (name: string) => Promise<boolean>;
   onDone: () => void;
 }) {
   const { pushToast } = useToast();
@@ -69,11 +69,15 @@ function DisplayNameEditor({
   );
   const canSave = displayName.trim().length > 0 && isDirty;
 
-  const save = () => {
+  const save = async () => {
     if (!canSave) return;
-    updateDisplayName(displayName.trim());
-    pushToast({ type: "success", message: "表示名を保存しました。" });
-    onDone();
+    const success = await updateDisplayName(displayName.trim());
+    if (success) {
+      pushToast({ type: "success", message: "表示名を保存しました。" });
+      onDone();
+    } else {
+      pushToast({ type: "error", message: "表示名の保存に失敗しました。" });
+    }
   };
 
   return (
@@ -130,7 +134,7 @@ function SettingsAccordion({
   nameEditOpen: boolean;
   onNameEditToggle: () => void;
   user: { name?: string; email?: string } | null;
-  updateDisplayName: (name: string) => void;
+  updateDisplayName: (name: string) => Promise<boolean>;
   onNavigate?: () => void;
 }) {
   return (

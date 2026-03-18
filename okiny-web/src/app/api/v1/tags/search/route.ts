@@ -5,16 +5,11 @@ import {
   getAuthenticatedUserId,
   authErrorResponse,
 } from "@/lib/supabase/auth-guard";
-import {
-  getTagByName,
-  searchTagsByReading,
-  searchTagsByName,
-} from "@/lib/supabase-rest";
-import { toTagItem, deduplicateByKey } from "@/lib/tag-mappers";
+import { searchTagsUnified } from "@/lib/supabase-rest";
+import { toTagItem } from "@/lib/tag-mappers";
 import { TAG_QUERY_LIMITS } from "@/lib/constants";
 import { normalizeTagName } from "@/lib/tag-utils";
 import { hiraganaToKatakana } from "@/lib/yahoo-furigana";
-import type { SupabaseTagRow } from "@/lib/types";
 
 const searchQuerySchema = z.string().min(1).max(20);
 
@@ -47,24 +42,14 @@ export async function GET(request: Request) {
     const normalizedQ = normalizeTagName(q);
     const katakanaQ = hiraganaToKatakana(normalizedQ);
 
-    const [exact, byReading, byName] = await Promise.all([
-      getTagByName(normalizedQ, accessToken),
-      searchTagsByReading(katakanaQ, accessToken, {
-        limit: TAG_QUERY_LIMITS.SEARCH,
-      }),
-      searchTagsByName(normalizedQ, accessToken, {
-        limit: TAG_QUERY_LIMITS.SEARCH,
-      }),
-    ]);
+    const rows = await searchTagsUnified({
+      query: normalizedQ,
+      katakanaQuery: katakanaQ,
+      limit: TAG_QUERY_LIMITS.SEARCH,
+      accessToken,
+    });
 
-    // 優先度付きマージ: 完全一致 → 読み → 名前前方一致
-    const exactRows: SupabaseTagRow[] = exact ? [exact] : [];
-    const merged = deduplicateByKey(
-      [...exactRows, ...byReading, ...byName],
-      (t) => t.id,
-    ).slice(0, TAG_QUERY_LIMITS.SEARCH);
-
-    const data = merged.map((row) => toTagItem(row, 0));
+    const data = rows.map((row) => toTagItem(row, 0));
 
     return NextResponse.json({ data });
   } catch (error) {

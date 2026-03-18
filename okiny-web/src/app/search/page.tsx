@@ -36,6 +36,8 @@ function SearchPageContent() {
   const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
   const [isRankingsLoading, setIsRankingsLoading] = useState(false);
   const [results, setResults] = useState<PublishedRanking[]>([]);
+  const [rankingsError, setRankingsError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [hasStartedLoading, setHasStartedLoading] = useState(false);
 
   // Fetch all tags on mount (for sections / recommendations)
@@ -66,22 +68,26 @@ function SearchPageContent() {
   useEffect(() => {
     if (!user || !selectedTag) {
       setResults([]);
+      setRankingsError(null);
       return;
     }
 
     let canceled = false;
     setIsRankingsLoading(true);
+    setRankingsError(null);
 
     void apiClient
       .listPublishedRankings(selectedTag.id)
       .then((data) => {
         if (canceled) return;
         setResults(data);
+        setRankingsError(null);
       })
       .catch((error: unknown) => {
         if (canceled) return;
         const message =
-          error instanceof PublishedApiError ? error.message : "ランキング検索に失敗しました。";
+          error instanceof PublishedApiError ? error.message : "ランキングの取得に失敗しました";
+        setRankingsError(message);
         pushToast({ type: "error", message });
       })
       .finally(() => {
@@ -92,7 +98,12 @@ function SearchPageContent() {
     return () => {
       canceled = true;
     };
-  }, [pushToast, selectedTag, user]);
+  }, [pushToast, selectedTag, user, retryCount]);
+
+  // Retry handler for rankings fetch
+  const handleRetryRankings = () => {
+    setRetryCount((prev) => prev + 1);
+  };
 
   // Tag click handler
   const handleTagSelect = (tag: TagItem) => {
@@ -165,6 +176,8 @@ function SearchPageContent() {
             selectedTag={selectedTag}
             isLoading={isRankingsLoading}
             results={results}
+            error={rankingsError}
+            onRetry={handleRetryRankings}
           />
         ) : q ? (
           /* ── States 3/4: Search results ── */
@@ -328,13 +341,32 @@ function SelectedTagView({
   selectedTag,
   isLoading,
   results,
+  error,
+  onRetry,
 }: {
   selectedTag: TagItem;
   isLoading: boolean;
   results: PublishedRanking[];
+  error: string | null;
+  onRetry: () => void;
 }) {
   if (isLoading) {
     return <p className="text-xs text-muted-foreground">読み込み中...</p>;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-6 text-center">
+        <p className="text-sm text-destructive">{error}</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          再読み込み
+        </button>
+      </div>
+    );
   }
 
   if (results.length === 0) {

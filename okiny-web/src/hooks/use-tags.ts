@@ -41,25 +41,41 @@ export function useTags(): UseTagsReturn {
   const fetchTags = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [mineRes, popularRes] = await Promise.all([
-        fetch("/api/v1/tags/mine"),
-        fetch("/api/v1/tags/popular"),
+      const [mineResult, popularResult] = await Promise.allSettled([
+        fetch("/api/v1/tags/mine").then(async (res) => {
+          if (!res.ok) throw new Error("Failed to fetch my tags");
+          const json = await res.json();
+          return (json.data ?? []) as TagItem[];
+        }),
+        fetch("/api/v1/tags/popular").then(async (res) => {
+          if (!res.ok) throw new Error("Failed to fetch popular tags");
+          const json = await res.json();
+          return (json.data ?? []) as TagItem[];
+        }),
       ]);
-      if (!mineRes.ok) throw new Error("Failed to fetch my tags");
-      if (!popularRes.ok) throw new Error("Failed to fetch popular tags");
-      const [mineJson, popularJson] = await Promise.all([
-        mineRes.json(),
-        popularRes.json(),
-      ]);
-      const mineTags: TagItem[] = mineJson.data ?? [];
-      const popularTags: TagItem[] = popularJson.data ?? [];
+      const mineTags =
+        mineResult.status === "fulfilled" ? mineResult.value : [];
+      const popularTags =
+        popularResult.status === "fulfilled" ? popularResult.value : [];
+
+      if (
+        mineResult.status === "rejected" &&
+        popularResult.status === "rejected"
+      ) {
+        console.error(
+          "[use-tags] Both mine and popular tags failed:",
+          mineResult.reason,
+          popularResult.reason,
+        );
+      }
+
       const merged = deduplicateByKey(
         [...mineTags, ...popularTags],
         (t) => t.id,
       );
       setTags(merged);
     } catch {
-      // silently fail
+      // unexpected error (should not reach here due to allSettled)
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +92,7 @@ export function useTags(): UseTagsReturn {
       setSearchResults([]);
       return;
     }
+    setSearchResults([]);
     debounceRef.current = setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
@@ -107,6 +124,7 @@ export function useTags(): UseTagsReturn {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
+    abortRef.current?.abort();
   }, []);
 
   return { tags, searchResults, isLoading, fetchTags, search, clearSearch };
