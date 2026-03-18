@@ -54,6 +54,44 @@ async function requestSupabase(
   });
 }
 
+async function callRpc<T>(
+  functionName: string,
+  params: Record<string, unknown>,
+  accessToken: string,
+): Promise<T> {
+  const env = readSupabaseEnv();
+  const headers: Record<string, string> = {
+    apikey: env.anonKey,
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  };
+  const response = await fetch(
+    `${env.url}/rest/v1/rpc/${functionName}`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(params),
+      cache: "no-store",
+    },
+  );
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({})) as { code?: string; message?: string };
+    if (err.code === "23P01") {
+      throw new ConflictError("Ranking was modified by another request.");
+    }
+    throw new Error(`RPC ${functionName} failed: ${err.message ?? response.status}`);
+  }
+  // 204 No Content または空ボディの場合は null を返す
+  if (response.status === 204) {
+    return null as T;
+  }
+  const text = await response.text();
+  if (!text) {
+    return null as T;
+  }
+  return JSON.parse(text) as T;
+}
+
 function parseItems(row: SupabaseRankingRow): [string, string, string, string, string] {
   const sorted = [...(row.ranking_items ?? [])].sort((a, b) => a.rank - b.rank);
   return [
@@ -96,27 +134,6 @@ async function ensureResponseOk(response: Response): Promise<void> {
   throw new Error(`Supabase REST failed (${response.status})`);
 }
 
-function buildRankingItemsPayload(params: {
-  rankingId: string;
-  items: [string, string, string, string, string];
-}) {
-  return params.items
-    .map((item, index) => ({
-      ranking_id: params.rankingId,
-      rank: index + 1,
-      item_text: item.trim(),
-    }))
-    .filter((item) => item.item_text.length > 0);
-}
-
-async function deleteRankingById(rankingId: string, accessToken: string): Promise<void> {
-  const query = new URLSearchParams({ id: `eq.${rankingId}` });
-  const response = await requestSupabase(`rankings?${query.toString()}`, {
-    method: "DELETE",
-    accessToken,
-  });
-  await ensureResponseOk(response);
-}
 
 export async function listRankingsByUser(params: {
   userId: string;
@@ -172,111 +189,30 @@ export async function createRanking(params: {
   items: [string, string, string, string, string];
   accessToken: string;
 }) {
-  const rankingInsertResponse = await requestSupabase("rankings", {
-    method: "POST",
-    prefer: "return=representation",
-    accessToken: params.accessToken,
-    body: [
-      {
-        user_id: params.userId,
-        title: params.title,
-        tag_id: params.tagId,
-      },
-    ],
-  });
-  await ensureResponseOk(rankingInsertResponse);
-  const inserted = (await rankingInsertResponse.json()) as Array<{ id: string }>;
-  const rankingId = inserted[0]?.id;
-  if (!rankingId) {
-    throw new Error("Ranking insert did not return id.");
-  }
+  const filteredItems = params.items
+    .map((text, index) => ({ rank: index + 1, item_text: text }))
+    .filter((item) => item.item_text.trim() !== "");
 
-  const itemsBody = buildRankingItemsPayload({
-    rankingId,
-    items: params.items,
-  });
-  if (itemsBody.length === 0) {
-    await deleteRankingById(rankingId, params.accessToken);
+  if (filteredItems.length === 0) {
     throw new Error("Ranking must contain at least one non-empty item.");
   }
 
-  try {
-    const itemInsertResponse = await requestSupabase("ranking_items", {
-      method: "POST",
-      accessToken: params.accessToken,
-      body: itemsBody,
-    });
-    await ensureResponseOk(itemInsertResponse);
-  } catch (error) {
-    try {
-      await deleteRankingById(rankingId, params.accessToken);
-    } catch {
-      // best-effort rollback
-    }
-    throw error;
-  }
-  const created = await getRankingById({ userId: params.userId, rankingId, accessToken: params.accessToken });
+  const row = await callRpc<{ id: string }>("create_ranking", {
+    p_user_id: params.userId,
+    p_title: params.title,
+    p_tag_id: params.tagId,
+    p_items: filteredItems,
+  }, params.accessToken);
+
+  const created = await getRankingById({
+    userId: params.userId,
+    rankingId: row.id,
+    accessToken: params.accessToken,
+  });
   if (!created) {
     throw new Error("Failed to fetch created ranking.");
   }
   return created;
-}
-
-async function replaceRankingItems(params: {
-  rankingId: string;
-  itemsBody: Array<{ ranking_id: string; rank: number; item_text: string }>;
-  accessToken: string;
-}): Promise<void> {
-  const deleteQuery = new URLSearchParams({ ranking_id: `eq.${params.rankingId}` });
-  const deleteResponse = await requestSupabase(
-    `ranking_items?${deleteQuery.toString()}`,
-    {
-      method: "DELETE",
-      accessToken: params.accessToken,
-    },
-  );
-  await ensureResponseOk(deleteResponse);
-
-  const insertResponse = await requestSupabase("ranking_items", {
-    method: "POST",
-    accessToken: params.accessToken,
-    body: params.itemsBody,
-  });
-  await ensureResponseOk(insertResponse);
-}
-
-async function restoreRankingItems(params: {
-  ranking: ReturnType<typeof mapRankingRow>;
-  userId: string;
-  accessToken: string;
-}): Promise<void> {
-  const restoreRankingResponse = await requestSupabase(
-    `rankings?${new URLSearchParams({
-      id: `eq.${params.ranking.id}`,
-      user_id: `eq.${params.userId}`,
-    }).toString()}`,
-    {
-      method: "PATCH",
-      accessToken: params.accessToken,
-      body: {
-        title: params.ranking.title,
-        tag_id: params.ranking.tagId,
-        updated_at: params.ranking.updatedAt,
-      },
-    },
-  );
-  await ensureResponseOk(restoreRankingResponse);
-
-  const restoreItemsResponse = await requestSupabase("ranking_items", {
-    method: "POST",
-    accessToken: params.accessToken,
-    body: params.ranking.items.map((item, index) => ({
-      ranking_id: params.ranking.id,
-      rank: index + 1,
-      item_text: item,
-    })),
-  });
-  await ensureResponseOk(restoreItemsResponse);
 }
 
 export async function updateRanking(params: {
@@ -288,68 +224,22 @@ export async function updateRanking(params: {
   expectedUpdatedAt: string;
   accessToken: string;
 }) {
-  const previous = await getRankingById({
-    userId: params.userId,
-    rankingId: params.rankingId,
-    accessToken: params.accessToken,
-  });
-  if (!previous) {
-    throw new Error("Ranking not found.");
-  }
-  if (previous.updatedAt !== params.expectedUpdatedAt) {
-    throw new ConflictError("Ranking was modified by another request.");
-  }
+  const filteredItems = params.items
+    .map((text, index) => ({ rank: index + 1, item_text: text }))
+    .filter((item) => item.item_text.trim() !== "");
 
-  const itemsBody = buildRankingItemsPayload({
-    rankingId: params.rankingId,
-    items: params.items,
-  });
-  if (itemsBody.length === 0) {
+  if (filteredItems.length === 0) {
     throw new Error("Ranking must contain at least one non-empty item.");
   }
 
-  const updateQuery = new URLSearchParams({
-    id: `eq.${params.rankingId}`,
-    user_id: `eq.${params.userId}`,
-    updated_at: `eq.${params.expectedUpdatedAt}`,
-  });
-  const rankingUpdateResponse = await requestSupabase(
-    `rankings?${updateQuery.toString()}`,
-    {
-      method: "PATCH",
-      prefer: "return=representation",
-      accessToken: params.accessToken,
-      body: {
-        title: params.title,
-        tag_id: params.tagId,
-        updated_at: new Date().toISOString(),
-      },
-    },
-  );
-  await ensureResponseOk(rankingUpdateResponse);
-  const updatedRows = (await rankingUpdateResponse.json()) as Array<{ id: string }>;
-  if (updatedRows.length === 0) {
-    throw new ConflictError("Ranking was modified by another request.");
-  }
-
-  try {
-    await replaceRankingItems({
-      rankingId: params.rankingId,
-      itemsBody,
-      accessToken: params.accessToken,
-    });
-  } catch (error) {
-    try {
-      await restoreRankingItems({
-        ranking: previous,
-        userId: params.userId,
-        accessToken: params.accessToken,
-      });
-    } catch {
-      // best-effort rollback
-    }
-    throw error;
-  }
+  await callRpc<unknown>("update_ranking", {
+    p_id: params.rankingId,
+    p_user_id: params.userId,
+    p_title: params.title,
+    p_tag_id: params.tagId,
+    p_items: filteredItems,
+    p_expected_updated_at: params.expectedUpdatedAt,
+  }, params.accessToken);
 
   const updated = await getRankingById({
     userId: params.userId,
@@ -368,61 +258,11 @@ export async function deleteRanking(params: {
   expectedUpdatedAt: string;
   accessToken: string;
 }) {
-  const existing = await getRankingById({
-    userId: params.userId,
-    rankingId: params.rankingId,
-    accessToken: params.accessToken,
-  });
-  if (!existing) {
-    return;
-  }
-  if (existing.updatedAt !== params.expectedUpdatedAt) {
-    throw new ConflictError("Ranking was modified by another request.");
-  }
-
-  const deleteItemsQuery = new URLSearchParams({ ranking_id: `eq.${params.rankingId}` });
-  try {
-    const deleteItemsResponse = await requestSupabase(
-      `ranking_items?${deleteItemsQuery.toString()}`,
-      {
-        method: "DELETE",
-        accessToken: params.accessToken,
-      },
-    );
-    await ensureResponseOk(deleteItemsResponse);
-
-    const query = new URLSearchParams({
-      id: `eq.${params.rankingId}`,
-      user_id: `eq.${params.userId}`,
-      updated_at: `eq.${params.expectedUpdatedAt}`,
-    });
-    const response = await requestSupabase(`rankings?${query.toString()}`, {
-      method: "DELETE",
-      prefer: "return=representation",
-      accessToken: params.accessToken,
-    });
-    await ensureResponseOk(response);
-    const deletedRows = (await response.json()) as Array<{ id: string }>;
-    if (deletedRows.length === 0) {
-      throw new ConflictError("Ranking was modified by another request.");
-    }
-  } catch (error) {
-    try {
-      const restoreItemsResponse = await requestSupabase("ranking_items", {
-        method: "POST",
-        accessToken: params.accessToken,
-        body: existing.items.map((item, index) => ({
-          ranking_id: existing.id,
-          rank: index + 1,
-          item_text: item,
-        })),
-      });
-      await ensureResponseOk(restoreItemsResponse);
-    } catch {
-      // best-effort rollback
-    }
-    throw error;
-  }
+  await callRpc<unknown>("delete_ranking", {
+    p_id: params.rankingId,
+    p_user_id: params.userId,
+    p_expected_updated_at: params.expectedUpdatedAt,
+  }, params.accessToken);
 }
 
 /**
