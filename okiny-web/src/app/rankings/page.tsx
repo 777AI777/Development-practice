@@ -285,7 +285,7 @@ function RankingsPageContent() {
     return () => {
       canceled = true;
     };
-  }, [isReady, requestedState, signalReady, user]);
+  }, [isReady, requestedState, signalReady, user?.id]);
 
   const groupedRankings = useMemo(() => groupRankingsByTag(rankings), [rankings]);
   const isEmpty = !isLoading && !errorMessage && rankings.length === 0;
