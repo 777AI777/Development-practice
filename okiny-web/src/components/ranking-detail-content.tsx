@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { usePageTransition } from "@/components/page-transition-provider";
@@ -17,6 +17,14 @@ export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
   const router = useRouter();
   const { signalReady } = usePageTransition();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleShareToX = useCallback(() => {
+    const shareUrl = `${window.location.origin}/share/rankings/${ranking.id}`;
+    const tagText = ranking.tagName ? `「${ranking.tagName}」` : "";
+    const text = `わたしの${tagText}ランキング！\n#OKINY\n`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(twitterUrl, "_blank", "noopener,noreferrer");
+  }, [ranking.id, ranking.tagName]);
 
   useEffect(() => {
     signalReady();
@@ -124,6 +132,18 @@ export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
               </div>
             );
           })}
+        </div>
+
+        {/* X share button */}
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            onClick={handleShareToX}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#000000] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#333333]"
+          >
+            <span className="text-base leading-none">𝕏</span>
+            <span>Xで共有する</span>
+          </button>
         </div>
       </div>
     </AppShell>

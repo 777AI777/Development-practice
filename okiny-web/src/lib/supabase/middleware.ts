@@ -7,8 +7,12 @@ import { buildContentSecurityPolicy } from "@/lib/security-headers";
 /**
  * 認証不要なパス。新しいパブリックパスを追加する場合はここに追記すること。
  * 全API（/api/v1/...）はデフォルトで認証必須。
+ *
+ * EXACT_PUBLIC_PATHS: 完全一致で認証除外
+ * PREFIX_PUBLIC_PATHS: 前方一致で認証除外（サブパスを含む）
  */
-const PUBLIC_PATHS = ["/login", "/api/auth/callback"] as const;
+const EXACT_PUBLIC_PATHS = ["/login", "/api/auth/callback"] as const;
+const PREFIX_PUBLIC_PATHS = ["/api/og", "/share"] as const;
 
 async function hashString(input: string): Promise<string> {
   const encoded = new TextEncoder().encode(input);
@@ -142,7 +146,9 @@ export async function updateSession(request: NextRequest, nonce: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p);
+  const isPublicPath =
+    EXACT_PUBLIC_PATHS.some((p) => pathname === p) ||
+    PREFIX_PUBLIC_PATHS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
   if (!user && !isPublicPath) {
     if (pathname.startsWith("/api/")) {
