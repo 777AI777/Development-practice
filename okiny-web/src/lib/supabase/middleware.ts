@@ -163,7 +163,7 @@ export async function updateSession(request: NextRequest, nonce: string) {
 
   if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = "/rankings";
+    url.pathname = user.user_metadata?.onboarded === true ? "/rankings" : "/onboarding";
     return setCspHeaders(NextResponse.redirect(url), nonce);
   }
 

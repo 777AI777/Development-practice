@@ -42,8 +42,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
+
   const url = request.nextUrl.clone();
-  url.pathname = "/rankings";
+  url.pathname = user?.user_metadata?.onboarded === true ? "/rankings" : "/onboarding";
   url.search = "";
   return NextResponse.redirect(url);
 }
