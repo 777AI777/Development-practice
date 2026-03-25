@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   },
   description:
     "あなたの「好き」をランキングで整理・共有しよう。映画、音楽、カフェなど、あらゆるジャンルのマイランキングを作成できるアプリです。",
+  verification: {
+    google: "9eBgHYg5kK0Y0sutgJBZ5THGFn9Np7xi7dxkiJBFsvQ",
+  },
 };
 
 export default async function RootLayout({
