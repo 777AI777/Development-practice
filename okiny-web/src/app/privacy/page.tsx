@@ -29,7 +29,23 @@ function PrivacyContent() {
 
         <section>
           <h2 className="text-lg font-semibold text-foreground">
-            2. 収集する情報
+            2. 運営者
+          </h2>
+          <p className="mt-2 text-foreground/80">
+            本サービスは、CVX Partner株式会社が運営しています。
+          </p>
+          <p className="mt-2 text-foreground/80">
+            お問い合わせ先：
+          </p>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-foreground/80">
+            <li>X（Twitter）：@OkinyApp</li>
+            <li>メール：CVX_AI_Development@cvx.co.jp（個人情報に関するお問い合わせ専用）</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-foreground">
+            3. 収集する情報
           </h2>
           <p className="mt-2 text-foreground/80">
             本サービスでは、Google
@@ -51,7 +67,7 @@ function PrivacyContent() {
 
         <section>
           <h2 className="text-lg font-semibold text-foreground">
-            3. 情報の利用目的
+            4. 情報の利用目的
           </h2>
           <ul className="mt-2 list-inside list-disc space-y-1 text-foreground/80">
             <li>ユーザー認証およびアカウント管理</li>
@@ -62,10 +78,10 @@ function PrivacyContent() {
 
         <section>
           <h2 className="text-lg font-semibold text-foreground">
-            4. データの保存
+            5. データの保存
           </h2>
           <p className="mt-2 text-foreground/80">
-            ユーザーの認証情報およびランキングデータは、Supabase（クラウドデータベースサービス）に保存されます。Supabaseは業界標準のセキュリティ対策を講じています。
+            ユーザーの認証情報およびランキングデータは、Supabase（クラウドデータベースサービス）に保存されます。Supabaseのプライバシーポリシーについては<a className="underline text-primary hover:text-primary/80" href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">こちら</a>をご確認ください。
           </p>
           <p className="mt-2 text-foreground/80">
             下書きデータはお使いのブラウザのIndexedDBにローカル保存され、サーバーには送信されません。
@@ -74,7 +90,20 @@ function PrivacyContent() {
 
         <section>
           <h2 className="text-lg font-semibold text-foreground">
-            5. Cookieの使用
+            6. 第三者サービスの利用
+          </h2>
+          <p className="mt-2 text-foreground/80">
+            本サービスでは、以下の第三者サービスを利用しています。各サービスのプライバシーポリシーもあわせてご確認ください。
+          </p>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-foreground/80">
+            <li><a className="underline text-primary hover:text-primary/80" href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google プライバシーポリシー</a>（認証）</li>
+            <li><a className="underline text-primary hover:text-primary/80" href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">Supabase プライバシーポリシー</a>（データ保存）</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-foreground">
+            7. Cookieの使用
           </h2>
           <p className="mt-2 text-foreground/80">
             本サービスでは、以下の目的でCookieを使用します。
@@ -92,7 +121,7 @@ function PrivacyContent() {
 
         <section>
           <h2 className="text-lg font-semibold text-foreground">
-            6. 第三者への提供
+            8. 第三者への提供
           </h2>
           <p className="mt-2 text-foreground/80">
             ユーザーの個人情報を、本人の同意なく第三者に提供することはありません。ただし、法令に基づく場合はこの限りではありません。
@@ -101,19 +130,28 @@ function PrivacyContent() {
 
         <section>
           <h2 className="text-lg font-semibold text-foreground">
-            7. データの削除
+            9. データの保存期間および削除
           </h2>
           <p className="mt-2 text-foreground/80">
-            アカウントの削除を希望される場合は、運営者までお問い合わせください。アカウント削除時には、関連するすべてのデータを削除します。
+            アカウントの削除を希望する場合は、上記お問い合わせ先までご連絡ください。ご連絡から30日以内に、関連するすべてのデータを削除します。
           </p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-foreground">
-            8. ポリシーの変更
+            10. 対象年齢
           </h2>
           <p className="mt-2 text-foreground/80">
-            本ポリシーは、必要に応じて変更されることがあります。変更後のポリシーは本ページに掲載した時点で効力を生じます。
+            本サービスは13歳以上を対象としています。13歳未満の方はご利用いただけません。
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-foreground">
+            11. ポリシーの変更
+          </h2>
+          <p className="mt-2 text-foreground/80">
+            本ポリシーは、必要に応じて変更されることがあります。重要な変更を行う場合は、本ページへの掲載に加えて、サービス内またはX（Twitter）アカウントにてお知らせします。変更後のポリシーは本ページに掲載した時点で効力を生じます。
           </p>
         </section>
       </div>
