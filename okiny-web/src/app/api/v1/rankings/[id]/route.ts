@@ -27,7 +27,7 @@ const rankingItemsSchema = z
 
 const expectedUpdatedAtSchema = z
   .string()
-  .datetime("expectedUpdatedAtはISO 8601形式で指定してください。");
+  .datetime({ offset: true, message: "expectedUpdatedAtはISO 8601形式で指定してください。" });
 
 const updateSchema = z.object({
   expectedUpdatedAt: expectedUpdatedAtSchema,
