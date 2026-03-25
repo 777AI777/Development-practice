@@ -132,7 +132,15 @@ function LoginPageContent() {
       </main>
 
       <p className="mt-6 max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
-        ログインすることで利用規約およびプライバシーポリシーに同意したものとみなします。
+        ログインすることで
+        <a href="/terms" className="text-primary underline hover:opacity-80">
+          利用規約
+        </a>
+        および
+        <a href="/privacy" className="text-primary underline hover:opacity-80">
+          プライバシーポリシー
+        </a>
+        に同意したものとみなします。
       </p>
     </div>
   );

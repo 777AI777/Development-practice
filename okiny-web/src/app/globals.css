@@ -47,7 +47,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: "Noto Sans JP", sans-serif;
+  --font-sans: var(--font-noto-sans-jp), "Noto Sans JP", sans-serif;
   --font-mono: "Menlo", "Monaco", "Consolas", "Courier New", monospace;
 }
 

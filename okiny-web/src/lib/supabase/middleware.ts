@@ -11,7 +11,7 @@ import { buildContentSecurityPolicy } from "@/lib/security-headers";
  * EXACT_PUBLIC_PATHS: 完全一致で認証除外
  * PREFIX_PUBLIC_PATHS: 前方一致で認証除外（サブパスを含む）
  */
-const EXACT_PUBLIC_PATHS = ["/login", "/api/auth/callback"] as const;
+const EXACT_PUBLIC_PATHS = ["/login", "/api/auth/callback", "/terms", "/privacy"] as const;
 const PREFIX_PUBLIC_PATHS = ["/api/og", "/share"] as const;
 
 async function hashString(input: string): Promise<string> {

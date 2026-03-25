@@ -1,6 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import { TagCombobox } from "@/components/tag-combobox";
 import { HttpPublishedApiClient } from "@/lib/publish/http-published-api-client";
@@ -14,7 +31,7 @@ interface RankingFormProps {
   initialNewTagName?: string;
   submitLabel: string;
   onSubmit: (value: RankingInput) => Promise<void>;
-  onSaveDraft?: (value: RankingInput & { newTagName?: string }) => Promise<void>;
+  onSaveDraft?: (value: RankingInput & { newTagName?: string; selectedTagName?: string }) => Promise<void>;
   onDraftList?: () => void;
   onCancel?: () => void;
   onBack?: () => void;
@@ -23,6 +40,65 @@ interface RankingFormProps {
 
 function toRankingItems(items: string[]): RankingItems {
   return [items[0] ?? "", items[1] ?? "", items[2] ?? "", items[3] ?? "", items[4] ?? ""];
+}
+
+interface SortableItemProps {
+  id: string;
+  rank: number;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function SortableItem({ id, rank, value, onChange }: SortableItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const isFirst = rank === 1;
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition ?? undefined,
+    opacity: isDragging ? 0.5 : 1,
+    borderBottom: "1px solid var(--border)",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 px-3 py-3 bg-card sm:gap-3 sm:px-6"
+    >
+      <span
+        className="cursor-grab touch-none text-muted-foreground"
+        {...attributes}
+        {...listeners}
+      >
+        {"⠿"}
+      </span>
+      <span
+        className={`w-6 shrink-0 text-center sm:w-8 ${isFirst ? "text-xl font-bold sm:text-2xl" : "text-base font-semibold"}`}
+        style={{
+          color: isFirst
+            ? "var(--primary)"
+            : "var(--muted-foreground)",
+        }}
+      >
+        {rank}
+      </span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={`min-w-0 flex-1 border border-border rounded-md px-2 py-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none ${isFirst ? "text-base font-semibold" : "text-sm"}`}
+        placeholder={`順位 ${rank}`}
+      />
+    </div>
+  );
 }
 
 function validateInput(value: RankingInput, newTagName: string): string | null {
@@ -65,6 +141,42 @@ export function RankingForm({
   const [isDirty, setIsDirty] = useState(false);
   const [autosaveState, setAutosaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [autosavedAt, setAutosavedAt] = useState<string | null>(null);
+
+  const dndContextId = useId();
+  const itemIdsRef = useRef<string[]>(
+    Array.from({ length: 5 }, (_, i) => `item-${i}`),
+  );
+  const [itemIds, setItemIds] = useState<string[]>(itemIdsRef.current);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(KeyboardSensor),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+    const oldIndex = itemIds.indexOf(String(active.id));
+    const newIndex = itemIds.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+    const newItemIds = arrayMove(itemIds, oldIndex, newIndex);
+    setItemIds(newItemIds);
+
+    setIsDirty(true);
+    setForm((prev) => {
+      const newItems = arrayMove([...prev.items], oldIndex, newIndex);
+      return { ...prev, items: toRankingItems(newItems) };
+    });
+  };
 
   const autosaveStorageKey = useMemo(
     () => (autosaveKey ? `okiny:autosave:${autosaveKey}` : null),
@@ -191,6 +303,7 @@ export function RankingForm({
       await onSaveDraft({
         ...form,
         ...(newTagName.trim() ? { newTagName: newTagName.trim() } : {}),
+        ...(tagDisplayName.trim() && !newTagName.trim() ? { selectedTagName: tagDisplayName.trim() } : {}),
       });
       if (autosaveStorageKey) {
         window.localStorage.removeItem(autosaveStorageKey);
@@ -321,36 +434,23 @@ export function RankingForm({
 
       {/* Ranking items */}
       <div className="rounded-xl overflow-hidden bg-card">
-        {form.items.map((item, index) => {
-          const rank = index + 1;
-          const isFirst = rank === 1;
-
-          return (
-            <div
-              key={index}
-              className="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6"
-              style={{ borderBottom: index < form.items.length - 1 ? "1px solid var(--border)" : "none" }}
-            >
-              <span className="cursor-grab text-muted-foreground">{"⠿"}</span>
-              <span
-                className={`w-6 shrink-0 text-center sm:w-8 ${isFirst ? "text-xl font-bold sm:text-2xl" : "text-base font-semibold"}`}
-                style={{
-                  color: isFirst
-                    ? "var(--primary)"
-                    : "var(--muted-foreground)",
-                }}
-              >
-                {rank}
-              </span>
-              <input
+        <DndContext
+          id={dndContextId}
+          sensors={sensors}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+            {form.items.map((item, index) => (
+              <SortableItem
+                key={itemIds[index]}
+                id={itemIds[index]}
+                rank={index + 1}
                 value={item}
-                onChange={(event) => setItem(index, event.target.value)}
-                className={`min-w-0 flex-1 border border-border rounded-md px-2 py-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none ${isFirst ? "text-base font-semibold" : "text-sm"}`}
-                placeholder={`順位 ${rank}`}
+                onChange={(v) => setItem(index, v)}
               />
-            </div>
-          );
-        })}
+            ))}
+          </SortableContext>
+        </DndContext>
         <div
           className="py-3 px-3 sm:px-6 flex items-center justify-center cursor-not-allowed opacity-60 transition bg-card"
           style={{ borderTop: "1px solid var(--border)" }}

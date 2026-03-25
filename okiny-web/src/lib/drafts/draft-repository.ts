@@ -6,6 +6,7 @@ export interface DraftSaveInput {
   tagId: string;
   items: RankingItems;
   newTagName?: string;
+  selectedTagName?: string;
 }
 
 export interface DraftRepository {
