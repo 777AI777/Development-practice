@@ -311,7 +311,7 @@ export async function listTags(
   if (options?.limit !== undefined) {
     query.set("limit", String(options.limit));
   }
-  const res = await requestSupabase(`tags?${query.toString()}`, {
+  const res = await requestSupabase(`tag_popularity?${query.toString()}`, {
     method: "GET",
     accessToken,
   });

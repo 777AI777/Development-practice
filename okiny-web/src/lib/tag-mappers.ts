@@ -8,7 +8,7 @@ export function toTagItem(row: SupabaseTagRow, myUsageCount = 0): TagItem {
     id: row.id,
     name: row.name,
     readings: row.readings,
-    usageCount: row.usage_count,
+    usageCount: row.usage_count ?? 0,
     myUsageCount,
     createdAt: row.created_at,
   };

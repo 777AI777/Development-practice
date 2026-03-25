@@ -54,7 +54,7 @@ export interface SupabaseTagRow {
   id: string;
   name: string;
   readings: string[];
-  usage_count: number;
+  usage_count?: number;
   created_at: string;
 }
 
