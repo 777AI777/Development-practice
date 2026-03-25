@@ -108,7 +108,7 @@ function NewRankingPageContent() {
     }
   };
 
-  const handleSaveDraft = async (value: RankingInput & { newTagName?: string }) => {
+  const handleSaveDraft = async (value: RankingInput & { newTagName?: string; selectedTagName?: string }) => {
     if (!user) return;
     const result = await saveDraftWithFeedback(draftRepository, user.id, {
       ...value,

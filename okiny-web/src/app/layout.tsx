@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
 import { headers } from "next/headers";
 import { PageTransitionProvider } from "@/components/page-transition-provider";
 import { ToastProvider } from "@/components/toast-provider";
 import "./globals.css";
 
+const notoSansJP = Noto_Sans_JP({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-noto-sans-jp",
+});
+
 export const metadata: Metadata = {
   title: "OKINY",
-  description: "IndexedDB を使ったローカル下書き保存と公開専用APIの検証アプリ。",
+  description:
+    "あなたの「好き」をランキングで整理・共有しよう。映画、音楽、カフェなど、あらゆるジャンルのマイランキングを作成できるアプリです。",
 };
 
 export default async function RootLayout({
@@ -21,7 +30,7 @@ export default async function RootLayout({
   const nonce = headerList.get("x-nonce") ?? "";
 
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang="ja" className={notoSansJP.variable} suppressHydrationWarning>
       <body className="antialiased">
         <ToastProvider>
           <PageTransitionProvider>{children}</PageTransitionProvider>

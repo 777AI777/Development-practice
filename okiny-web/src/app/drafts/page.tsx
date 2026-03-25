@@ -150,7 +150,7 @@ export default function DraftsPage() {
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                      {draft.newTagName ?? draft.tagId}
+                      {draft.selectedTagName ?? draft.newTagName ?? draft.tagId}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       更新: {formatSmartDate(draft.updatedAt)}

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
@@ -202,8 +201,6 @@ interface RankingsListContentProps {
 }
 
 function RankingsListContentInner({ initialRankings, userName: serverUserName }: RankingsListContentProps) {
-  const searchParams = useSearchParams();
-  const requestedState = searchParams.get("state");
   const { user } = useSessionUser();
   const { signalReady } = usePageTransition();
 
@@ -220,23 +217,6 @@ function RankingsListContentInner({ initialRankings, userName: serverUserName }:
       prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
     );
   }, []);
-
-  // デバッグ用 state パラメータの処理
-  useEffect(() => {
-    if (requestedState === "loading") {
-      setIsLoading(true);
-      setErrorMessage(null);
-      setRankings([]);
-    } else if (requestedState === "error") {
-      setIsLoading(false);
-      setErrorMessage("シミュレーション用のエラー状態です。");
-      setRankings([]);
-    } else if (requestedState === "empty") {
-      setIsLoading(false);
-      setErrorMessage(null);
-      setRankings([]);
-    }
-  }, [requestedState]);
 
   // データは SSR 済みなのでマウント時に即 signalReady
   useEffect(() => {

@@ -75,7 +75,8 @@ function normalizeInput(input: DraftSaveInput): DraftSaveInput {
   const tagId = input.tagId.trim();
   const items = input.items.map((item) => item.trim()) as DraftSaveInput["items"];
   const newTagName = input.newTagName?.trim() || undefined;
-  return { draftId: input.draftId, title, tagId, items, newTagName };
+  const selectedTagName = input.selectedTagName?.trim() || undefined;
+  return { draftId: input.draftId, title, tagId, items, newTagName, selectedTagName };
 }
 
 export class IndexedDbDraftRepository implements DraftRepository {
@@ -146,6 +147,7 @@ export class IndexedDbDraftRepository implements DraftRepository {
       items: normalized.items,
       updatedAt: new Date().toISOString(),
       ...(normalized.newTagName ? { newTagName: normalized.newTagName } : {}),
+      ...(normalized.selectedTagName ? { selectedTagName: normalized.selectedTagName } : {}),
     };
 
     store.put(record);

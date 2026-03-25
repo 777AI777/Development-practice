@@ -25,6 +25,7 @@ export interface DraftLocalRecord extends RankingInput {
   userId: string;
   updatedAt: string;
   newTagName?: string;
+  selectedTagName?: string;
 }
 
 export interface PublishedRanking extends RankingInput {

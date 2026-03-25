@@ -37,6 +37,7 @@ function SearchIcon() {
 
 interface SidebarMenuItemConfig {
   label: string;
+  href?: string;
   disabled: boolean;
   comingSoon?: boolean;
 }
@@ -45,8 +46,8 @@ const SETTINGS_MENU_ITEMS: SidebarMenuItemConfig[] = [
   { label: "プロフィール編集", disabled: true, comingSoon: true },
   { label: "通知設定", disabled: true, comingSoon: true },
   { label: "テーマ設定", disabled: true, comingSoon: true },
-  { label: "利用規約", disabled: true },
-  { label: "プライバシーポリシー", disabled: true },
+  { label: "利用規約", href: "/terms", disabled: false },
+  { label: "プライバシーポリシー", href: "/privacy", disabled: false },
 ];
 
 const MAX_DISPLAY_NAME_LENGTH = 30;
@@ -171,32 +172,43 @@ function SettingsAccordion({
             />
           )}
 
-          {SETTINGS_MENU_ITEMS.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              disabled={item.disabled}
-              className={`w-full bg-transparent px-4 py-2 text-left text-sm transition ${
-                item.disabled
-                  ? "cursor-not-allowed opacity-60"
-                  : "cursor-pointer hover:bg-muted"
-              }`}
-              style={{
-                color: item.disabled
-                  ? "var(--muted-foreground)"
-                  : "var(--foreground)",
-              }}
-            >
-              <span className="flex items-center gap-2">
+          {SETTINGS_MENU_ITEMS.map((item) =>
+            item.href && !item.disabled ? (
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={onNavigate}
+                className="block w-full bg-transparent px-4 py-2 text-left text-sm text-foreground transition cursor-pointer hover:bg-muted"
+              >
                 {item.label}
-                {item.comingSoon && (
-                  <span className="text-xs text-muted-foreground">
-                    (Coming Soon)
-                  </span>
-                )}
-              </span>
-            </button>
-          ))}
+              </Link>
+            ) : (
+              <button
+                key={item.label}
+                type="button"
+                disabled={item.disabled}
+                className={`w-full bg-transparent px-4 py-2 text-left text-sm transition ${
+                  item.disabled
+                    ? "cursor-not-allowed opacity-60"
+                    : "cursor-pointer hover:bg-muted"
+                }`}
+                style={{
+                  color: item.disabled
+                    ? "var(--muted-foreground)"
+                    : "var(--foreground)",
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  {item.label}
+                  {item.comingSoon && (
+                    <span className="text-xs text-muted-foreground">
+                      (Coming Soon)
+                    </span>
+                  )}
+                </span>
+              </button>
+            ),
+          )}
         </div>
       )}
 

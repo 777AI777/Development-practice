@@ -25,13 +25,21 @@ const rankingItemsSchema = z
     message: "ランキング順位は1つ以上入力してください。",
   });
 
+const expectedUpdatedAtSchema = z
+  .string()
+  .datetime("expectedUpdatedAtはISO 8601形式で指定してください。");
+
 const updateSchema = z.object({
-  expectedUpdatedAt: z.string().min(1),
+  expectedUpdatedAt: expectedUpdatedAtSchema,
   ranking: z.object({
     title: z.string().trim().min(1, "タイトルは必須です。").max(50, "タイトルは50文字以内にしてください。"),
     tagId: z.string().uuid("タグIDはUUID形式で指定してください。"),
     items: rankingItemsSchema,
   }),
+});
+
+const deleteSchema = z.object({
+  expectedUpdatedAt: expectedUpdatedAtSchema,
 });
 
 function toRankingItems(items: string[]): RankingItems {
@@ -146,18 +154,25 @@ export async function DELETE(
   const { userId, accessToken } = auth;
 
   const url = new URL(request.url);
-  const expectedUpdatedAt = url.searchParams.get("expectedUpdatedAt") ?? "";
+  const parsed = deleteSchema.safeParse({
+    expectedUpdatedAt: url.searchParams.get("expectedUpdatedAt") ?? "",
+  });
 
-  if (!expectedUpdatedAt) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: { code: "VALIDATION", message: "expectedUpdatedAt is required." } },
+      {
+        error: {
+          code: "VALIDATION",
+          message: parsed.error.issues[0]?.message ?? "Invalid input.",
+        },
+      },
       { status: 422 },
     );
   }
 
   const { id } = await params;
   try {
-    await deleteRanking({ rankingId: id, userId, expectedUpdatedAt, accessToken });
+    await deleteRanking({ rankingId: id, userId, expectedUpdatedAt: parsed.data.expectedUpdatedAt, accessToken });
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ConflictError) {
