@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "ページが見つかりません",
+  description: "お探しのページは見つかりませんでした",
+};
 
 export default function NotFound() {
   return (

@@ -13,7 +13,10 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "OKINY",
+  title: {
+    default: "OKINY",
+    template: "%s | OKINY",
+  },
   description:
     "あなたの「好き」をランキングで整理・共有しよう。映画、音楽、カフェなど、あらゆるジャンルのマイランキングを作成できるアプリです。",
 };

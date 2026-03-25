@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
 
 import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
 import { getRankingById } from "@/lib/supabase-rest";
 import { DEMO_RANKING, DEMO_RANKING_ID } from "@/lib/demo-ranking";
 import { DeleteRankingContent } from "@/components/delete-ranking-content";
+
+export const metadata: Metadata = {
+  title: "ランキング削除",
+  description: "ランキングを削除",
+};
 
 export default async function DeleteRankingPage({
   params,
