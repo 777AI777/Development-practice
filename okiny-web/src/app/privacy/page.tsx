@@ -14,7 +14,7 @@ function PrivacyContent() {
         プライバシーポリシー
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        最終更新日: 2026年3月25日
+        最終更新日: 2026年3月26日
       </p>
 
       <div className="mt-8 space-y-8 text-sm leading-relaxed text-foreground">
@@ -62,6 +62,15 @@ function PrivacyContent() {
           <ul className="mt-2 list-inside list-disc space-y-1 text-foreground/80">
             <li>作成したランキングデータ（タイトル、タグ、ランキング項目）</li>
             <li>下書きデータ（ブラウザのIndexedDBにローカル保存）</li>
+          </ul>
+          <p className="mt-2 text-foreground/80">
+            さらに、サービスの安定運用および不正アクセスの検出・防止を目的として、以下のアクセスログを自動的に記録します。
+          </p>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-foreground/80">
+            <li>IPアドレス</li>
+            <li>User-Agent（ブラウザ・OS情報）</li>
+            <li>アクセス日時</li>
+            <li>リクエスト内容</li>
           </ul>
         </section>
 
