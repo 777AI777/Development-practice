@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import {
   DndContext,
@@ -19,7 +19,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import { autosaveRepository } from "@/lib/autosave/client-repository";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { TagCombobox } from "@/components/tag-combobox";
+import { isFormEmpty } from "@/lib/drafts/is-form-empty";
 import { HttpPublishedApiClient } from "@/lib/publish/http-published-api-client";
 import type { RankingInput, RankingItems } from "@/lib/types";
 
@@ -31,11 +34,11 @@ interface RankingFormProps {
   initialNewTagName?: string;
   submitLabel: string;
   onSubmit: (value: RankingInput) => Promise<void>;
-  onSaveDraft?: (value: RankingInput & { newTagName?: string; selectedTagName?: string }) => Promise<void>;
+  onSaveDraft?: (value: RankingInput & { newTagName?: string; selectedTagName?: string }) => Promise<boolean>;
   onDraftList?: () => void;
   onCancel?: () => void;
   onBack?: () => void;
-  autosaveKey?: string;
+  autosaveConfig?: { userId: string; key: string };
 }
 
 function toRankingItems(items: string[]): RankingItems {
@@ -124,7 +127,7 @@ export function RankingForm({
   onDraftList,
   onCancel,
   onBack,
-  autosaveKey,
+  autosaveConfig,
 }: RankingFormProps) {
   const [form, setForm] = useState<RankingInput>(
     initialValue ?? {
@@ -139,8 +142,8 @@ export function RankingForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [autosaveState, setAutosaveState] = useState<"idle" | "saving" | "saved">("idle");
-  const [autosavedAt, setAutosavedAt] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
 
   const dndContextId = useId();
   const itemIdsRef = useRef<string[]>(
@@ -178,63 +181,20 @@ export function RankingForm({
     });
   };
 
-  const autosaveStorageKey = useMemo(
-    () => (autosaveKey ? `okiny:autosave:${autosaveKey}` : null),
-    [autosaveKey],
-  );
+  const buildDraftPayload = useCallback(() => ({
+    ...form,
+    ...(newTagName.trim() ? { newTagName: newTagName.trim() } : {}),
+    ...(tagDisplayName.trim() && !newTagName.trim() ? { selectedTagName: tagDisplayName.trim() } : {}),
+  }), [form, newTagName, tagDisplayName]);
 
   useEffect(() => {
-    if (!autosaveStorageKey) {
-      return;
-    }
-    const raw = window.localStorage.getItem(autosaveStorageKey);
-    if (!raw) {
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw) as {
-        form?: RankingInput;
-        updatedAt?: string;
-        newTagName?: string;
-        tagDisplayName?: string;
-      };
-      if (!parsed.form) {
-        return;
-      }
-      setForm(parsed.form);
-      setNewTagName(parsed.newTagName ?? "");
-      setTagDisplayName(parsed.tagDisplayName ?? "");
-      setAutosaveState("saved");
-      setAutosavedAt(parsed.updatedAt ?? null);
-      setIsDirty(false);
-    } catch {
-      // Ignore broken snapshot and continue with initial form.
-    }
-  }, [autosaveStorageKey]);
-
-  useEffect(() => {
-    if (!autosaveStorageKey || !isDirty) {
-      return;
-    }
-    setAutosaveState("saving");
+    if (!autosaveConfig || !isDirty) return;
+    const { userId, key } = autosaveConfig;
     const timer = window.setTimeout(() => {
-      const updatedAt = new Date().toISOString();
-      window.localStorage.setItem(
-        autosaveStorageKey,
-        JSON.stringify({
-          form,
-          updatedAt,
-          newTagName,
-          tagDisplayName,
-        }),
-      );
-      setAutosaveState("saved");
-      setAutosavedAt(updatedAt);
+      void autosaveRepository.save(userId, key, buildDraftPayload());
     }, 1200);
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [autosaveStorageKey, form, isDirty, newTagName, tagDisplayName]);
+    return () => window.clearTimeout(timer);
+  }, [autosaveConfig, form, isDirty, newTagName, tagDisplayName, buildDraftPayload]);
 
   useEffect(() => {
     if (!isDirty) {
@@ -282,12 +242,10 @@ export function RankingForm({
       };
 
       await onSubmit(resolvedForm);
-      if (autosaveStorageKey) {
-        window.localStorage.removeItem(autosaveStorageKey);
+      if (autosaveConfig) {
+        void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key);
       }
       setIsDirty(false);
-      setAutosaveState("idle");
-      setAutosavedAt(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -300,17 +258,17 @@ export function RankingForm({
     setErrorMessage(null);
     setIsSavingDraft(true);
     try {
-      await onSaveDraft({
-        ...form,
-        ...(newTagName.trim() ? { newTagName: newTagName.trim() } : {}),
-        ...(tagDisplayName.trim() && !newTagName.trim() ? { selectedTagName: tagDisplayName.trim() } : {}),
-      });
-      if (autosaveStorageKey) {
-        window.localStorage.removeItem(autosaveStorageKey);
+      const success = await onSaveDraft(buildDraftPayload());
+      if (success) {
+        if (autosaveConfig) {
+          void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key);
+        }
+        setForm({ title: "", tagId: "", items: ["", "", "", "", ""] });
+        setNewTagName("");
+        setTagDisplayName("");
+        setIsDirty(false);
+        onDraftList?.();
       }
-      setIsDirty(false);
-      setAutosaveState("idle");
-      setAutosavedAt(null);
     } finally {
       setIsSavingDraft(false);
     }
@@ -344,28 +302,54 @@ export function RankingForm({
     });
   };
 
+  const clearAutosaveAndBack = (callback: () => void) => {
+    if (autosaveConfig) {
+      void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key);
+    }
+    callback();
+  };
+
   const triggerCancel = () => {
     if (!onCancel) {
       return;
     }
-    if (isDirty && !window.confirm("未保存の変更があります。破棄して戻りますか？")) {
+    if (isDirty) {
+      setCancelDialogOpen(true);
       return;
     }
-    onCancel();
+    clearAutosaveAndBack(onCancel);
   };
 
-  const autosaveText = useMemo(() => {
-    if (!autosaveKey) {
-      return null;
+  const handleCancelConfirm = () => {
+    setCancelDialogOpen(false);
+    if (onCancel) {
+      clearAutosaveAndBack(onCancel);
     }
-    if (autosaveState === "saving") {
-      return "自動下書き保存: 保存中...";
+  };
+
+  const triggerBack = () => {
+    if (!onBack) return;
+
+    if (isFormEmpty(form, newTagName)) {
+      // 空なら即戻る + autosave クリア
+      clearAutosaveAndBack(onBack);
+      return;
     }
-    if (autosaveState === "saved" && autosavedAt) {
-      return `自動下書き保存: ${new Date(autosavedAt).toLocaleTimeString()} に保存済み`;
+
+    if (isDirty) {
+      setDiscardDialogOpen(true);
+      return;
     }
-    return "自動下書き保存: 未変更";
-  }, [autosaveKey, autosaveState, autosavedAt]);
+
+    onBack();
+  };
+
+  const handleDiscardConfirm = () => {
+    setDiscardDialogOpen(false);
+    if (onBack) {
+      clearAutosaveAndBack(onBack);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -374,7 +358,7 @@ export function RankingForm({
         {onBack ? (
           <button
             type="button"
-            onClick={onBack}
+            onClick={triggerBack}
             className="flex h-8 w-8 shrink-0 items-center justify-center bg-transparent text-lg font-bold text-foreground"
             aria-label="戻る"
           >
@@ -461,10 +445,6 @@ export function RankingForm({
         </div>
       </div>
 
-      {autosaveText ? (
-        <p className="text-xs font-medium text-muted-foreground">{autosaveText}</p>
-      ) : null}
-
       {errorMessage ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm font-semibold text-destructive">
           {errorMessage}
@@ -480,6 +460,26 @@ export function RankingForm({
           キャンセル
         </button>
       ) : null}
+
+      <ConfirmDialog
+        open={cancelDialogOpen}
+        onConfirm={handleCancelConfirm}
+        onCancel={() => setCancelDialogOpen(false)}
+        title="未保存の変更があります"
+        message="破棄して戻りますか？"
+        confirmLabel="破棄する"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={discardDialogOpen}
+        onConfirm={handleDiscardConfirm}
+        onCancel={() => setDiscardDialogOpen(false)}
+        title="未保存の変更があります"
+        message="破棄して戻りますか？"
+        confirmLabel="破棄する"
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -1,19 +1,14 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 import { usePageTransition } from "@/components/page-transition-provider";
-import { useSessionUser } from "@/hooks/use-session-user";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginPageContent() {
   const { signalReady } = usePageTransition();
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isReady } = useSessionUser();
-  const nextRoute = "/rankings";
-  const hasNavigatedRef = useRef(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const authError = searchParams.get("error");
@@ -22,15 +17,8 @@ function LoginPageContent() {
     signalReady();
   }, [signalReady]);
 
-  useEffect(() => {
-    if (isReady && user && !hasNavigatedRef.current) {
-      hasNavigatedRef.current = true;
-      router.replace(nextRoute);
-    }
-  }, [isReady, nextRoute, router, user]);
-
   const handleGoogleLogin = async () => {
-    if (hasNavigatedRef.current || isSigningIn) return;
+    if (isSigningIn) return;
     setIsSigningIn(true);
     setLoginError(null);
 

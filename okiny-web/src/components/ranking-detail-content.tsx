@@ -67,7 +67,7 @@ export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
-            onClick={() => router.push("/rankings")}
+            onClick={() => router.back()}
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center bg-transparent text-lg font-bold text-foreground"
             aria-label="戻る"
           >
