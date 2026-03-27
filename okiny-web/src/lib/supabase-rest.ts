@@ -1,4 +1,9 @@
-﻿import type { SupabaseRankingRow, SupabaseTagRow, UserProfile } from "@/lib/types";
+﻿import type {
+  PublicRankingWithAuthor,
+  SupabaseRankingRow,
+  SupabaseTagRow,
+  UserProfile,
+} from "@/lib/types";
 import {
   POPULAR_TAGS_CACHE_REVALIDATE_SECONDS,
   RANKING_ITEMS_PREVIEW_LIMIT,
@@ -250,6 +255,56 @@ function mapUserProfileRow(row: {
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     displayUserId: row.display_user_id,
+  };
+}
+
+class PublicRankingsByTagRpcUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PublicRankingsByTagRpcUnavailableError";
+  }
+}
+
+function mapPublicRankingWithAuthorRow(row: {
+  id: string;
+  user_id: string;
+  title: string;
+  tag_id: string;
+  tag_name: string | null;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  view_count: number;
+  bookmark_count: number;
+  ranking_items: Array<{ rank: number; item_text: string }> | null;
+  author_display_name: string | null;
+  author_avatar_url: string | null;
+  author_display_user_id: string | null;
+  is_bookmarked: boolean;
+}): PublicRankingWithAuthor {
+  const ranking = mapRankingRow({
+    id: row.id,
+    user_id: row.user_id,
+    title: row.title,
+    tag_id: row.tag_id,
+    is_public: row.is_public,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    view_count: row.view_count,
+    bookmark_count: row.bookmark_count,
+    ranking_items: row.ranking_items ?? [],
+    tags: row.tag_name ? { name: row.tag_name } : undefined,
+  });
+
+  return {
+    ...ranking,
+    isBookmarked: row.is_bookmarked,
+    author: {
+      id: row.user_id,
+      displayName: row.author_display_name ?? "ユーザー",
+      avatarUrl: row.author_avatar_url,
+      displayUserId: row.author_display_user_id,
+    },
   };
 }
 
@@ -682,6 +737,79 @@ export async function listPublicRankingsByTag(params: {
     userId: params.viewerUserId,
     accessToken: params.accessToken,
   });
+}
+
+export async function listPublicRankingsByTagWithAuthors(params: {
+  tagId: string;
+  viewerUserId: string;
+  accessToken: string;
+}): Promise<PublicRankingWithAuthor[]> {
+  try {
+    const response = await requestSupabase("rpc/list_public_rankings_by_tag", {
+      method: "POST",
+      accessToken: params.accessToken,
+      body: {
+        p_tag_id: params.tagId,
+      },
+    });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      if (detail.includes("PGRST202")) {
+        throw new PublicRankingsByTagRpcUnavailableError(
+          "list_public_rankings_by_tag RPC is unavailable.",
+        );
+      }
+      throw new Error(`list_public_rankings_by_tag failed (${response.status})`);
+    }
+
+    const rows = (await response.json()) as Array<{
+      id: string;
+      user_id: string;
+      title: string;
+      tag_id: string;
+      tag_name: string | null;
+      is_public: boolean;
+      created_at: string;
+      updated_at: string;
+      view_count: number;
+      bookmark_count: number;
+      ranking_items: Array<{ rank: number; item_text: string }> | null;
+      author_display_name: string | null;
+      author_avatar_url: string | null;
+      author_display_user_id: string | null;
+      is_bookmarked: boolean;
+    }>;
+
+    return rows.map(mapPublicRankingWithAuthorRow);
+  } catch (error) {
+    if (!(error instanceof PublicRankingsByTagRpcUnavailableError)) {
+      throw error;
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "[listPublicRankingsByTagWithAuthors] RPC unavailable, falling back to REST composition.",
+      );
+    }
+
+    const rankings = await listPublicRankingsByTag(params);
+    const uniqueUserIds = [...new Set(rankings.map((ranking) => ranking.userId))];
+    const profiles = await getUserProfilesBatch(uniqueUserIds);
+    const profileMap = new Map<string, UserProfile>(
+      profiles.map((profile) => [profile.id, profile]),
+    );
+
+    return rankings.map((ranking) => ({
+      ...ranking,
+      author: profileMap.get(ranking.userId) ?? {
+        id: ranking.userId,
+        displayName: "ユーザー",
+        avatarUrl: null,
+        displayUserId: null,
+      },
+    }));
+  }
 }
 
 /**

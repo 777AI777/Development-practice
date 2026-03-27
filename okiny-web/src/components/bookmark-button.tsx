@@ -8,9 +8,9 @@ interface BookmarkButtonProps {
   bookmarkCount: number;
   className?: string;
   compact?: boolean;
+  onChange?: (nextIsBookmarked: boolean, nextCount: number) => void;
 }
 
-/** ブックマーク済みアイコン（塗りつぶし） */
 function BookmarkFilledIcon() {
   return (
     <svg
@@ -29,7 +29,6 @@ function BookmarkFilledIcon() {
   );
 }
 
-/** 未ブックマークアイコン（アウトライン） */
 function BookmarkOutlineIcon() {
   return (
     <svg
@@ -48,16 +47,13 @@ function BookmarkOutlineIcon() {
   );
 }
 
-/**
- * ブックマークトグルボタン。
- * 楽観的UI更新を行い、API呼び出しに失敗した場合はリバートする。
- */
 export function BookmarkButton({
   rankingId,
   initialIsBookmarked,
   bookmarkCount,
   className,
   compact = false,
+  onChange,
 }: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
   const [count, setCount] = useState(bookmarkCount);
@@ -71,47 +67,51 @@ export function BookmarkButton({
     setCount(bookmarkCount);
   }, [bookmarkCount]);
 
-  const handleToggle = useCallback(async (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const handleToggle = useCallback(
+    async (event: MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-    if (isPending) return;
+      if (isPending) return;
 
-    // 楽観的UI更新
-    const prevBookmarked = isBookmarked;
-    const prevCount = count;
-    const nextBookmarked = !isBookmarked;
-    const nextCount = nextBookmarked ? count + 1 : Math.max(0, count - 1);
+      const prevBookmarked = isBookmarked;
+      const prevCount = count;
+      const nextBookmarked = !isBookmarked;
+      const nextCount = nextBookmarked ? count + 1 : Math.max(0, count - 1);
 
-    setIsBookmarked(nextBookmarked);
-    setCount(nextCount);
-    setIsPending(true);
+      setIsBookmarked(nextBookmarked);
+      setCount(nextCount);
+      setIsPending(true);
 
-    try {
-      const method = nextBookmarked ? "POST" : "DELETE";
-      const response = await fetch(`/api/v1/bookmarks/${rankingId}`, {
-        method,
-      });
+      try {
+        const method = nextBookmarked ? "POST" : "DELETE";
+        const response = await fetch(`/api/v1/bookmarks/${rankingId}`, {
+          method,
+        });
 
-      if (!response.ok) {
-        // API失敗時はリバート
+        if (!response.ok) {
+          setIsBookmarked(prevBookmarked);
+          setCount(prevCount);
+          return;
+        }
+
+        onChange?.(nextBookmarked, nextCount);
+      } catch {
         setIsBookmarked(prevBookmarked);
         setCount(prevCount);
+      } finally {
+        setIsPending(false);
       }
-    } catch {
-      // ネットワークエラー時もリバート
-      setIsBookmarked(prevBookmarked);
-      setCount(prevCount);
-    } finally {
-      setIsPending(false);
-    }
-  }, [isPending, isBookmarked, count, rankingId]);
+    },
+    [count, isBookmarked, isPending, onChange, rankingId],
+  );
 
   return (
     <button
       type="button"
       onClick={handleToggle}
       disabled={isPending}
+      data-page-transition-ignore
       className={`inline-flex items-center gap-1 text-xs transition disabled:opacity-60 ${compact ? "" : "rounded-md bg-transparent px-1.5 py-1 hover:bg-muted"} ${className ?? ""}`}
       style={{
         color: isBookmarked ? "var(--primary)" : "var(--muted-foreground)",
