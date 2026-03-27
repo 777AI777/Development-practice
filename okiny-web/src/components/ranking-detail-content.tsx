@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -7,13 +8,21 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { formatSmartDate } from "@/lib/format-date";
-import type { PublishedRanking } from "@/lib/types";
+import type { PublishedRanking, UserProfile } from "@/lib/types";
 
 interface RankingDetailContentProps {
   ranking: PublishedRanking;
+  /** オーナーかどうか（編集・削除メニューの表示制御） */
+  isOwner: boolean;
+  /** 他ユーザーのランキング閲覧時の著者プロフィール */
+  authorProfile?: UserProfile;
 }
 
-export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
+export function RankingDetailContent({
+  ranking,
+  isOwner,
+  authorProfile,
+}: RankingDetailContentProps) {
   const router = useRouter();
   const { signalReady } = usePageTransition();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -60,6 +69,18 @@ export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
     signalReady();
   }, [signalReady]);
 
+  // 閲覧記録（SessionStorage + サーバーキャッシュで24時間デデュプ）
+  useEffect(() => {
+    const storageKey = `view:${ranking.id}`;
+    const lastViewed = sessionStorage.getItem(storageKey);
+    if (lastViewed) return;
+
+    sessionStorage.setItem(storageKey, String(Date.now()));
+    fetch(`/api/v1/rankings/${ranking.id}/views`, { method: "POST" }).catch(
+      () => {},
+    );
+  }, [ranking.id]);
+
   return (
     <AppShell>
       <div className="space-y-4">
@@ -79,7 +100,7 @@ export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
             </h1>
           </div>
           <div className="flex flex-shrink-0 items-center gap-1">
-            {/* Share button */}
+            {/* 共有ボタン（公開ランキングなら全員に表示） */}
             <div className="relative">
               <button
                 type="button"
@@ -152,52 +173,81 @@ export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
                       onClick={handleShareToX}
                       className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
                     >
-                      <span className="inline-flex w-[14px] justify-center text-sm font-bold leading-none">𝕏</span>
+                      <span className="inline-flex w-[14px] justify-center text-sm font-bold leading-none">
+                        𝕏
+                      </span>
                       Xで共有
                     </button>
                   </div>
                 </>
               )}
             </div>
-            {/* Menu button */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={handleToggleMenu}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-xl font-black text-foreground transition hover:bg-muted"
-                aria-label="メニュー"
-              >
-                <span className="leading-none">{"\u22EF"}</span>
-              </button>
-              {menuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setMenuOpen(false)}
-                  />
-                  <div className="absolute right-0 top-full z-50 mt-1 w-36 rounded-lg border border-border bg-card py-1 shadow-md">
-                    <Link
-                      href={`/rankings/${ranking.id}/edit`}
+            {/* 編集・削除メニュー（オーナーのみ） */}
+            {isOwner && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleToggleMenu}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-xl font-black text-foreground transition hover:bg-muted"
+                  aria-label="メニュー"
+                >
+                  <span className="leading-none">{"\u22EF"}</span>
+                </button>
+                {menuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
                       onClick={() => setMenuOpen(false)}
-                      className="block w-full px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
-                    >
-                      編集
-                    </Link>
-                    <Link
-                      href={`/rankings/${ranking.id}/delete`}
-                      onClick={() => setMenuOpen(false)}
-                      className="block w-full px-4 py-2 text-left text-sm text-destructive transition hover:bg-muted"
-                    >
-                      削除
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
+                    />
+                    <div className="absolute right-0 top-full z-50 mt-1 w-36 rounded-lg border border-border bg-card py-1 shadow-md">
+                      <Link
+                        href={`/rankings/${ranking.id}/edit`}
+                        onClick={() => setMenuOpen(false)}
+                        className="block w-full px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
+                      >
+                        編集
+                      </Link>
+                      <Link
+                        href={`/rankings/${ranking.id}/delete`}
+                        onClick={() => setMenuOpen(false)}
+                        className="block w-full px-4 py-2 text-left text-sm text-destructive transition hover:bg-muted"
+                      >
+                        削除
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Tag + date */}
+        {/* 著者情報（他ユーザーのランキング閲覧時） */}
+        {!isOwner && authorProfile && (
+          <Link
+            href={`/users/${authorProfile.id}`}
+            className="flex items-center gap-2 transition hover:opacity-80"
+          >
+            {authorProfile.avatarUrl ? (
+              <Image
+                src={authorProfile.avatarUrl}
+                alt={authorProfile.displayName}
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                {authorProfile.displayName.charAt(0)}
+              </span>
+            )}
+            <span className="text-sm text-muted-foreground">
+              {authorProfile.displayName}
+            </span>
+          </Link>
+        )}
+
+        {/* Tag + date + stats */}
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             {ranking.tagName ?? ranking.tagId}
@@ -205,10 +255,45 @@ export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
           <span className="text-sm text-muted-foreground">
             {formatSmartDate(ranking.createdAt)}
           </span>
+          {/* 閲覧数 */}
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            {ranking.viewCount}
+          </span>
+          {/* ブックマーク数 */}
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+            {ranking.bookmarkCount}
+          </span>
         </div>
 
         {/* Ranking items */}
-        <div className="rounded-xl overflow-hidden bg-card">
+        <div className="overflow-hidden rounded-xl bg-card">
           {ranking.items.map((item, index) => {
             const rank = index + 1;
             const isFirst = rank === 1;
@@ -246,7 +331,6 @@ export function RankingDetailContent({ ranking }: RankingDetailContentProps) {
             );
           })}
         </div>
-
       </div>
     </AppShell>
   );

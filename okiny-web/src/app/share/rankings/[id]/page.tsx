@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cache } from "react";
@@ -58,6 +59,28 @@ export default async function ShareRankingPage({ params }: Props) {
 
         {ranking ? (
           <div className="flex flex-col items-center gap-3">
+            {/* 著者情報 */}
+            <Link
+              href={`/users/${ranking.authorId}`}
+              className="flex items-center gap-2 transition hover:opacity-80"
+            >
+              {ranking.authorAvatarUrl ? (
+                <Image
+                  src={ranking.authorAvatarUrl}
+                  alt={ranking.authorName}
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                  {ranking.authorName.charAt(0)}
+                </span>
+              )}
+              <span className="text-sm text-muted-foreground">
+                {ranking.authorName}
+              </span>
+            </Link>
             <h2 className="text-2xl font-semibold text-foreground">
               {ranking.title}
             </h2>

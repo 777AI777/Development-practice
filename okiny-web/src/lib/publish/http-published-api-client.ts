@@ -1,4 +1,4 @@
-import type { AppErrorCode, PublishedRanking, RankingInput, TagItem } from "@/lib/types";
+import type { AppErrorCode, PublishedRanking, PublicRankingWithAuthor, RankingInput, TagItem } from "@/lib/types";
 
 interface ApiResponse<T> {
   data?: T;
@@ -38,6 +38,7 @@ async function parseJson<T>(response: Response): Promise<ApiResponse<T>> {
 
 export interface PublishedApiClient {
   listPublishedRankings(tagId?: string): Promise<PublishedRanking[]>;
+  listPublicRankingsByTag(tagId: string): Promise<PublicRankingWithAuthor[]>;
   getPublishedRanking(rankingId: string): Promise<PublishedRanking>;
   createPublishedRanking(input: {
     ranking: RankingInput;
@@ -49,6 +50,9 @@ export interface PublishedApiClient {
   }): Promise<PublishedRanking>;
   deletePublishedRanking(rankingId: string, expectedUpdatedAt: string): Promise<void>;
   createTag(name: string): Promise<TagItem>;
+  bookmarkRanking(rankingId: string): Promise<void>;
+  unbookmarkRanking(rankingId: string): Promise<void>;
+  recordView(rankingId: string): Promise<void>;
 }
 
 export class HttpPublishedApiClient implements PublishedApiClient {
@@ -67,6 +71,25 @@ export class HttpPublishedApiClient implements PublishedApiClient {
       throw new PublishedApiError(
         body.error?.code ?? mapStatusToErrorCode(response.status),
         body.error?.message ?? "Failed to load rankings.",
+      );
+    }
+    return body.data;
+  }
+
+  async listPublicRankingsByTag(tagId: string): Promise<PublicRankingWithAuthor[]> {
+    const params = new URLSearchParams({
+      tagId,
+      scope: "public",
+    });
+    const url = `/api/v1/rankings?${params.toString()}`;
+    const response = await fetch(url, {
+      cache: "no-store",
+    });
+    const body = await parseJson<PublicRankingWithAuthor[]>(response);
+    if (!response.ok || !body.data) {
+      throw new PublishedApiError(
+        body.error?.code ?? mapStatusToErrorCode(response.status),
+        body.error?.message ?? "公開ランキングの取得に失敗しました。",
       );
     }
     return body.data;
@@ -159,5 +182,44 @@ export class HttpPublishedApiClient implements PublishedApiClient {
       );
     }
     return body.data;
+  }
+
+  async bookmarkRanking(rankingId: string): Promise<void> {
+    const response = await fetch(`/api/v1/bookmarks/${rankingId}`, {
+      method: "POST",
+    });
+    if (response.status === 204) {
+      return;
+    }
+    const body = await parseJson<unknown>(response);
+    throw new PublishedApiError(
+      body.error?.code ?? mapStatusToErrorCode(response.status),
+      body.error?.message ?? "ブックマークの追加に失敗しました。",
+    );
+  }
+
+  async unbookmarkRanking(rankingId: string): Promise<void> {
+    const response = await fetch(`/api/v1/bookmarks/${rankingId}`, {
+      method: "DELETE",
+    });
+    if (response.status === 204) {
+      return;
+    }
+    const body = await parseJson<unknown>(response);
+    throw new PublishedApiError(
+      body.error?.code ?? mapStatusToErrorCode(response.status),
+      body.error?.message ?? "ブックマークの削除に失敗しました。",
+    );
+  }
+
+  async recordView(rankingId: string): Promise<void> {
+    const response = await fetch(`/api/v1/rankings/${rankingId}/views`, {
+      method: "POST",
+    });
+    // 閲覧記録は失敗してもユーザー体験に影響しないため、エラーを握りつぶす
+    if (response.status === 204 || response.ok) {
+      return;
+    }
+    // サイレントに失敗（ログはサーバー側で出力済み）
   }
 }

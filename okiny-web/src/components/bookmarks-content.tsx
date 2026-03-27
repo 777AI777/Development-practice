@@ -1,0 +1,158 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Suspense, useEffect } from "react";
+
+import { AppShell } from "@/components/app-shell";
+import { usePageTransition } from "@/components/page-transition-provider";
+import { formatSmartDate } from "@/lib/format-date";
+import type { PublishedRanking } from "@/lib/types";
+
+interface BookmarksContentProps {
+  initialRankings: PublishedRanking[];
+}
+
+function BackArrowIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19 12H5" />
+      <path d="m12 19-7-7 7-7" />
+    </svg>
+  );
+}
+
+function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
+  const router = useRouter();
+  const { signalReady } = usePageTransition();
+
+  // データは SSR 済みなのでマウント時に即 signalReady
+  useEffect(() => {
+    signalReady();
+  }, [signalReady]);
+
+  return (
+    <AppShell>
+      {/* 戻るボタン + タイトル */}
+      <div className="mb-4 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="inline-flex items-center justify-center rounded-lg bg-transparent p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          aria-label="戻る"
+        >
+          <BackArrowIcon />
+        </button>
+        <h1 className="text-lg font-bold text-foreground">ブックマーク</h1>
+      </div>
+
+      {/* 空の状態 */}
+      {initialRankings.length === 0 ? (
+        <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mx-auto text-muted-foreground"
+          >
+            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+          </svg>
+          <p className="mt-4 text-sm text-muted-foreground">
+            ブックマークはまだありません
+          </p>
+          <Link
+            href="/rankings"
+            className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground hover:opacity-90"
+          >
+            ランキング一覧へ
+          </Link>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl bg-card">
+          {initialRankings.map((ranking, idx) => (
+            <Link
+              key={ranking.id}
+              href={`/rankings/${ranking.id}`}
+              className="block transition hover:bg-muted/50"
+              style={{
+                borderBottom:
+                  idx < initialRankings.length - 1
+                    ? "1px solid var(--border)"
+                    : "none",
+              }}
+            >
+              <div className="p-4">
+                <div className="flex items-center gap-1.5">
+                  {ranking.tagName && (
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                      {ranking.tagName}
+                    </span>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    · {formatSmartDate(ranking.createdAt)}
+                  </span>
+                </div>
+                <h3 className="mt-1.5 text-[15px] font-semibold text-foreground">
+                  {ranking.title}
+                </h3>
+                <div className="mt-1 space-y-0">
+                  {ranking.items.slice(0, 5).map((item, itemIdx) => (
+                    <p
+                      key={`${ranking.id}-item-${itemIdx}`}
+                      className="text-sm leading-relaxed text-muted-foreground"
+                    >
+                      {itemIdx + 1}. {item || "未入力"}
+                    </p>
+                  ))}
+                </div>
+                {/* 閲覧数・ブックマーク数 */}
+                <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    {ranking.viewCount}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                    </svg>
+                    {ranking.bookmarkCount}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Bottom spacer */}
+      <div className="h-4" aria-hidden="true" />
+    </AppShell>
+  );
+}
+
+export function BookmarksContent(props: BookmarksContentProps) {
+  return (
+    <Suspense fallback={null}>
+      <BookmarksContentInner {...props} />
+    </Suspense>
+  );
+}

@@ -62,6 +62,7 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
           title: record.title,
           tagId: record.tagId,
           items: toRankingItems([...record.items]),
+          isPublic: record.isPublic ?? true,
         });
         setOverrideTagName(record.selectedTagName);
         setOverrideNewTagName(record.newTagName);
@@ -84,6 +85,7 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
     title: ranking.title,
     tagId: ranking.tagId,
     items: ranking.items,
+    isPublic: ranking.isPublic ?? true,
   };
 
   const initialTagName = overrideTagName ?? ranking.tagName;
@@ -105,7 +107,7 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
         expectedUpdatedAt,
       });
       pushToast({ type: "success", message: "ランキングを更新しました。" });
-      router.push(`/rankings/${rankingId}`);
+      router.replace(`/rankings/${rankingId}`);
     } catch (error: unknown) {
       const message =
         error instanceof PublishedApiError

@@ -9,6 +9,7 @@ function makeForm(overrides: Partial<RankingInput> = {}): RankingInput {
     title: "",
     tagId: "",
     items: EMPTY_ITEMS,
+    isPublic: true,
     ...overrides,
   };
 }

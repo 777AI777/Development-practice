@@ -1,4 +1,4 @@
-﻿import type { SupabaseRankingRow, SupabaseTagRow } from "@/lib/types";
+﻿import type { SupabaseRankingRow, SupabaseTagRow, UserProfile } from "@/lib/types";
 import { RANKING_ITEMS_PREVIEW_LIMIT } from "@/lib/constants";
 
 interface SupabaseEnv {
@@ -109,10 +109,13 @@ export function mapRankingRow(row: SupabaseRankingRow) {
     userId: row.user_id,
     title: row.title,
     tagId: row.tag_id,
+    isPublic: row.is_public,
     tagName: row.tags?.name,
     items: parseItems(row),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    viewCount: row.view_count ?? 0,
+    bookmarkCount: row.bookmark_count ?? 0,
   };
 }
 
@@ -141,7 +144,7 @@ export async function listRankingsByUser(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,created_at,updated_at,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     user_id: `eq.${params.userId}`,
     order: "updated_at.desc",
   });
@@ -166,7 +169,7 @@ export async function getRankingById(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow> | null> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,created_at,updated_at,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     id: `eq.${params.rankingId}`,
     user_id: `eq.${params.userId}`,
     limit: "1",
@@ -187,6 +190,7 @@ export async function createRanking(params: {
   title: string;
   tagId: string;
   items: [string, string, string, string, string];
+  isPublic: boolean;
   accessToken: string;
 }) {
   const filteredItems = params.items
@@ -202,6 +206,7 @@ export async function createRanking(params: {
     p_title: params.title,
     p_tag_id: params.tagId,
     p_items: filteredItems,
+    p_is_public: params.isPublic,
   }, params.accessToken);
 
   const created = await getRankingById({
@@ -221,6 +226,7 @@ export async function updateRanking(params: {
   title: string;
   tagId: string;
   items: [string, string, string, string, string];
+  isPublic: boolean;
   expectedUpdatedAt: string;
   accessToken: string;
 }) {
@@ -238,6 +244,7 @@ export async function updateRanking(params: {
     p_title: params.title,
     p_tag_id: params.tagId,
     p_items: filteredItems,
+    p_is_public: params.isPublic,
     p_expected_updated_at: params.expectedUpdatedAt,
   }, params.accessToken);
 
@@ -394,4 +401,291 @@ export async function getTagByName(
   const rows = (await res.json()) as SupabaseTagRow[];
   return rows[0] ?? null;
 }
+
+// ---------------------------------------------------------------------------
+// 公開ランキング・閲覧記録・ブックマーク・ユーザープロフィール
+// ---------------------------------------------------------------------------
+
+/**
+ * 公開ランキングをIDで取得（user_idフィルタなし、is_public=true のみ）。
+ * 認証ユーザーのアクセストークンで取得するが、所有者制限はかけない。
+ */
+export async function getPublicRankingById(params: {
+  rankingId: string;
+  accessToken: string;
+}): Promise<ReturnType<typeof mapRankingRow> | null> {
+  const query = new URLSearchParams({
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    id: `eq.${params.rankingId}`,
+    is_public: "eq.true",
+    limit: "1",
+  });
+
+  const response = await requestSupabase(`rankings?${query.toString()}`, {
+    method: "GET",
+    accessToken: params.accessToken,
+  });
+  if (!response.ok) {
+    return null;
+  }
+  const rows = (await response.json()) as SupabaseRankingRow[];
+  const row = rows[0];
+  return row ? mapRankingRow(row) : null;
+}
+
+/**
+ * ランキングの view_count をアトミックに +1 する（RPC: increment_view_count）。
+ * 重複防止はクライアント側の SessionStorage で制御する。
+ */
+export async function incrementViewCount(params: {
+  rankingId: string;
+  accessToken: string;
+}): Promise<void> {
+  await callRpc<unknown>("increment_view_count", {
+    p_ranking_id: params.rankingId,
+  }, params.accessToken);
+}
+
+/**
+ * service_role_key を使って user_profiles VIEW からユーザー情報を取得する。
+ * RLSバイパスが必要なため、service_role_key で直接リクエストする。
+ */
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceRoleKey) {
+    console.warn("[getUserProfile] SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL not configured");
+    return null;
+  }
+
+  const query = new URLSearchParams({
+    select: "id,display_name,avatar_url",
+    id: `eq.${userId}`,
+    limit: "1",
+  });
+
+  try {
+    const response = await fetch(
+      `${url}/rest/v1/user_profiles?${query.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        cache: "no-store",
+      },
+    );
+
+    if (!response.ok) {
+      console.warn(`[getUserProfile] failed: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const rows = (await response.json()) as Array<{
+      id: string;
+      display_name: string;
+      avatar_url: string | null;
+    }>;
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+
+    return {
+      id: row.id,
+      displayName: row.display_name,
+      avatarUrl: row.avatar_url,
+    };
+  } catch (error) {
+    console.warn("[getUserProfile] error:", error);
+    return null;
+  }
+}
+
+/**
+ * タグ指定で他ユーザーの公開ランキングを取得する（自分を除外）。
+ * 検索ページのタグ選択時に使用。
+ */
+export async function listPublicRankingsByTag(params: {
+  tagId: string;
+  excludeUserId: string;
+  accessToken: string;
+}): Promise<ReturnType<typeof mapRankingRow>[]> {
+  const query = new URLSearchParams({
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    is_public: "eq.true",
+    user_id: `neq.${params.excludeUserId}`,
+    tag_id: `eq.${params.tagId}`,
+    order: "created_at.desc",
+  });
+  query.set("ranking_items.order", "rank.asc");
+  query.set("ranking_items.limit", String(RANKING_ITEMS_PREVIEW_LIMIT));
+
+  const response = await requestSupabase(`rankings?${query.toString()}`, {
+    method: "GET",
+    accessToken: params.accessToken,
+  });
+  await ensureResponseOk(response);
+  const rows = (await response.json()) as SupabaseRankingRow[];
+  return rows.map(mapRankingRow);
+}
+
+/**
+ * 複数ユーザーのプロフィールを一括取得する（service_role_key使用）。
+ * user_profiles VIEW から取得。
+ */
+export async function getUserProfilesBatch(userIds: string[]): Promise<UserProfile[]> {
+  if (userIds.length === 0) return [];
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceRoleKey) {
+    console.warn("[getUserProfilesBatch] SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL not configured");
+    return [];
+  }
+
+  const query = new URLSearchParams({
+    select: "id,display_name,avatar_url",
+    id: `in.(${userIds.join(",")})`,
+  });
+
+  try {
+    const response = await fetch(
+      `${url}/rest/v1/user_profiles?${query.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        cache: "no-store",
+      },
+    );
+
+    if (!response.ok) {
+      console.warn(`[getUserProfilesBatch] failed: ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const rows = (await response.json()) as Array<{
+      id: string;
+      display_name: string;
+      avatar_url: string | null;
+    }>;
+
+    return rows.map((row) => ({
+      id: row.id,
+      displayName: row.display_name,
+      avatarUrl: row.avatar_url,
+    }));
+  } catch (error) {
+    console.warn("[getUserProfilesBatch] error:", error);
+    return [];
+  }
+}
+
+/**
+ * 指定ユーザーの公開ランキング一覧を取得する。
+ * プロフィールページで使用。
+ */
+export async function listPublicRankingsByUser(params: {
+  userId: string;
+  accessToken: string;
+}): Promise<ReturnType<typeof mapRankingRow>[]> {
+  const query = new URLSearchParams({
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    user_id: `eq.${params.userId}`,
+    is_public: "eq.true",
+    order: "updated_at.desc",
+  });
+  query.set("ranking_items.order", "rank.asc");
+  query.set("ranking_items.limit", String(RANKING_ITEMS_PREVIEW_LIMIT));
+
+  const response = await requestSupabase(`rankings?${query.toString()}`, {
+    method: "GET",
+    accessToken: params.accessToken,
+  });
+  await ensureResponseOk(response);
+  const rows = (await response.json()) as SupabaseRankingRow[];
+  return rows.map(mapRankingRow);
+}
+
+/**
+ * ブックマークを追加する。
+ * bookmarks テーブルに直接 INSERT（UNIQUE制約で重複防止）。
+ */
+export async function addBookmark(params: {
+  userId: string;
+  rankingId: string;
+  accessToken: string;
+}): Promise<void> {
+  const response = await requestSupabase("bookmarks", {
+    method: "POST",
+    accessToken: params.accessToken,
+    prefer: "return=minimal",
+    body: [{ user_id: params.userId, ranking_id: params.rankingId }],
+  });
+  // 409 Conflict（既にブックマーク済み）は正常として扱う
+  if (response.status === 409) {
+    return;
+  }
+  await ensureResponseOk(response);
+}
+
+/**
+ * ブックマークを削除する。
+ */
+export async function removeBookmark(params: {
+  userId: string;
+  rankingId: string;
+  accessToken: string;
+}): Promise<void> {
+  const query = new URLSearchParams({
+    user_id: `eq.${params.userId}`,
+    ranking_id: `eq.${params.rankingId}`,
+  });
+  const response = await requestSupabase(`bookmarks?${query.toString()}`, {
+    method: "DELETE",
+    accessToken: params.accessToken,
+  });
+  await ensureResponseOk(response);
+}
+
+/**
+ * ユーザーのブックマーク一覧を取得する。
+ * bookmarks テーブルから ranking_id を取得し、ランキング詳細を JOIN で返す。
+ */
+export async function listBookmarkedRankings(params: {
+  userId: string;
+  accessToken: string;
+}): Promise<ReturnType<typeof mapRankingRow>[]> {
+  // bookmarks テーブルから rankings を JOIN して取得
+  const query = new URLSearchParams({
+    select: "ranking_id,rankings(id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name))",
+    user_id: `eq.${params.userId}`,
+    order: "created_at.desc",
+  });
+  query.set("rankings.ranking_items.order", "rank.asc");
+  query.set("rankings.ranking_items.limit", String(RANKING_ITEMS_PREVIEW_LIMIT));
+
+  const response = await requestSupabase(`bookmarks?${query.toString()}`, {
+    method: "GET",
+    accessToken: params.accessToken,
+  });
+  await ensureResponseOk(response);
+
+  const rows = (await response.json()) as Array<{
+    ranking_id: string;
+    rankings: SupabaseRankingRow | null;
+  }>;
+
+  // rankings が null のもの（削除済み等）はスキップ
+  return rows
+    .filter((row): row is { ranking_id: string; rankings: SupabaseRankingRow } => row.rankings !== null)
+    .map((row) => mapRankingRow(row.rankings));
+}
+
 

@@ -84,7 +84,7 @@ function normalizeInput(input: DraftSaveInput): DraftSaveInput {
   const items = input.items.map((item) => item.trim()) as DraftSaveInput["items"];
   const newTagName = input.newTagName?.trim() || undefined;
   const selectedTagName = input.selectedTagName?.trim() || undefined;
-  return { draftId: input.draftId, title, tagId, items, newTagName, selectedTagName };
+  return { draftId: input.draftId, title, tagId, items, isPublic: input.isPublic, newTagName, selectedTagName };
 }
 
 export class IndexedDbDraftRepository implements DraftRepository {
@@ -94,7 +94,10 @@ export class IndexedDbDraftRepository implements DraftRepository {
     const store = transaction.objectStore(DRAFT_STORE_NAME);
     const draft = await requestToPromise(store.get(draftId));
     await transactionToPromise(transaction);
-    return draft as DraftLocalRecord | undefined;
+    if (!draft) return undefined;
+    const record = draft as DraftLocalRecord;
+    // 旧レコードに isPublic が存在しない場合は true にフォールバック
+    return { ...record, isPublic: record.isPublic ?? true };
   }
 
   async list(userId: string): Promise<DraftLocalRecord[]> {
@@ -102,10 +105,15 @@ export class IndexedDbDraftRepository implements DraftRepository {
     const transaction = database.transaction(DRAFT_STORE_NAME, "readonly");
     const store = transaction.objectStore(DRAFT_STORE_NAME);
     const index = store.index("userId");
-    const records = (await requestToPromise(
+    const rawRecords = (await requestToPromise(
       index.getAll(IDBKeyRange.only(userId)),
     )) as DraftLocalRecord[];
     await transactionToPromise(transaction);
+    // 旧レコードに isPublic が存在しない場合は true にフォールバック
+    const records = rawRecords.map((r) => ({
+      ...r,
+      isPublic: r.isPublic ?? true,
+    }));
     return toSorted(records);
   }
 
@@ -153,6 +161,7 @@ export class IndexedDbDraftRepository implements DraftRepository {
       title: normalized.title,
       tagId: normalized.tagId,
       items: normalized.items,
+      isPublic: normalized.isPublic,
       updatedAt: new Date().toISOString(),
       ...(normalized.newTagName ? { newTagName: normalized.newTagName } : {}),
       ...(normalized.selectedTagName ? { selectedTagName: normalized.selectedTagName } : {}),

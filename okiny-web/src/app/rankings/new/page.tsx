@@ -67,6 +67,7 @@ function NewRankingPageContent() {
               title: "",
               tagId: preselectedTagId,
               items: EMPTY_ITEMS,
+              isPublic: true,
             });
           }
           setInitialTagName(undefined);
@@ -90,6 +91,7 @@ function NewRankingPageContent() {
             title: record.title,
             tagId: record.tagId,
             items: toRankingItems([...record.items]),
+            isPublic: record.isPublic ?? true,
           });
           setInitialTagName(record.selectedTagName);
           setInitialNewTagName(record.newTagName);
@@ -111,6 +113,7 @@ function NewRankingPageContent() {
           title: target.title,
           tagId: target.tagId,
           items: toRankingItems([...target.items]),
+          isPublic: target.isPublic ?? true,
         });
         setInitialTagName(target.selectedTagName);
         setInitialNewTagName(target.newTagName);
@@ -150,7 +153,7 @@ function NewRankingPageContent() {
         ranking_id: result.published.id,
         tag_id: value.tagId,
       });
-      router.push(`/rankings/${result.published.id}`);
+      router.replace("/");
     }
   };
 
@@ -182,6 +185,7 @@ function NewRankingPageContent() {
           title: record.title,
           tagId: record.tagId,
           items: toRankingItems([...record.items]),
+          isPublic: record.isPublic ?? true,
         });
         setInitialTagName(record.selectedTagName ?? "");
         setInitialNewTagName(record.newTagName ?? "");
@@ -210,6 +214,7 @@ function NewRankingPageContent() {
               title: target.title,
               tagId: target.tagId,
               items: toRankingItems([...target.items]),
+              isPublic: target.isPublic ?? true,
             });
             setInitialTagName(target.selectedTagName);
             setInitialNewTagName(target.newTagName);

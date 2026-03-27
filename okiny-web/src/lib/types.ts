@@ -18,6 +18,7 @@ export interface RankingInput {
   title: string;
   tagId: string;
   items: RankingItems;
+  isPublic: boolean;
 }
 
 export interface DraftLocalRecord extends RankingInput {
@@ -34,6 +35,18 @@ export interface PublishedRanking extends RankingInput {
   tagName?: string;
   createdAt: string;
   updatedAt: string;
+  viewCount: number;
+  bookmarkCount: number;
+}
+
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+export interface PublicRankingWithAuthor extends PublishedRanking {
+  author: UserProfile;
 }
 
 export interface ToastMessage {
@@ -64,8 +77,11 @@ export interface SupabaseRankingRow {
   user_id: string;
   title: string;
   tag_id: string;
+  is_public: boolean;
   created_at: string;
   updated_at: string;
+  view_count: number;
+  bookmark_count: number;
   ranking_items?: Array<{
     rank: number;
     item_text: string;

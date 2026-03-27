@@ -132,11 +132,14 @@ export function RankingForm({
   isDraftMode,
 }: RankingFormProps) {
   const [form, setForm] = useState<RankingInput>(
-    initialValue ?? {
-      title: "",
-      tagId: "",
-      items: ["", "", "", "", ""],
-    },
+    initialValue
+      ? { ...initialValue, isPublic: initialValue.isPublic ?? true }
+      : {
+          title: "",
+          tagId: "",
+          items: ["", "", "", "", ""],
+          isPublic: true,
+        },
   );
   const [newTagName, setNewTagName] = useState(initialNewTagName ?? "");
   const [tagDisplayName, setTagDisplayName] = useState(initialTagName ?? initialNewTagName ?? "");
@@ -318,7 +321,7 @@ export function RankingForm({
         if (autosaveConfig) {
           void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key);
         }
-        setForm({ title: "", tagId: "", items: ["", "", "", "", ""] });
+        setForm({ title: "", tagId: "", items: ["", "", "", "", ""], isPublic: true });
         setNewTagName("");
         setTagDisplayName("");
         setIsDirty(false);
@@ -479,12 +482,62 @@ export function RankingForm({
           {isSubmitting ? "送信中..." : submitLabel}
         </button>
       </div>
+      {newTagName ? (
+        <p className="text-xs text-muted-foreground">
+          {"新しいタグは他のユーザーにも表示されます"}
+        </p>
+      ) : null}
 
-      {/* Autosave indicator */}
-      {autosaveConfig && autosavedAt ? (
-        <p className="text-xs text-muted-foreground text-right">
-          {"自動保存済み "}
-          {autosavedAt.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+      {/* 公開/非公開トグル */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            setIsDirty(true);
+            setForm((prev) => ({ ...prev, isPublic: !prev.isPublic }));
+          }}
+          className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+            form.isPublic ? "bg-primary" : "bg-muted"
+          }`}
+          role="switch"
+          aria-checked={form.isPublic}
+          aria-label={form.isPublic ? "公開" : "非公開"}
+        >
+          <span
+            className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+              form.isPublic ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+        <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+          {form.isPublic ? (
+            <>
+              {/* 公開アイコン（解錠） */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-foreground" aria-hidden="true">
+                <path d="M14.5 1A4.5 4.5 0 0 0 10 5.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3.5V5.5a3 3 0 1 1 6 0v1a.75.75 0 0 0 1.5 0v-1A4.5 4.5 0 0 0 14.5 1Z" />
+              </svg>
+              {"公開"}
+            </>
+          ) : (
+            <>
+              {/* 非公開アイコン（施錠） */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-foreground" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
+              </svg>
+              {"非公開"}
+            </>
+          )}
+        </span>
+        {autosaveConfig && autosavedAt ? (
+          <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+            {"自動保存済み "}
+            {autosavedAt.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        ) : null}
+      </div>
+      {form.isPublic ? (
+        <p className="text-xs text-muted-foreground">
+          {"公開にすると他のユーザーがこのランキングを参照できます"}
         </p>
       ) : null}
 
