@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BookmarkButton } from "@/components/bookmark-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
@@ -13,7 +14,7 @@ import { TAG_QUERY_LIMITS } from "@/lib/constants";
 import { formatSmartDate } from "@/lib/format-date";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
 import type { PublicRankingWithAuthor, TagItem } from "@/lib/types";
-import { getUserInitial } from "@/lib/user-utils";
+import { buildUserProfilePath, getUserInitial } from "@/lib/user-utils";
 
 const apiClient = new HttpPublishedApiClient();
 
@@ -30,7 +31,7 @@ function SearchPageContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
 
-  const { user } = useSessionUser();
+  const { user, isReady: isUserReady } = useSessionUser();
   const { pushToast } = useToast();
   const { signalReady } = usePageTransition();
   const { tags, searchResults, isLoading: isTagsLoading, fetchTags, search, clearSearch } = useTags();
@@ -61,10 +62,10 @@ function SearchPageContent() {
 
   // Signal ready once tags have loaded (after fetch has started)
   useEffect(() => {
-    if (hasStartedLoading && !isTagsLoading) {
+    if (!selectedTag && hasStartedLoading && !isTagsLoading) {
       signalReady();
     }
-  }, [hasStartedLoading, isTagsLoading, signalReady]);
+  }, [hasStartedLoading, isTagsLoading, selectedTag, signalReady]);
 
   // React to q changes from header search
   useEffect(() => {
@@ -88,9 +89,22 @@ function SearchPageContent() {
 
   // Fetch rankings when tag selected
   useEffect(() => {
-    if (!user || !selectedTag) {
+    if (!selectedTag) {
       setResults([]);
       setRankingsError(null);
+      setIsRankingsLoading(false);
+      return;
+    }
+
+    if (!isUserReady) {
+      setIsRankingsLoading(true);
+      return;
+    }
+
+    if (!user) {
+      setResults([]);
+      setRankingsError(null);
+      setIsRankingsLoading(false);
       return;
     }
 
@@ -120,7 +134,13 @@ function SearchPageContent() {
     return () => {
       canceled = true;
     };
-  }, [pushToast, selectedTag, user, retryCount]);
+  }, [pushToast, selectedTag, user, isUserReady, retryCount]);
+
+  useEffect(() => {
+    if (selectedTag && isUserReady && !isRankingsLoading) {
+      signalReady();
+    }
+  }, [selectedTag, isUserReady, isRankingsLoading, signalReady]);
 
   // Retry handler for rankings fetch
   const handleRetryRankings = () => {
@@ -432,10 +452,13 @@ function SelectedTagView({
     );
   }
 
-  const handleAvatarClick = (e: React.MouseEvent, userId: string) => {
+  const handleAvatarClick = (
+    e: React.MouseEvent,
+    author: PublicRankingWithAuthor["author"],
+  ) => {
     e.preventDefault();
     e.stopPropagation();
-    router.push(`/users/${userId}`);
+    router.push(buildUserProfilePath(author));
   };
 
   return (
@@ -452,7 +475,7 @@ function SelectedTagView({
             <div className="p-4 flex gap-3">
               <button
                 type="button"
-                onClick={(e) => handleAvatarClick(e, ranking.author.id)}
+                onClick={(e) => handleAvatarClick(e, ranking.author)}
                 className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label={`${ranking.author.displayName}のプロフィール`}
               >
@@ -473,6 +496,11 @@ function SelectedTagView({
                   <span className="text-sm font-bold text-foreground">
                     {ranking.author.displayName}
                   </span>
+                  {ranking.author.displayUserId ? (
+                    <span className="text-xs text-muted-foreground">
+                      @{ranking.author.displayUserId}
+                    </span>
+                  ) : null}
                   <span className="text-xs text-muted-foreground">
                     · {formatSmartDate(ranking.createdAt)}
                   </span>
@@ -499,12 +527,13 @@ function SelectedTagView({
                     </svg>
                     {ranking.viewCount}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                    </svg>
-                    {ranking.bookmarkCount}
-                  </span>
+                  <BookmarkButton
+                    rankingId={ranking.id}
+                    initialIsBookmarked={ranking.isBookmarked}
+                    bookmarkCount={ranking.bookmarkCount}
+                    compact
+                    className="-my-1 -ml-1"
+                  />
                 </div>
               </div>
             </div>

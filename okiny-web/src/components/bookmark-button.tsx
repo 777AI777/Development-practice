@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
 interface BookmarkButtonProps {
   rankingId: string;
   initialIsBookmarked: boolean;
   bookmarkCount: number;
+  className?: string;
+  compact?: boolean;
 }
 
 /** ブックマーク済みアイコン（塗りつぶし） */
@@ -54,12 +56,25 @@ export function BookmarkButton({
   rankingId,
   initialIsBookmarked,
   bookmarkCount,
+  className,
+  compact = false,
 }: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
   const [count, setCount] = useState(bookmarkCount);
   const [isPending, setIsPending] = useState(false);
 
-  const handleToggle = useCallback(async () => {
+  useEffect(() => {
+    setIsBookmarked(initialIsBookmarked);
+  }, [initialIsBookmarked]);
+
+  useEffect(() => {
+    setCount(bookmarkCount);
+  }, [bookmarkCount]);
+
+  const handleToggle = useCallback(async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (isPending) return;
 
     // 楽観的UI更新
@@ -97,7 +112,7 @@ export function BookmarkButton({
       type="button"
       onClick={handleToggle}
       disabled={isPending}
-      className="inline-flex items-center gap-1 rounded-md bg-transparent px-1.5 py-1 text-xs transition hover:bg-muted disabled:opacity-60"
+      className={`inline-flex items-center gap-1 text-xs transition disabled:opacity-60 ${compact ? "" : "rounded-md bg-transparent px-1.5 py-1 hover:bg-muted"} ${className ?? ""}`}
       style={{
         color: isBookmarked ? "var(--primary)" : "var(--muted-foreground)",
       }}

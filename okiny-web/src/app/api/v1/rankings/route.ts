@@ -62,12 +62,12 @@ export async function GET(request: Request) {
 
     try {
       if (process.env.NODE_ENV !== "production") {
-        console.info(`[GET /api/v1/rankings?scope=public] excludeUserId=${userId}, tagId=${tagId}`);
+        console.info(`[GET /api/v1/rankings?scope=public] viewerUserId=${userId}, tagId=${tagId}`);
       }
 
       const rankings = await listPublicRankingsByTag({
         tagId,
-        excludeUserId: userId,
+        viewerUserId: userId,
         accessToken,
       });
 
@@ -86,6 +86,7 @@ export async function GET(request: Request) {
         id: "",
         displayName: "不明なユーザー",
         avatarUrl: null,
+        displayUserId: null,
       };
 
       const data: PublicRankingWithAuthor[] = rankings.map((ranking) => ({

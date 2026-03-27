@@ -44,6 +44,7 @@ describe("publishRanking", () => {
         updatedAt: new Date().toISOString(),
         viewCount: 0,
         bookmarkCount: 0,
+        isBookmarked: false,
       }),
       updatePublishedRanking: async (_input) => {
         throw new Error("not used in this test");

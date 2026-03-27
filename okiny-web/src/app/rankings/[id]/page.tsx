@@ -43,6 +43,7 @@ export async function generateMetadata({
     // 他ユーザーの公開ランキングを取得
     const publicRanking = await getPublicRankingById({
       rankingId: id,
+      userId: auth.userId,
       accessToken: auth.accessToken,
     });
     if (publicRanking) {
@@ -97,6 +98,7 @@ export default async function RankingDetailPage({
     try {
       ranking = await getPublicRankingById({
         rankingId: id,
+        userId: auth.userId,
         accessToken: auth.accessToken,
       });
     } catch {

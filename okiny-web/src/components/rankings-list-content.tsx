@@ -47,6 +47,7 @@ function MyRankContent({
   collapsedTagIds,
   toggleTagAccordion,
   userName,
+  userDisplayUserId,
 }: {
   isLoading: boolean;
   errorMessage: string | null;
@@ -55,6 +56,7 @@ function MyRankContent({
   collapsedTagIds: string[];
   toggleTagAccordion: (tagId: string) => void;
   userName: string | undefined;
+  userDisplayUserId: string | null;
 }) {
   const userInitial = getUserInitial(userName, "??");
 
@@ -164,6 +166,11 @@ function MyRankContent({
                             <span className="text-sm font-bold text-foreground">
                               {userName ?? "Unknown"}
                             </span>
+                            {userDisplayUserId ? (
+                              <span className="text-xs text-muted-foreground">
+                                @{userDisplayUserId}
+                              </span>
+                            ) : null}
                             <span className="text-xs text-muted-foreground">
                               · {formatSmartDate(ranking.createdAt)}
                             </span>
@@ -228,6 +235,7 @@ function RankingsListContentInner({ initialRankings, userName: serverUserName }:
   const { signalReady } = usePageTransition();
 
   const displayName = user?.name ?? serverUserName;
+  const displayUserId = user?.displayUserId ?? null;
 
   const [rankings, setRankings] = useState<PublishedRanking[]>(initialRankings);
   const [isLoading, setIsLoading] = useState(false);
@@ -261,6 +269,7 @@ function RankingsListContentInner({ initialRankings, userName: serverUserName }:
           collapsedTagIds={collapsedTagIds}
           toggleTagAccordion={toggleTagAccordion}
           userName={displayName}
+          userDisplayUserId={displayUserId}
         />
       )}
 

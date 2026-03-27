@@ -5,6 +5,7 @@ import { cache } from "react";
 
 import { getPublicRanking } from "@/lib/supabase/public-ranking";
 import { getAppUrl } from "@/lib/url";
+import { buildUserProfilePath } from "@/lib/user-utils";
 
 const getCachedPublicRanking = cache(getPublicRanking);
 
@@ -61,7 +62,10 @@ export default async function ShareRankingPage({ params }: Props) {
           <div className="flex flex-col items-center gap-3">
             {/* 著者情報 */}
             <Link
-              href={`/users/${ranking.authorId}`}
+              href={buildUserProfilePath({
+                id: ranking.authorId,
+                displayUserId: ranking.authorDisplayUserId,
+              })}
               className="flex items-center gap-2 transition hover:opacity-80"
             >
               {ranking.authorAvatarUrl ? (
@@ -77,9 +81,16 @@ export default async function ShareRankingPage({ params }: Props) {
                   {ranking.authorName.charAt(0)}
                 </span>
               )}
-              <span className="text-sm text-muted-foreground">
-                {ranking.authorName}
-              </span>
+              <div className="min-w-0">
+                <span className="block truncate text-sm text-muted-foreground">
+                  {ranking.authorName}
+                </span>
+                {ranking.authorDisplayUserId ? (
+                  <span className="block truncate text-xs text-muted-foreground">
+                    @{ranking.authorDisplayUserId}
+                  </span>
+                ) : null}
+              </div>
             </Link>
             <h2 className="text-2xl font-semibold text-foreground">
               {ranking.title}

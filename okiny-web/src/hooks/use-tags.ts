@@ -84,12 +84,15 @@ export function useTags(): UseTagsReturn {
   const search = useCallback((query: string) => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
+      debounceRef.current = undefined;
     }
     if (abortRef.current) {
       abortRef.current.abort();
+      abortRef.current = null;
     }
     if (!query.trim()) {
       setSearchResults([]);
+      setIsLoading(false);
       return;
     }
     setSearchResults([]);
@@ -114,6 +117,7 @@ export function useTags(): UseTagsReturn {
         }
         setSearchResults([]);
       } finally {
+        abortRef.current = null;
         setIsLoading(false);
       }
     }, 300);
@@ -123,8 +127,11 @@ export function useTags(): UseTagsReturn {
     setSearchResults([]);
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
+      debounceRef.current = undefined;
     }
     abortRef.current?.abort();
+    abortRef.current = null;
+    setIsLoading(false);
   }, []);
 
   return { tags, searchResults, isLoading, fetchTags, search, clearSearch };

@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BookmarkButton } from "@/components/bookmark-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { formatSmartDate } from "@/lib/format-date";
 import type { PublishedRanking, UserProfile } from "@/lib/types";
+import { buildUserProfilePath } from "@/lib/user-utils";
 
 interface RankingDetailContentProps {
   ranking: PublishedRanking;
@@ -225,7 +227,7 @@ export function RankingDetailContent({
         {/* 著者情報（他ユーザーのランキング閲覧時） */}
         {!isOwner && authorProfile && (
           <Link
-            href={`/users/${authorProfile.id}`}
+            href={buildUserProfilePath(authorProfile)}
             className="flex items-center gap-2 transition hover:opacity-80"
           >
             {authorProfile.avatarUrl ? (
@@ -241,9 +243,16 @@ export function RankingDetailContent({
                 {authorProfile.displayName.charAt(0)}
               </span>
             )}
-            <span className="text-sm text-muted-foreground">
-              {authorProfile.displayName}
-            </span>
+            <div className="min-w-0">
+              <span className="block truncate text-sm text-muted-foreground">
+                {authorProfile.displayName}
+              </span>
+              {authorProfile.displayUserId ? (
+                <span className="block truncate text-xs text-muted-foreground">
+                  @{authorProfile.displayUserId}
+                </span>
+              ) : null}
+            </div>
           </Link>
         )}
 
@@ -274,22 +283,32 @@ export function RankingDetailContent({
             {ranking.viewCount}
           </span>
           {/* ブックマーク数 */}
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-            {ranking.bookmarkCount}
-          </span>
+          {isOwner ? (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+              {ranking.bookmarkCount}
+            </span>
+          ) : (
+            <BookmarkButton
+              rankingId={ranking.id}
+              initialIsBookmarked={ranking.isBookmarked}
+              bookmarkCount={ranking.bookmarkCount}
+              compact
+              className="-my-1 -ml-1"
+            />
+          )}
         </div>
 
         {/* Ranking items */}

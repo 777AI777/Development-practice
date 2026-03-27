@@ -7,6 +7,11 @@ import type { AuthChangeEvent, Session, User } from "@supabase/auth-js";
 import { trackEvent } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
 import type { AuthUser } from "@/lib/supabase/types";
+import {
+  DISPLAY_USER_ID_MAX_LENGTH,
+  isValidDisplayUserId,
+  normalizeDisplayUserId,
+} from "@/lib/user-utils";
 
 // モジュールレベルキャッシュ（ページ遷移間で保持、ハードリフレッシュでリセット）
 let cachedUser: AuthUser | null = null;
@@ -30,11 +35,23 @@ interface UseSessionUserResult {
   isReady: boolean;
   user: AuthUser | null;
   signOut: () => Promise<void>;
-  updateDisplayName: (displayName: string) => Promise<boolean>;
+  updateDisplayName: (displayName: string) => Promise<"success" | "invalid" | "server">;
+  updateDisplayUserId: (
+    displayUserId: string,
+  ) => Promise<"success" | "invalid" | "conflict" | "server">;
 }
 
 function safeString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
+}
+
+function isConflictErrorMessage(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return message.includes("duplicate") || message.includes("unique");
 }
 
 function toAuthUser(supabaseUser: {
@@ -52,6 +69,7 @@ function toAuthUser(supabaseUser: {
       "Unknown",
     email: supabaseUser.email ?? "",
     avatarUrl: safeString(meta.avatar_url),
+    displayUserId: safeString(meta.display_user_id) ?? null,
   };
 }
 
@@ -137,26 +155,56 @@ export function useSessionUser(): UseSessionUserResult {
 
   const updateDisplayName = async (
     displayName: string,
-  ): Promise<boolean> => {
+  ): Promise<"success" | "invalid" | "server"> => {
     const MAX_DISPLAY_NAME_LENGTH = 30;
     const normalized = displayName.trim();
     if (!normalized || normalized.length > MAX_DISPLAY_NAME_LENGTH)
-      return false;
+      return "invalid";
     try {
       const supabase = createClient();
-      const { data } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         data: { display_name: normalized },
       });
+      if (error) {
+        return "server";
+      }
       if (data.user) {
         const updatedUser = toAuthUser(data.user);
         updateCache(updatedUser, true);
         setUser(updatedUser);
       }
-      return true;
+      return "success";
     } catch {
-      return false;
+      return "server";
     }
   };
 
-  return { isReady, user, signOut, updateDisplayName };
+  const updateDisplayUserId = async (
+    displayUserId: string,
+  ): Promise<"success" | "invalid" | "conflict" | "server"> => {
+    const normalized = normalizeDisplayUserId(displayUserId);
+    if (!isValidDisplayUserId(normalized) || normalized.length > DISPLAY_USER_ID_MAX_LENGTH) {
+      return "invalid";
+    }
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.updateUser({
+        data: { display_user_id: normalized },
+      });
+      if (error) {
+        return isConflictErrorMessage(error) ? "conflict" : "server";
+      }
+      if (data.user) {
+        const updatedUser = toAuthUser(data.user);
+        updateCache(updatedUser, true);
+        setUser(updatedUser);
+      }
+      return "success";
+    } catch (error) {
+      return isConflictErrorMessage(error) ? "conflict" : "server";
+    }
+  };
+
+  return { isReady, user, signOut, updateDisplayName, updateDisplayUserId };
 }

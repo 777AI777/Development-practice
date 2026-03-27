@@ -8,14 +8,13 @@ import { Suspense } from "react";
 import { AppShell } from "@/components/app-shell";
 import { formatSmartDate } from "@/lib/format-date";
 
-/** サーバーから受け取るプロフィール情報 */
 interface UserProfileData {
   readonly id: string;
   readonly displayName: string;
   readonly avatarUrl: string | null;
+  readonly displayUserId: string | null;
 }
 
-/** サーバーから受け取る公開ランキング */
 interface PublicRankingItem {
   readonly id: string;
   readonly title: string;
@@ -31,14 +30,15 @@ interface UserProfileContentProps {
   rankings: readonly PublicRankingItem[];
 }
 
-/** ユーザーアバターの頭文字を取得 */
 function getInitial(name: string): string {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "?";
+  return (
+    name
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "?"
+  );
 }
 
 function BackArrowIcon() {
@@ -65,7 +65,6 @@ function UserProfileContentInner({ profile, rankings }: UserProfileContentProps)
 
   return (
     <AppShell>
-      {/* 戻るボタン */}
       <div className="mb-4">
         <button
           type="button"
@@ -77,10 +76,8 @@ function UserProfileContentInner({ profile, rankings }: UserProfileContentProps)
         </button>
       </div>
 
-      {/* プロフィールヘッダー */}
       <section className="mb-6 rounded-xl border border-border bg-card px-6 py-6">
         <div className="flex items-center gap-4">
-          {/* アバター */}
           {profile.avatarUrl ? (
             <Image
               src={profile.avatarUrl}
@@ -95,10 +92,16 @@ function UserProfileContentInner({ profile, rankings }: UserProfileContentProps)
               {getInitial(profile.displayName)}
             </div>
           )}
+
           <div className="min-w-0">
             <h1 className="truncate text-lg font-bold text-foreground">
               {profile.displayName}
             </h1>
+            {profile.displayUserId ? (
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                @{profile.displayUserId}
+              </p>
+            ) : null}
             <p className="mt-0.5 text-sm text-muted-foreground">
               公開ランキング {rankings.length}件
             </p>
@@ -106,7 +109,6 @@ function UserProfileContentInner({ profile, rankings }: UserProfileContentProps)
         </div>
       </section>
 
-      {/* ランキング一覧 */}
       {rankings.length === 0 ? (
         <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
           <p className="text-sm text-muted-foreground">
@@ -149,17 +151,36 @@ function UserProfileContentInner({ profile, rankings }: UserProfileContentProps)
                     </p>
                   ))}
                 </div>
-                {/* 閲覧数・ブックマーク数 */}
                 <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                     {ranking.viewCount}
                   </span>
                   <span className="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
                     </svg>
                     {ranking.bookmarkCount}
@@ -171,7 +192,6 @@ function UserProfileContentInner({ profile, rankings }: UserProfileContentProps)
         </div>
       )}
 
-      {/* Bottom spacer（AppShellのボトムバー分） */}
       <div className="h-4" aria-hidden="true" />
     </AppShell>
   );
