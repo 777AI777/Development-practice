@@ -1,14 +1,16 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { RankingForm } from "@/components/ranking-form";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { trackEvent } from "@/lib/analytics";
+import { autosaveRepository } from "@/lib/autosave/client-repository";
 import { draftRepository } from "@/lib/drafts/client-repository";
 import { saveDraftWithFeedback } from "@/lib/drafts/save-draft-with-feedback";
 import { publishedApiClient } from "@/lib/publish/client";
@@ -28,8 +30,12 @@ function NewRankingPageContent() {
   const { pushToast } = useToast();
   const { isReady, user } = useSessionUser();
   const [initialDraft, setInitialDraft] = useState<RankingInput | undefined>();
+  const [initialTagName, setInitialTagName] = useState<string | undefined>();
   const [initialNewTagName, setInitialNewTagName] = useState<string | undefined>();
   const [activeDraftId, setActiveDraftId] = useState<string | undefined>();
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [restoreDecided, setRestoreDecided] = useState(false);
+  const autosaveKeyRef = useRef<string>("new");
   const trackedRef = useRef(false);
 
   useEffect(() => {
@@ -40,42 +46,82 @@ function NewRankingPageContent() {
       signalReady();
       return;
     }
+    if (restoreDecided) {
+      return;
+    }
     const draftId = searchParams.get("draftId");
     const preselectedTagId = searchParams.get("tagId");
     if (!draftId) {
-      if (preselectedTagId) {
-        setInitialDraft({
-          title: "",
-          tagId: preselectedTagId,
-          items: EMPTY_ITEMS,
-        });
-      } else {
-        setInitialDraft(undefined);
-      }
-      setInitialNewTagName(undefined);
-      setActiveDraftId(undefined);
-      signalReady();
+      const key = "new";
+      autosaveKeyRef.current = key;
+      void (async () => {
+        const hasAutosave = await autosaveRepository.has(user.id, key);
+        if (hasAutosave && !preselectedTagId) {
+          // 復元ダイアログを表示し、結果を待つ
+          // initialDraft等はhandleRestoreConfirm/handleRestoreCancelで設定する
+          setRestoreDialogOpen(true);
+          signalReady();
+        } else {
+          if (preselectedTagId) {
+            setInitialDraft({
+              title: "",
+              tagId: preselectedTagId,
+              items: EMPTY_ITEMS,
+            });
+          }
+          setInitialTagName(undefined);
+          setInitialNewTagName(undefined);
+          setActiveDraftId(undefined);
+          setRestoreDecided(true);
+          signalReady();
+        }
+      })();
       return;
     }
 
-    void draftRepository.list(user.id).then((drafts) => {
-      const target = drafts.find((draft) => draft.draftId === draftId);
-      if (!target) {
+    const draftAutosaveKey = `draft:${draftId}`;
+    autosaveKeyRef.current = draftAutosaveKey;
+    void (async () => {
+      const hasAutosave = await autosaveRepository.has(user.id, draftAutosaveKey);
+      if (hasAutosave) {
+        const record = await autosaveRepository.get(user.id, draftAutosaveKey);
+        if (record) {
+          setInitialDraft({
+            title: record.title,
+            tagId: record.tagId,
+            items: toRankingItems([...record.items]),
+          });
+          setInitialTagName(record.selectedTagName);
+          setInitialNewTagName(record.newTagName);
+        }
+        setActiveDraftId(draftId);
+        setRestoreDecided(true);
         signalReady();
         return;
       }
-      setInitialDraft({
-        title: target.title,
-        tagId: target.tagId,
-        items: toRankingItems([...target.items]),
-      });
-      setInitialNewTagName(target.newTagName);
-      setActiveDraftId(target.draftId);
-      signalReady();
-    }).catch(() => {
-      signalReady();
-    });
-  }, [isReady, searchParams, signalReady, user]);
+
+      try {
+        const drafts = await draftRepository.list(user.id);
+        const target = drafts.find((draft) => draft.draftId === draftId);
+        if (!target) {
+          signalReady();
+          return;
+        }
+        setInitialDraft({
+          title: target.title,
+          tagId: target.tagId,
+          items: toRankingItems([...target.items]),
+        });
+        setInitialTagName(target.selectedTagName);
+        setInitialNewTagName(target.newTagName);
+        setActiveDraftId(target.draftId);
+        setRestoreDecided(true);
+        signalReady();
+      } catch {
+        signalReady();
+      }
+    })();
+  }, [isReady, restoreDecided, searchParams, signalReady, user]);
 
   useEffect(() => {
     if (!user || trackedRef.current) {
@@ -108,8 +154,8 @@ function NewRankingPageContent() {
     }
   };
 
-  const handleSaveDraft = async (value: RankingInput & { newTagName?: string; selectedTagName?: string }) => {
-    if (!user) return;
+  const handleSaveDraft = async (value: RankingInput & { newTagName?: string; selectedTagName?: string }): Promise<boolean> => {
+    if (!user) return false;
     const result = await saveDraftWithFeedback(draftRepository, user.id, {
       ...value,
       draftId: activeDraftId,
@@ -122,23 +168,92 @@ function NewRankingPageContent() {
         tag_id: value.tagId,
       });
       setActiveDraftId(result.record.draftId);
-      router.push("/drafts");
     }
+    return result.ok;
   };
+
+  const handleRestoreConfirm = () => {
+    if (!user) return;
+    const key = autosaveKeyRef.current;
+    void (async () => {
+      const record = await autosaveRepository.get(user.id, key);
+      if (record) {
+        setInitialDraft({
+          title: record.title,
+          tagId: record.tagId,
+          items: toRankingItems([...record.items]),
+        });
+        setInitialTagName(record.selectedTagName ?? "");
+        setInitialNewTagName(record.newTagName ?? "");
+      }
+      const draftId = searchParams.get("draftId");
+      if (draftId) {
+        setActiveDraftId(draftId);
+      }
+      setRestoreDecided(true);
+      setRestoreDialogOpen(false);
+    })();
+  };
+
+  const handleRestoreCancel = () => {
+    if (!user) return;
+    const key = autosaveKeyRef.current;
+    void (async () => {
+      await autosaveRepository.delete(user.id, key);
+      const draftId = searchParams.get("draftId");
+      if (draftId) {
+        try {
+          const drafts = await draftRepository.list(user.id);
+          const target = drafts.find((draft) => draft.draftId === draftId);
+          if (target) {
+            setInitialDraft({
+              title: target.title,
+              tagId: target.tagId,
+              items: toRankingItems([...target.items]),
+            });
+            setInitialTagName(target.selectedTagName);
+            setInitialNewTagName(target.newTagName);
+            setActiveDraftId(target.draftId);
+          }
+        } catch {
+          // drafts store read failure — proceed with empty form
+        }
+      }
+      setRestoreDecided(true);
+      setRestoreDialogOpen(false);
+    })();
+  };
+
+  const autosaveConfig = useMemo(
+    () => user && restoreDecided
+      ? { userId: user.id, key: activeDraftId ? `draft:${activeDraftId}` : "new" }
+      : undefined,
+    [user, restoreDecided, activeDraftId],
+  );
 
   return (
     <AppShell>
       <RankingForm
         key={activeDraftId ?? "new"}
         initialValue={initialDraft}
+        initialTagName={initialTagName}
         initialNewTagName={initialNewTagName}
         submitLabel="作成"
         onSubmit={handlePublish}
         onSaveDraft={handleSaveDraft}
         onDraftList={() => router.push("/drafts")}
-        onCancel={() => router.push("/rankings")}
-        onBack={() => router.push("/rankings")}
-        autosaveKey={user ? `${user.id}:${activeDraftId ?? "new"}` : undefined}
+        onCancel={() => router.back()}
+        onBack={() => router.back()}
+        autosaveConfig={autosaveConfig}
+        isDraftMode={!!activeDraftId}
+      />
+      <ConfirmDialog
+        open={restoreDialogOpen}
+        onConfirm={handleRestoreConfirm}
+        onCancel={handleRestoreCancel}
+        title="前回の続きから作成しますか？"
+        confirmLabel="復元する"
+        cancelLabel="破棄して新規作成"
       />
     </AppShell>
   );

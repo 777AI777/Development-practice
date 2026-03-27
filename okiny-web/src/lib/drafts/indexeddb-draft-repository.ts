@@ -4,6 +4,7 @@ import {
   DRAFT_STORE_NAME,
   MAX_DRAFTS_PER_USER,
 } from "@/lib/drafts/constants";
+import { AUTOSAVE_STORE_NAME } from "@/lib/autosave/constants";
 import { DraftLimitError } from "@/lib/drafts/draft-errors";
 import type {
   DraftRepository,
@@ -53,6 +54,13 @@ function getDatabase(): Promise<IDBDatabase> {
       if (!database.objectStoreNames.contains(DRAFT_STORE_NAME)) {
         const store = database.createObjectStore(DRAFT_STORE_NAME, {
           keyPath: "draftId",
+        });
+        store.createIndex("userId", "userId", { unique: false });
+      }
+
+      if (!database.objectStoreNames.contains(AUTOSAVE_STORE_NAME)) {
+        const store = database.createObjectStore(AUTOSAVE_STORE_NAME, {
+          keyPath: "id",
         });
         store.createIndex("userId", "userId", { unique: false });
       }

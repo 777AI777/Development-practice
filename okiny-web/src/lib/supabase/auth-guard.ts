@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -18,14 +19,36 @@ export function authErrorResponse(
   return NextResponse.json({ error: { code, message } }, { status });
 }
 
-export async function getAuthenticatedUserId(): Promise<AuthResult> {
-  const supabase = await createClient();
+/**
+ * Supabase クライアントをリクエスト単位でメモ化。
+ * getCachedSession / getCachedUser が同一インスタンスを共有する。
+ */
+const getCachedClient = cache(async () => createClient());
 
-  // セッションからトークンを先に取得
+/**
+ * Supabase getSession() をリクエスト単位でメモ化。
+ * cookie デコードのみで HTTP 通信なし。accessToken 取得用。
+ */
+const getCachedSession = cache(async () => {
+  const supabase = await getCachedClient();
+  return supabase.auth.getSession();
+});
+
+/**
+ * Supabase getUser() をリクエスト単位でメモ化。
+ * JWT 署名検証（Supabase API への HTTP 通信）を同一リクエスト内で1回のみに抑える。
+ */
+const getCachedUser = cache(async () => {
+  const supabase = await getCachedClient();
+  return supabase.auth.getUser();
+});
+
+export async function getAuthenticatedUserId(): Promise<AuthResult> {
+  // セッションからトークンを先に取得（cache済み）
   const {
     data: { session },
     error: sessionError,
-  } = await supabase.auth.getSession();
+  } = await getCachedSession();
 
   if (sessionError || !session?.access_token) {
     console.error("[auth-guard] getSession failed");
@@ -35,11 +58,11 @@ export async function getAuthenticatedUserId(): Promise<AuthResult> {
     return { ok: false, reason: "unauthorized" };
   }
 
-  // ユーザーの存在をサーバーサイドで検証（JWT署名検証）
+  // ユーザーの存在をサーバーサイドで検証（JWT署名検証、cache済み）
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser();
+  } = await getCachedUser();
 
   if (error) {
     console.error("[auth-guard] getUser failed");

@@ -13,6 +13,7 @@
 | `src/lib/tag-utils.ts` | タグ名正規化（NFKC）・表示ラベル取得 | tag-validation, tag-combobox, API が依存 |
 | `src/lib/tag-validation.ts` | Zodスキーマ + 禁止ワード検査 | フロント・API両方で使用 |
 | `src/lib/analytics.ts` | イベント計測 | イベント名変更は計測ダッシュボードに影響 |
+| `src/app/api/og/rankings/[id]/route.tsx` | OGP画像生成 | 公開共有ページのメタ画像。フォント・レイアウト変更時は実機確認必須 |
 
 ### Core Logic（バグが直結）
 
@@ -23,6 +24,7 @@
 | `src/lib/publish/` | 公開APIクライアント | シングルトンHTTPクライアント。エラーコード体系あり |
 | `src/hooks/use-tags.ts` | タグ取得・検索フック（300ms debounce） | tag-combobox が依存 |
 | `src/components/tag-combobox.tsx` | タグ選択・検索・新規作成UI | use-tags, tag-validation, tag-utils に依存 |
+| `src/lib/rate-limit.ts` | APIレート制限（Upstash Redis） | 全APIルートで使用。UPSTASH_REDIS_REST_URL/TOKEN が必要 |
 
 ### Local State（データ消失リスク）
 
@@ -44,6 +46,10 @@
 | `/drafts` | 下書き一覧 | main |
 | `/settings` | 設定 | main |
 | `/settings/logout` | ログアウト確認 | main |
+| `/onboarding` | オンボーディング | main |
+| `/share/rankings/[id]` | ランキング公開共有 | public |
+| `/privacy` | プライバシーポリシー | legal |
+| `/terms` | 利用規約 | legal |
 
 ## 楽観ロック
 

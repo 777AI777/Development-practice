@@ -166,3 +166,7 @@ describe("getAuthenticatedUserId", () => {
     consoleErrorSpy.mockRestore();
   });
 });
+
+// NOTE: React cache() によるメモ化の効果は Vitest 環境では検証できない
+// （サーバーコンポーネントのリクエストコンテキストが必要なため）
+// メモ化の動作確認は統合テスト/E2E で行う

@@ -142,9 +142,16 @@ export async function updateSession(request: NextRequest, nonce: string) {
     },
   });
 
+  // getSession() は cookie デコードのみ（HTTP通信なし）。
+  // JWT 署名検証は Server Component の auth-guard に委任する。
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // session.user は cookie の JWT payload をデコードした結果であり、
+  // サーバーサイドでの署名検証は行われていない。
+  // ルーティング判定にのみ使用し、データアクセスの認証は auth-guard で行う。
+  const user = session?.user ?? null;
 
   const isPublicPath =
     EXACT_PUBLIC_PATHS.some((p) => pathname === p) ||
