@@ -1,5 +1,8 @@
 ﻿import type { SupabaseRankingRow, SupabaseTagRow, UserProfile } from "@/lib/types";
-import { RANKING_ITEMS_PREVIEW_LIMIT } from "@/lib/constants";
+import {
+  POPULAR_TAGS_CACHE_REVALIDATE_SECONDS,
+  RANKING_ITEMS_PREVIEW_LIMIT,
+} from "@/lib/constants";
 import { toUserProfileLookup } from "@/lib/user-utils";
 
 interface SupabaseEnv {
@@ -77,6 +80,37 @@ async function requestSupabase(
     headers,
     body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
     cache: "no-store",
+  });
+}
+
+async function requestSupabaseWithServiceRole(
+  path: string,
+  init?: Omit<SupabaseRequestInit, "accessToken"> & {
+    revalidateSeconds?: number;
+  },
+): Promise<Response> {
+  const env = readSupabaseServiceRoleEnv();
+  const headers: Record<string, string> = {
+    apikey: env.serviceRoleKey,
+    Authorization: `Bearer ${env.serviceRoleKey}`,
+  };
+
+  if (init?.body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (init?.prefer) {
+    headers.Prefer = init.prefer;
+  }
+
+  return fetch(`${env.url}/rest/v1/${path}`, {
+    method: init?.method ?? "GET",
+    headers,
+    body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
+    next:
+      init?.revalidateSeconds !== undefined
+        ? { revalidate: init.revalidateSeconds }
+        : undefined,
   });
 }
 
@@ -404,6 +438,28 @@ export async function listTags(
     method: "GET",
     accessToken,
   });
+  await ensureResponseOk(res);
+  return (await res.json()) as SupabaseTagRow[];
+}
+
+export async function listPopularTagsCached(
+  options?: { limit?: number },
+): Promise<SupabaseTagRow[]> {
+  const query = new URLSearchParams({
+    select: "*",
+    order: "usage_count.desc,created_at.asc",
+  });
+  if (options?.limit !== undefined) {
+    query.set("limit", String(options.limit));
+  }
+
+  const res = await requestSupabaseWithServiceRole(
+    `tag_popularity?${query.toString()}`,
+    {
+      method: "GET",
+      revalidateSeconds: POPULAR_TAGS_CACHE_REVALIDATE_SECONDS,
+    },
+  );
   await ensureResponseOk(res);
   return (await res.json()) as SupabaseTagRow[];
 }

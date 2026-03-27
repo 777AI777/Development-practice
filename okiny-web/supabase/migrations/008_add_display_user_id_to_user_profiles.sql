@@ -33,6 +33,6 @@ SELECT
   NULLIF(lower(btrim(au.raw_user_meta_data ->> 'display_user_id')), '') AS display_user_id
 FROM auth.users au;
 
-GRANT SELECT ON TABLE public.user_profiles TO anon;
-GRANT SELECT ON TABLE public.user_profiles TO authenticated;
+REVOKE ALL ON TABLE public.user_profiles FROM anon;
+REVOKE ALL ON TABLE public.user_profiles FROM authenticated;
 GRANT SELECT ON TABLE public.user_profiles TO service_role;

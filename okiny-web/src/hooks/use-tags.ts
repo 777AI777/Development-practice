@@ -41,41 +41,18 @@ export function useTags(): UseTagsReturn {
   const fetchTags = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [mineResult, popularResult] = await Promise.allSettled([
-        fetch("/api/v1/tags/mine").then(async (res) => {
-          if (!res.ok) throw new Error("Failed to fetch my tags");
-          const json = await res.json();
-          return (json.data ?? []) as TagItem[];
-        }),
-        fetch("/api/v1/tags/popular").then(async (res) => {
-          if (!res.ok) throw new Error("Failed to fetch popular tags");
-          const json = await res.json();
-          return (json.data ?? []) as TagItem[];
-        }),
-      ]);
-      const mineTags =
-        mineResult.status === "fulfilled" ? mineResult.value : [];
-      const popularTags =
-        popularResult.status === "fulfilled" ? popularResult.value : [];
-
-      if (
-        mineResult.status === "rejected" &&
-        popularResult.status === "rejected"
-      ) {
-        console.error(
-          "[use-tags] Both mine and popular tags failed:",
-          mineResult.reason,
-          popularResult.reason,
-        );
+      const res = await fetch("/api/v1/tags/bootstrap");
+      if (!res.ok) {
+        throw new Error("Failed to fetch tags");
       }
-
+      const json = await res.json();
       const merged = deduplicateByKey(
-        [...mineTags, ...popularTags],
+        (json.data ?? []) as TagItem[],
         (t) => t.id,
       );
       setTags(merged);
     } catch {
-      // unexpected error (should not reach here due to allSettled)
+      setTags([]);
     } finally {
       setIsLoading(false);
     }

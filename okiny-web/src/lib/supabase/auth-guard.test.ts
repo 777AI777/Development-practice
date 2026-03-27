@@ -4,10 +4,10 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
 }));
 
-const mockGetUser = vi.fn();
+const mockGetClaims = vi.fn();
 const mockGetSession = vi.fn();
 const mockSupabase = {
-  auth: { getUser: mockGetUser, getSession: mockGetSession },
+  auth: { getClaims: mockGetClaims, getSession: mockGetSession },
 };
 
 import { createClient } from "@/lib/supabase/server";
@@ -21,9 +21,9 @@ beforeEach(() => {
 });
 
 describe("getAuthenticatedUserId", () => {
-  it("認証済みユーザーの場合 { ok: true, userId, accessToken } を返す", async () => {
-    mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-google-001" } },
+  it("returns auth info when session and claims are present", async () => {
+    mockGetClaims.mockResolvedValue({
+      data: { claims: { sub: "user-google-001" } },
       error: null,
     });
     mockGetSession.mockResolvedValue({
@@ -41,13 +41,38 @@ describe("getAuthenticatedUserId", () => {
     });
   });
 
-  it("未認証（user === null）の場合 { ok: false, reason: 'unauthorized' } を返す", async () => {
+  it("returns userName from claims metadata when available", async () => {
+    mockGetClaims.mockResolvedValue({
+      data: {
+        claims: {
+          sub: "user-google-001",
+          user_metadata: { name: "Alice" },
+        },
+      },
+      error: null,
+    });
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: "jwt-token-abc" } },
       error: null,
     });
-    mockGetUser.mockResolvedValue({
-      data: { user: null },
+
+    const result = await getAuthenticatedUserId();
+
+    expect(result).toEqual({
+      ok: true,
+      userId: "user-google-001",
+      accessToken: "jwt-token-abc",
+      userName: "Alice",
+    });
+  });
+
+  it("returns unauthorized when claims do not include sub", async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: "jwt-token-abc" } },
+      error: null,
+    });
+    mockGetClaims.mockResolvedValue({
+      data: { claims: {} },
       error: null,
     });
 
@@ -56,38 +81,29 @@ describe("getAuthenticatedUserId", () => {
     expect(result).toEqual({ ok: false, reason: "unauthorized" });
   });
 
-  it("Supabase getUser エラーの場合 { ok: false, reason: 'server_error' } を返す", async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+  it("returns server_error when getClaims fails", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: "jwt-token-abc" } },
       error: null,
     });
-    mockGetUser.mockResolvedValue({
-      data: { user: null },
+    mockGetClaims.mockResolvedValue({
+      data: null,
       error: { message: "JWT expired" },
     });
 
     const result = await getAuthenticatedUserId();
 
     expect(result).toEqual({ ok: false, reason: "server_error" });
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[auth-guard] getUser failed",
-    );
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[auth-guard] detail:",
-      "JWT expired",
-    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[auth-guard] getClaims failed");
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[auth-guard] detail:", "JWT expired");
 
     consoleErrorSpy.mockRestore();
   });
 
-  it("getSession がエラーの場合 { ok: false, reason: 'unauthorized' } を返す", async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+  it("returns unauthorized when getSession fails", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     mockGetSession.mockResolvedValue({
       data: { session: null },
@@ -97,10 +113,8 @@ describe("getAuthenticatedUserId", () => {
     const result = await getAuthenticatedUserId();
 
     expect(result).toEqual({ ok: false, reason: "unauthorized" });
-    expect(mockGetUser).not.toHaveBeenCalled();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[auth-guard] getSession failed",
-    );
+    expect(mockGetClaims).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[auth-guard] getSession failed");
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "[auth-guard] session detail:",
       "Session not found",
@@ -109,49 +123,8 @@ describe("getAuthenticatedUserId", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it("getSession が session null（エラーなし）の場合 { ok: false, reason: 'unauthorized' } を返す", async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
-    mockGetSession.mockResolvedValue({
-      data: { session: null },
-      error: null,
-    });
-
-    const result = await getAuthenticatedUserId();
-
-    expect(result).toEqual({ ok: false, reason: "unauthorized" });
-    expect(mockGetUser).not.toHaveBeenCalled();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[auth-guard] getSession failed",
-    );
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it("session に access_token が undefined の場合は unauthorized を返す", async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
-    mockGetSession.mockResolvedValue({
-      data: { session: { access_token: undefined } },
-      error: null,
-    });
-
-    const result = await getAuthenticatedUserId();
-
-    expect(result).toEqual({ ok: false, reason: "unauthorized" });
-    expect(mockGetUser).not.toHaveBeenCalled();
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it("session が空オブジェクト（access_token プロパティなし）の場合は unauthorized を返す", async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+  it("returns unauthorized when session has no access token", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     mockGetSession.mockResolvedValue({
       data: { session: {} },
@@ -161,12 +134,8 @@ describe("getAuthenticatedUserId", () => {
     const result = await getAuthenticatedUserId();
 
     expect(result).toEqual({ ok: false, reason: "unauthorized" });
-    expect(mockGetUser).not.toHaveBeenCalled();
+    expect(mockGetClaims).not.toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();
   });
 });
-
-// NOTE: React cache() によるメモ化の効果は Vitest 環境では検証できない
-// （サーバーコンポーネントのリクエストコンテキストが必要なため）
-// メモ化の動作確認は統合テスト/E2E で行う
