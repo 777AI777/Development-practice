@@ -4,17 +4,43 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useSessionUser } from "@/hooks/use-session-user";
 import { useToast } from "@/components/toast-provider";
-import { getUserInitial } from "@/lib/user-utils";
+import { useSessionUser } from "@/hooks/use-session-user";
+import {
+  DISPLAY_USER_ID_MAX_LENGTH,
+  getUserInitial,
+  normalizeDisplayUserId,
+  parseDisplayUserIdSearchQuery,
+} from "@/lib/user-utils";
 
 const APP_BRAND = "OKINY";
+const MAX_DISPLAY_NAME_LENGTH = 30;
 
 interface AppShellProps {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
 }
+
+interface SidebarMenuItemConfig {
+  label: string;
+  href?: string;
+  disabled: boolean;
+  comingSoon?: boolean;
+}
+
+interface ShellUser {
+  name?: string;
+  email?: string;
+  displayUserId?: string | null;
+}
+
+const SETTINGS_MENU_ITEMS: SidebarMenuItemConfig[] = [
+  { label: "通知設定", disabled: true, comingSoon: true },
+  { label: "テーマ設定", disabled: true, comingSoon: true },
+  { label: "利用規約", href: "/terms", disabled: false },
+  { label: "プライバシーポリシー", href: "/privacy", disabled: false },
+];
 
 function SearchIcon() {
   return (
@@ -35,30 +61,13 @@ function SearchIcon() {
   );
 }
 
-interface SidebarMenuItemConfig {
-  label: string;
-  href?: string;
-  disabled: boolean;
-  comingSoon?: boolean;
-}
-
-const SETTINGS_MENU_ITEMS: SidebarMenuItemConfig[] = [
-  { label: "プロフィール編集", disabled: true, comingSoon: true },
-  { label: "通知設定", disabled: true, comingSoon: true },
-  { label: "テーマ設定", disabled: true, comingSoon: true },
-  { label: "利用規約", href: "/terms", disabled: false },
-  { label: "プライバシーポリシー", href: "/privacy", disabled: false },
-];
-
-const MAX_DISPLAY_NAME_LENGTH = 30;
-
 function DisplayNameEditor({
   user,
   updateDisplayName,
   onDone,
 }: {
-  user: { name?: string; email?: string } | null;
-  updateDisplayName: (name: string) => Promise<boolean>;
+  user: ShellUser | null;
+  updateDisplayName: (name: string) => Promise<"success" | "invalid" | "server">;
   onDone: () => void;
 }) {
   const { pushToast } = useToast();
@@ -72,13 +81,21 @@ function DisplayNameEditor({
 
   const save = async () => {
     if (!canSave) return;
-    const success = await updateDisplayName(displayName.trim());
-    if (success) {
-      pushToast({ type: "success", message: "表示名を保存しました。" });
+
+    const status = await updateDisplayName(displayName.trim());
+    if (status === "success") {
+      pushToast({ type: "success", message: "表示名を更新しました。" });
       onDone();
-    } else {
-      pushToast({ type: "error", message: "表示名の保存に失敗しました。" });
+      return;
     }
+
+    pushToast({
+      type: "error",
+      message:
+        status === "invalid"
+          ? "表示名は1〜30文字で入力してください。"
+          : "表示名の更新に失敗しました。",
+    });
   };
 
   return (
@@ -95,10 +112,104 @@ function DisplayNameEditor({
         onChange={(e) => setDisplayName(e.target.value)}
         maxLength={MAX_DISPLAY_NAME_LENGTH}
         className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="表示名"
+        placeholder="表示名を入力"
       />
       <p className="mt-1 text-right text-xs text-muted-foreground">
         {displayName.length}/{MAX_DISPLAY_NAME_LENGTH}
+      </p>
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          onClick={save}
+          disabled={!canSave}
+          className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          保存
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground"
+        >
+          キャンセル
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DisplayUserIdEditor({
+  user,
+  updateDisplayUserId,
+  onDone,
+}: {
+  user: ShellUser | null;
+  updateDisplayUserId: (
+    value: string,
+  ) => Promise<"success" | "invalid" | "conflict" | "server">;
+  onDone: () => void;
+}) {
+  const { pushToast } = useToast();
+  const [displayUserId, setDisplayUserId] = useState(user?.displayUserId ?? "");
+
+  const normalizedDisplayUserId = normalizeDisplayUserId(displayUserId);
+  const isDirty = normalizedDisplayUserId !== (user?.displayUserId ?? "");
+  const canSave = normalizedDisplayUserId.length > 0 && isDirty;
+
+  const save = async () => {
+    if (!canSave) return;
+
+    const status = await updateDisplayUserId(normalizedDisplayUserId);
+    if (status === "success") {
+      pushToast({ type: "success", message: "ユーザーIDを更新しました。" });
+      onDone();
+      return;
+    }
+
+    if (status === "conflict") {
+      pushToast({
+        type: "error",
+        message: "そのユーザーIDはすでに使われています。",
+      });
+      return;
+    }
+
+    pushToast({
+      type: "error",
+      message:
+        status === "invalid"
+          ? "ユーザーIDは3〜20文字の英小文字・数字・_で入力してください。"
+          : "ユーザーIDの更新に失敗しました。",
+    });
+  };
+
+  return (
+    <div className="border-t border-border px-4 py-3">
+      <label
+        htmlFor="sidebar-display-user-id"
+        className="mb-1 block text-xs font-semibold text-foreground"
+      >
+        ユーザーID
+      </label>
+      <div className="flex items-center rounded-md border border-border bg-background px-2">
+        <span className="text-sm text-muted-foreground">@</span>
+        <input
+          id="sidebar-display-user-id"
+          value={displayUserId}
+          onChange={(e) => setDisplayUserId(e.target.value)}
+          maxLength={DISPLAY_USER_ID_MAX_LENGTH}
+          className="w-full bg-transparent px-1 py-1.5 text-sm text-foreground focus:outline-none"
+          placeholder="okiny_user"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        英小文字・数字・_ を 3〜20文字で設定できます
+      </p>
+      <p className="mt-1 text-right text-xs text-muted-foreground">
+        {normalizedDisplayUserId.length}/{DISPLAY_USER_ID_MAX_LENGTH}
       </p>
       <div className="mt-2 flex gap-2">
         <button
@@ -126,21 +237,28 @@ function SettingsAccordion({
   onToggle,
   nameEditOpen,
   onNameEditToggle,
+  userIdEditOpen,
+  onUserIdEditToggle,
   user,
   updateDisplayName,
+  updateDisplayUserId,
   onNavigate,
 }: {
   settingsExpanded: boolean;
   onToggle: () => void;
   nameEditOpen: boolean;
   onNameEditToggle: () => void;
-  user: { name?: string; email?: string } | null;
-  updateDisplayName: (name: string) => Promise<boolean>;
+  userIdEditOpen: boolean;
+  onUserIdEditToggle: () => void;
+  user: ShellUser | null;
+  updateDisplayName: (name: string) => Promise<"success" | "invalid" | "server">;
+  updateDisplayUserId: (
+    value: string,
+  ) => Promise<"success" | "invalid" | "conflict" | "server">;
   onNavigate?: () => void;
 }) {
   return (
     <>
-      {/* ブックマーク */}
       <Link
         href="/bookmarks"
         onClick={onNavigate}
@@ -162,7 +280,6 @@ function SettingsAccordion({
         <span className="text-sm font-medium">ブックマーク</span>
       </Link>
 
-      {/* 設定 */}
       <button
         type="button"
         onClick={onToggle}
@@ -182,9 +299,9 @@ function SettingsAccordion({
           <button
             type="button"
             onClick={onNameEditToggle}
-            className="w-full bg-transparent px-4 py-2 text-left text-sm text-foreground transition cursor-pointer hover:bg-muted"
+            className="w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
           >
-            表示名編集
+            表示名を編集
           </button>
 
           {nameEditOpen && (
@@ -195,13 +312,29 @@ function SettingsAccordion({
             />
           )}
 
+          <button
+            type="button"
+            onClick={onUserIdEditToggle}
+            className="w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
+          >
+            ユーザーIDを編集
+          </button>
+
+          {userIdEditOpen && (
+            <DisplayUserIdEditor
+              user={user}
+              updateDisplayUserId={updateDisplayUserId}
+              onDone={onUserIdEditToggle}
+            />
+          )}
+
           {SETTINGS_MENU_ITEMS.map((item) =>
             item.href && !item.disabled ? (
               <Link
                 key={item.label}
                 href={item.href}
                 onClick={onNavigate}
-                className="block w-full bg-transparent px-4 py-2 text-left text-sm text-foreground transition cursor-pointer hover:bg-muted"
+                className="block w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
               >
                 {item.label}
               </Link>
@@ -247,14 +380,39 @@ function SettingsAccordion({
   );
 }
 
+function UserSummary({ user, userInitial }: { user: ShellUser | null; userInitial: string }) {
+  return (
+    <div className="flex items-center gap-3 border-b border-border px-4 py-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+        {userInitial}
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-foreground">
+          {user?.name ?? "Unknown"}
+        </p>
+        {user?.displayUserId ? (
+          <p className="truncate text-xs text-muted-foreground">
+            @{user.displayUserId}
+          </p>
+        ) : (
+          <p className="truncate text-xs text-muted-foreground">
+            ユーザーID未設定
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isReady, user, updateDisplayName } = useSessionUser();
+  const { isReady, user, updateDisplayName, updateDisplayUserId } = useSessionUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
   const [nameEditOpen, setNameEditOpen] = useState(false);
+  const [userIdEditOpen, setUserIdEditOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -279,6 +437,12 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   const handleSearchSubmit = useCallback(() => {
+    const profileSearchId = parseDisplayUserIdSearchQuery(searchQuery);
+    if (profileSearchId) {
+      router.push(`/users/${profileSearchId}`);
+      return;
+    }
+
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     } else {
@@ -287,7 +451,23 @@ export function AppShell({ children }: AppShellProps) {
   }, [router, searchQuery]);
 
   const handleNameEditToggle = useCallback(() => {
-    setNameEditOpen((prev) => !prev);
+    setNameEditOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setUserIdEditOpen(false);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleUserIdEditToggle = useCallback(() => {
+    setUserIdEditOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setNameEditOpen(false);
+      }
+      return next;
+    });
   }, []);
 
   const handleSettingsToggle = useCallback(() => {
@@ -298,8 +478,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="fixed top-0 left-1/2 z-30 flex h-14 w-full max-w-[480px] -translate-x-1/2 items-center border-b border-border bg-card px-4">
+      <header className="fixed left-1/2 top-0 z-30 flex h-14 w-full max-w-[480px] -translate-x-1/2 items-center border-b border-border bg-card px-4">
         <div className="flex w-full items-center justify-between gap-3">
           <Link
             href="/rankings"
@@ -311,7 +490,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="relative min-w-0 flex-1">
             <input
               type="text"
-              placeholder="タグで検索..."
+              placeholder="タグ検索 / @user_id"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -359,15 +538,12 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </header>
 
-      {/* Header spacer */}
       <div className="h-14 w-full shrink-0" aria-hidden="true" />
 
-      {/* Main content */}
       <main className="mx-auto w-full max-w-[480px] px-4 py-6">
         {children}
       </main>
 
-      {/* Desktop side panel */}
       <aside
         className="fixed top-0 z-26 hidden h-screen flex-col border-l border-border bg-card min-[1040px]:flex"
         style={{
@@ -379,19 +555,7 @@ export function AppShell({ children }: AppShellProps) {
           <span className="text-base font-bold text-foreground">メニュー</span>
         </div>
 
-        <div className="flex items-center gap-3 border-b border-border px-4 py-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-            {userInitial}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {user?.name ?? "Unknown"}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {user?.email ?? ""}
-            </p>
-          </div>
-        </div>
+        <UserSummary user={user} userInitial={userInitial} />
 
         <nav className="flex-1 overflow-y-auto py-2">
           <SettingsAccordion
@@ -399,13 +563,15 @@ export function AppShell({ children }: AppShellProps) {
             onToggle={handleSettingsToggle}
             nameEditOpen={nameEditOpen}
             onNameEditToggle={handleNameEditToggle}
+            userIdEditOpen={userIdEditOpen}
+            onUserIdEditToggle={handleUserIdEditToggle}
             user={user}
             updateDisplayName={updateDisplayName}
+            updateDisplayUserId={updateDisplayUserId}
           />
         </nav>
       </aside>
 
-      {/* Mobile sidebar overlay */}
       <div
         className="fixed inset-0 z-50"
         onClick={handleSidebarClose}
@@ -417,9 +583,8 @@ export function AppShell({ children }: AppShellProps) {
         }}
       />
 
-      {/* Mobile sidebar */}
       <aside
-        className="fixed top-0 right-0 z-50 flex h-full w-[80vw] max-w-[320px] flex-col border-l border-border bg-card shadow-lg"
+        className="fixed right-0 top-0 z-50 flex h-full w-[80vw] max-w-[320px] flex-col border-l border-border bg-card shadow-lg"
         aria-hidden={!sidebarOpen}
         style={{
           transform: sidebarOpen ? "translateX(0)" : "translateX(100%)",
@@ -427,9 +592,7 @@ export function AppShell({ children }: AppShellProps) {
         }}
       >
         <div className="flex h-14 items-center justify-between border-b border-border px-4">
-          <span className="text-base font-bold text-foreground">
-            メニュー
-          </span>
+          <span className="text-base font-bold text-foreground">メニュー</span>
           <button
             type="button"
             onClick={handleSidebarClose}
@@ -440,19 +603,7 @@ export function AppShell({ children }: AppShellProps) {
           </button>
         </div>
 
-        <div className="flex items-center gap-3 border-b border-border px-4 py-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-            {userInitial}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {user?.name ?? "Unknown"}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {user?.email ?? ""}
-            </p>
-          </div>
-        </div>
+        <UserSummary user={user} userInitial={userInitial} />
 
         <nav className="flex-1 overflow-y-auto py-2">
           <SettingsAccordion
@@ -460,8 +611,11 @@ export function AppShell({ children }: AppShellProps) {
             onToggle={handleSettingsToggle}
             nameEditOpen={nameEditOpen}
             onNameEditToggle={handleNameEditToggle}
+            userIdEditOpen={userIdEditOpen}
+            onUserIdEditToggle={handleUserIdEditToggle}
             user={user}
             updateDisplayName={updateDisplayName}
+            updateDisplayUserId={updateDisplayUserId}
             onNavigate={handleSidebarClose}
           />
         </nav>

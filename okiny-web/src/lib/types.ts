@@ -37,12 +37,14 @@ export interface PublishedRanking extends RankingInput {
   updatedAt: string;
   viewCount: number;
   bookmarkCount: number;
+  isBookmarked: boolean;
 }
 
 export interface UserProfile {
   id: string;
   displayName: string;
   avatarUrl: string | null;
+  displayUserId: string | null;
 }
 
 export interface PublicRankingWithAuthor extends PublishedRanking {

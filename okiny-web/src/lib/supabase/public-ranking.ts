@@ -1,10 +1,9 @@
 /**
- * 認証なしでランキングデータを取得するユーティリティ。
- * OGP画像生成・公開共有ページで使用。
- *
- * Supabase RLS をバイパスするため SUPABASE_SERVICE_ROLE_KEY を使用する。
- * service role key が未設定の場合は null を返す（graceful degradation）。
+ * Public profile and shared-ranking helpers that read from Supabase with the
+ * service role key so they can bypass RLS safely on the server.
  */
+
+import { isUuid, toUserProfileLookup } from "@/lib/user-utils";
 
 interface PublicRankingData {
   readonly title: string;
@@ -13,6 +12,7 @@ interface PublicRankingData {
   readonly authorId: string;
   readonly authorName: string;
   readonly authorAvatarUrl: string | null;
+  readonly authorDisplayUserId: string | null;
 }
 
 interface SupabasePublicRankingRow {
@@ -28,11 +28,11 @@ interface SupabasePublicRankingRow {
   readonly tags?: { readonly name: string };
 }
 
-/** user_profiles VIEW の行型 */
 interface SupabaseUserProfileRow {
   readonly id: string;
   readonly display_name: string;
   readonly avatar_url: string | null;
+  readonly display_user_id: string | null;
 }
 
 function readServiceRoleEnv(): { url: string; serviceRoleKey: string } | null {
@@ -52,25 +52,29 @@ function extractSortedItemTexts(
   if (!rankingItems || rankingItems.length === 0) {
     return [];
   }
+
   return [...rankingItems]
     .sort((a, b) => a.rank - b.rank)
     .map((item) => item.item_text)
     .filter((text) => text.trim() !== "");
 }
 
-/**
- * service_role_key を使って user_profiles VIEW からプロフィールを取得する。
- * 見つからない場合はフォールバック値を返す。
- */
-async function fetchUserProfile(
-  userId: string,
+async function fetchUserProfileRow(
+  userIdentifier: string,
   env: { url: string; serviceRoleKey: string },
-): Promise<{ displayName: string; avatarUrl: string | null }> {
+): Promise<SupabaseUserProfileRow | null> {
+  const lookup = toUserProfileLookup(userIdentifier);
+  if (!lookup) {
+    return null;
+  }
+
   try {
     const query = new URLSearchParams({
-      id: `eq.${userId}`,
+      select: "id,display_name,avatar_url,display_user_id",
       limit: "1",
     });
+    query.set(lookup.column, `eq.${lookup.value}`);
+
     const response = await fetch(
       `${env.url}/rest/v1/user_profiles?${query.toString()}`,
       {
@@ -82,102 +86,61 @@ async function fetchUserProfile(
         cache: "no-store",
       },
     );
+
     if (!response.ok) {
-      return { displayName: "ユーザー", avatarUrl: null };
+      return null;
     }
+
     const rows = (await response.json()) as SupabaseUserProfileRow[];
-    const row = rows[0];
-    if (!row) {
-      return { displayName: "ユーザー", avatarUrl: null };
-    }
-    return {
-      displayName: row.display_name,
-      avatarUrl: row.avatar_url,
-    };
+    return rows[0] ?? null;
   } catch {
-    return { displayName: "ユーザー", avatarUrl: null };
+    return null;
   }
 }
 
 function mapToPublicRankingData(
   row: SupabasePublicRankingRow,
-  authorProfile: { displayName: string; avatarUrl: string | null },
+  authorProfile: SupabaseUserProfileRow | null,
 ): PublicRankingData {
   return {
     title: row.title,
     tagName: row.tags?.name ?? "",
     items: extractSortedItemTexts(row.ranking_items),
     authorId: row.user_id,
-    authorName: authorProfile.displayName,
-    authorAvatarUrl: authorProfile.avatarUrl,
+    authorName: authorProfile?.display_name ?? "ユーザー",
+    authorAvatarUrl: authorProfile?.avatar_url ?? null,
+    authorDisplayUserId: authorProfile?.display_user_id ?? null,
   };
 }
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * service_role で user_profiles VIEW からユーザープロフィールを取得。
- * 公開プロフィールページ用（認証不要）。
- */
 export async function getUserProfile(
-  userId: string,
-): Promise<{ id: string; displayName: string; avatarUrl: string | null } | null> {
-  if (!UUID_PATTERN.test(userId)) {
-    return null;
-  }
-
+  userIdentifier: string,
+): Promise<{
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+  displayUserId: string | null;
+} | null> {
   const env = readServiceRoleEnv();
   if (!env) {
     return null;
   }
 
-  const profile = await fetchUserProfile(userId, env);
-  // fetchUserProfile はフォールバック値を返すため、
-  // ユーザーが実在するかどうかはDB直接確認が必要
-  const query = new URLSearchParams({
-    select: "id",
-    id: `eq.${userId}`,
-    limit: "1",
-  });
-
-  try {
-    const response = await fetch(
-      `${env.url}/rest/v1/user_profiles?${query.toString()}`,
-      {
-        method: "GET",
-        headers: {
-          apikey: env.serviceRoleKey,
-          Authorization: `Bearer ${env.serviceRoleKey}`,
-        },
-        cache: "no-store",
-      },
-    );
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const rows = (await response.json()) as Array<{ id: string }>;
-    if (rows.length === 0) {
-      return null;
-    }
-
-    return {
-      id: userId,
-      displayName: profile.displayName,
-      avatarUrl: profile.avatarUrl,
-    };
-  } catch {
+  const profile = await fetchUserProfileRow(userIdentifier, env);
+  if (!profile) {
     return null;
   }
+
+  return {
+    id: profile.id,
+    displayName: profile.display_name,
+    avatarUrl: profile.avatar_url,
+    displayUserId: profile.display_user_id,
+  };
 }
 
-/**
- * service_role で特定ユーザーの公開ランキング一覧を取得。
- * 公開プロフィールページ用（認証不要）。
- */
 export async function listPublicRankingsByUser(
-  userId: string,
+  userIdentifier: string,
 ): Promise<ReadonlyArray<{
   id: string;
   title: string;
@@ -187,19 +150,20 @@ export async function listPublicRankingsByUser(
   viewCount: number;
   bookmarkCount: number;
 }>> {
-  if (!UUID_PATTERN.test(userId)) {
+  const env = readServiceRoleEnv();
+  if (!env) {
     return [];
   }
 
-  const env = readServiceRoleEnv();
-  if (!env) {
+  const profile = await fetchUserProfileRow(userIdentifier, env);
+  if (!profile) {
     return [];
   }
 
   const query = new URLSearchParams({
     select:
       "id,user_id,title,tag_id,is_public,created_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
-    user_id: `eq.${userId}`,
+    user_id: `eq.${profile.id}`,
     is_public: "eq.true",
     order: "created_at.desc",
     "ranking_items.order": "rank.asc",
@@ -250,7 +214,7 @@ export async function listPublicRankingsByUser(
 export async function getPublicRanking(
   rankingId: string,
 ): Promise<PublicRankingData | null> {
-  if (!UUID_PATTERN.test(rankingId)) {
+  if (!isUuid(rankingId)) {
     return null;
   }
 
@@ -286,19 +250,11 @@ export async function getPublicRanking(
 
     const rows = (await response.json()) as SupabasePublicRankingRow[];
     const row = rows[0];
-    if (!row) {
+    if (!row || row.is_public !== true) {
       return null;
     }
 
-    // Defense-in-depth: 非公開ランキングの漏洩を防止
-    // クエリフィルタ (is_public=eq.true) が誤って削除された場合のガード
-    if (row.is_public !== true) {
-      return null;
-    }
-
-    // 著者プロフィールを取得
-    const authorProfile = await fetchUserProfile(row.user_id, env);
-
+    const authorProfile = await fetchUserProfileRow(row.user_id, env);
     return mapToPublicRankingData(row, authorProfile);
   } catch {
     return null;

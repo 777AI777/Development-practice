@@ -4,7 +4,7 @@ import {
   getAuthenticatedUserId,
   authErrorResponse,
 } from "@/lib/supabase/auth-guard";
-import { listTags } from "@/lib/supabase-rest";
+import { listPopularTagsCached, listTags } from "@/lib/supabase-rest";
 import { toTagItem } from "@/lib/tag-mappers";
 import { TAG_QUERY_LIMITS } from "@/lib/constants";
 
@@ -16,9 +16,13 @@ export async function GET() {
   const { accessToken } = auth;
 
   try {
-    const rows = await listTags(accessToken, {
-      limit: TAG_QUERY_LIMITS.POPULAR,
-    });
+    const rows = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? await listPopularTagsCached({
+          limit: TAG_QUERY_LIMITS.POPULAR,
+        })
+      : await listTags(accessToken, {
+          limit: TAG_QUERY_LIMITS.POPULAR,
+        });
 
     const data = rows.map((row) => toTagItem(row, 0));
 

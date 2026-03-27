@@ -1,9 +1,23 @@
-﻿import type { SupabaseRankingRow, SupabaseTagRow, UserProfile } from "@/lib/types";
-import { RANKING_ITEMS_PREVIEW_LIMIT } from "@/lib/constants";
+﻿import type {
+  PublicRankingWithAuthor,
+  SupabaseRankingRow,
+  SupabaseTagRow,
+  UserProfile,
+} from "@/lib/types";
+import {
+  POPULAR_TAGS_CACHE_REVALIDATE_SECONDS,
+  RANKING_ITEMS_PREVIEW_LIMIT,
+} from "@/lib/constants";
+import { toUserProfileLookup } from "@/lib/user-utils";
 
 interface SupabaseEnv {
   url: string;
   anonKey: string;
+}
+
+interface SupabaseServiceRoleEnv {
+  url: string;
+  serviceRoleKey: string;
 }
 
 function readSupabaseEnv(): SupabaseEnv {
@@ -20,11 +34,31 @@ function readSupabaseEnv(): SupabaseEnv {
   return { url, anonKey };
 }
 
+function readSupabaseServiceRoleEnv(): SupabaseServiceRoleEnv {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL is not configured.");
+  }
+  if (!serviceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured.");
+  }
+
+  return { url, serviceRoleKey };
+}
+
 interface SupabaseRequestInit {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   prefer?: string;
   accessToken: string;
+}
+
+function toPostgrestInList(values: readonly string[]): string {
+  return `(${values
+    .map((value) => `"${value.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"")}"`)
+    .join(",")})`;
 }
 
 async function requestSupabase(
@@ -51,6 +85,37 @@ async function requestSupabase(
     headers,
     body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
     cache: "no-store",
+  });
+}
+
+async function requestSupabaseWithServiceRole(
+  path: string,
+  init?: Omit<SupabaseRequestInit, "accessToken"> & {
+    revalidateSeconds?: number;
+  },
+): Promise<Response> {
+  const env = readSupabaseServiceRoleEnv();
+  const headers: Record<string, string> = {
+    apikey: env.serviceRoleKey,
+    Authorization: `Bearer ${env.serviceRoleKey}`,
+  };
+
+  if (init?.body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (init?.prefer) {
+    headers.Prefer = init.prefer;
+  }
+
+  return fetch(`${env.url}/rest/v1/${path}`, {
+    method: init?.method ?? "GET",
+    headers,
+    body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
+    next:
+      init?.revalidateSeconds !== undefined
+        ? { revalidate: init.revalidateSeconds }
+        : undefined,
   });
 }
 
@@ -116,6 +181,7 @@ export function mapRankingRow(row: SupabaseRankingRow) {
     updatedAt: row.updated_at,
     viewCount: row.view_count ?? 0,
     bookmarkCount: row.bookmark_count ?? 0,
+    isBookmarked: false,
   };
 }
 
@@ -135,6 +201,111 @@ async function ensureResponseOk(response: Response): Promise<void> {
     console.error("[supabase-rest] error detail:", detail);
   }
   throw new Error(`Supabase REST failed (${response.status})`);
+}
+
+async function getBookmarkedRankingIds(params: {
+  userId: string;
+  rankingIds: readonly string[];
+  accessToken: string;
+}): Promise<Set<string>> {
+  if (params.rankingIds.length === 0) {
+    return new Set();
+  }
+
+  const query = new URLSearchParams({
+    select: "ranking_id",
+    user_id: `eq.${params.userId}`,
+  });
+  query.set("ranking_id", `in.${toPostgrestInList(params.rankingIds)}`);
+
+  const response = await requestSupabase(`bookmarks?${query.toString()}`, {
+    method: "GET",
+    accessToken: params.accessToken,
+  });
+  await ensureResponseOk(response);
+
+  const rows = (await response.json()) as Array<{ ranking_id: string }>;
+  return new Set(rows.map((row) => row.ranking_id));
+}
+
+async function attachBookmarkState(
+  rankings: ReturnType<typeof mapRankingRow>[],
+  params: { userId: string; accessToken: string },
+): Promise<ReturnType<typeof mapRankingRow>[]> {
+  const bookmarkedRankingIds = await getBookmarkedRankingIds({
+    userId: params.userId,
+    rankingIds: rankings.map((ranking) => ranking.id),
+    accessToken: params.accessToken,
+  });
+
+  return rankings.map((ranking) => ({
+    ...ranking,
+    isBookmarked: bookmarkedRankingIds.has(ranking.id),
+  }));
+}
+
+function mapUserProfileRow(row: {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  display_user_id: string | null;
+}): UserProfile {
+  return {
+    id: row.id,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+    displayUserId: row.display_user_id,
+  };
+}
+
+class PublicRankingsByTagRpcUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PublicRankingsByTagRpcUnavailableError";
+  }
+}
+
+function mapPublicRankingWithAuthorRow(row: {
+  id: string;
+  user_id: string;
+  title: string;
+  tag_id: string;
+  tag_name: string | null;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  view_count: number;
+  bookmark_count: number;
+  ranking_items: Array<{ rank: number; item_text: string }> | null;
+  author_display_name: string | null;
+  author_avatar_url: string | null;
+  author_display_user_id: string | null;
+  is_bookmarked: boolean;
+}): PublicRankingWithAuthor {
+  const ranking = mapRankingRow({
+    id: row.id,
+    user_id: row.user_id,
+    title: row.title,
+    tag_id: row.tag_id,
+    is_public: row.is_public,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    view_count: row.view_count,
+    bookmark_count: row.bookmark_count,
+    ranking_items: row.ranking_items ?? [],
+    tags: row.tag_name ? { name: row.tag_name } : undefined,
+  });
+
+  return {
+    ...ranking,
+    isBookmarked: row.is_bookmarked,
+    author: {
+      id: row.user_id,
+      displayName: row.author_display_name ?? "ユーザー",
+      avatarUrl: row.author_avatar_url,
+      displayUserId: row.author_display_user_id,
+    },
+  };
 }
 
 
@@ -326,6 +497,28 @@ export async function listTags(
   return (await res.json()) as SupabaseTagRow[];
 }
 
+export async function listPopularTagsCached(
+  options?: { limit?: number },
+): Promise<SupabaseTagRow[]> {
+  const query = new URLSearchParams({
+    select: "*",
+    order: "usage_count.desc,created_at.asc",
+  });
+  if (options?.limit !== undefined) {
+    query.set("limit", String(options.limit));
+  }
+
+  const res = await requestSupabaseWithServiceRole(
+    `tag_popularity?${query.toString()}`,
+    {
+      method: "GET",
+      revalidateSeconds: POPULAR_TAGS_CACHE_REVALIDATE_SECONDS,
+    },
+  );
+  await ensureResponseOk(res);
+  return (await res.json()) as SupabaseTagRow[];
+}
+
 export async function searchTagsUnified(params: {
   query: string;
   katakanaQuery: string;
@@ -412,6 +605,7 @@ export async function getTagByName(
  */
 export async function getPublicRankingById(params: {
   rankingId: string;
+  userId?: string;
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow> | null> {
   const query = new URLSearchParams({
@@ -430,7 +624,25 @@ export async function getPublicRankingById(params: {
   }
   const rows = (await response.json()) as SupabaseRankingRow[];
   const row = rows[0];
-  return row ? mapRankingRow(row) : null;
+  if (!row) {
+    return null;
+  }
+
+  const ranking = mapRankingRow(row);
+  if (!params.userId) {
+    return ranking;
+  }
+
+  const bookmarkedRankingIds = await getBookmarkedRankingIds({
+    userId: params.userId,
+    rankingIds: [ranking.id],
+    accessToken: params.accessToken,
+  });
+
+  return {
+    ...ranking,
+    isBookmarked: bookmarkedRankingIds.has(ranking.id),
+  };
 }
 
 /**
@@ -448,60 +660,52 @@ export async function incrementViewCount(params: {
 
 /**
  * service_role_key を使って user_profiles VIEW からユーザー情報を取得する。
- * RLSバイパスが必要なため、service_role_key で直接リクエストする。
+ * 一覧・詳細の著者情報はこの server-only の経路に集約する。
  */
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+export async function getUserProfile(
+  userIdentifier: string,
+): Promise<UserProfile | null> {
+  const lookup = toUserProfileLookup(userIdentifier);
 
-  if (!url || !serviceRoleKey) {
-    console.warn("[getUserProfile] SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL not configured");
+  if (!lookup) {
     return null;
   }
 
+  const env = readSupabaseServiceRoleEnv();
   const query = new URLSearchParams({
-    select: "id,display_name,avatar_url",
-    id: `eq.${userId}`,
+    select: "id,display_name,avatar_url,display_user_id",
     limit: "1",
   });
+  query.set(lookup.column, `eq.${lookup.value}`);
 
-  try {
-    const response = await fetch(
-      `${url}/rest/v1/user_profiles?${query.toString()}`,
-      {
-        method: "GET",
-        headers: {
-          apikey: serviceRoleKey,
-          Authorization: `Bearer ${serviceRoleKey}`,
-        },
-        cache: "no-store",
+  const response = await fetch(
+    `${env.url}/rest/v1/user_profiles?${query.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        apikey: env.serviceRoleKey,
+        Authorization: `Bearer ${env.serviceRoleKey}`,
       },
-    );
+      cache: "no-store",
+    },
+  );
 
-    if (!response.ok) {
+  if (!response.ok) {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(`[getUserProfile] failed: ${response.status} ${response.statusText}`);
-      return null;
     }
-
-    const rows = (await response.json()) as Array<{
-      id: string;
-      display_name: string;
-      avatar_url: string | null;
-    }>;
-    const row = rows[0];
-    if (!row) {
-      return null;
-    }
-
-    return {
-      id: row.id,
-      displayName: row.display_name,
-      avatarUrl: row.avatar_url,
-    };
-  } catch (error) {
-    console.warn("[getUserProfile] error:", error);
     return null;
   }
+
+  const rows = (await response.json()) as Array<{
+    id: string;
+    display_name: string;
+    avatar_url: string | null;
+    display_user_id: string | null;
+  }>;
+
+  const row = rows[0];
+  return row ? mapUserProfileRow(row) : null;
 }
 
 /**
@@ -510,13 +714,13 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
  */
 export async function listPublicRankingsByTag(params: {
   tagId: string;
-  excludeUserId: string;
+  viewerUserId: string;
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
     select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     is_public: "eq.true",
-    user_id: `neq.${params.excludeUserId}`,
+    user_id: `neq.${params.viewerUserId}`,
     tag_id: `eq.${params.tagId}`,
     order: "created_at.desc",
   });
@@ -529,62 +733,129 @@ export async function listPublicRankingsByTag(params: {
   });
   await ensureResponseOk(response);
   const rows = (await response.json()) as SupabaseRankingRow[];
-  return rows.map(mapRankingRow);
+  return attachBookmarkState(rows.map(mapRankingRow), {
+    userId: params.viewerUserId,
+    accessToken: params.accessToken,
+  });
 }
 
-/**
- * 複数ユーザーのプロフィールを一括取得する（service_role_key使用）。
- * user_profiles VIEW から取得。
- */
-export async function getUserProfilesBatch(userIds: string[]): Promise<UserProfile[]> {
-  if (userIds.length === 0) return [];
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceRoleKey) {
-    console.warn("[getUserProfilesBatch] SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL not configured");
-    return [];
-  }
-
-  const query = new URLSearchParams({
-    select: "id,display_name,avatar_url",
-    id: `in.(${userIds.join(",")})`,
-  });
-
+export async function listPublicRankingsByTagWithAuthors(params: {
+  tagId: string;
+  viewerUserId: string;
+  accessToken: string;
+}): Promise<PublicRankingWithAuthor[]> {
   try {
-    const response = await fetch(
-      `${url}/rest/v1/user_profiles?${query.toString()}`,
-      {
-        method: "GET",
-        headers: {
-          apikey: serviceRoleKey,
-          Authorization: `Bearer ${serviceRoleKey}`,
-        },
-        cache: "no-store",
+    const response = await requestSupabase("rpc/list_public_rankings_by_tag", {
+      method: "POST",
+      accessToken: params.accessToken,
+      body: {
+        p_tag_id: params.tagId,
       },
-    );
+    });
 
     if (!response.ok) {
-      console.warn(`[getUserProfilesBatch] failed: ${response.status} ${response.statusText}`);
-      return [];
+      const detail = await response.text();
+      if (detail.includes("PGRST202")) {
+        throw new PublicRankingsByTagRpcUnavailableError(
+          "list_public_rankings_by_tag RPC is unavailable.",
+        );
+      }
+      throw new Error(`list_public_rankings_by_tag failed (${response.status})`);
     }
 
     const rows = (await response.json()) as Array<{
       id: string;
-      display_name: string;
-      avatar_url: string | null;
+      user_id: string;
+      title: string;
+      tag_id: string;
+      tag_name: string | null;
+      is_public: boolean;
+      created_at: string;
+      updated_at: string;
+      view_count: number;
+      bookmark_count: number;
+      ranking_items: Array<{ rank: number; item_text: string }> | null;
+      author_display_name: string | null;
+      author_avatar_url: string | null;
+      author_display_user_id: string | null;
+      is_bookmarked: boolean;
     }>;
 
-    return rows.map((row) => ({
-      id: row.id,
-      displayName: row.display_name,
-      avatarUrl: row.avatar_url,
-    }));
+    return rows.map(mapPublicRankingWithAuthorRow);
   } catch (error) {
-    console.warn("[getUserProfilesBatch] error:", error);
+    if (!(error instanceof PublicRankingsByTagRpcUnavailableError)) {
+      throw error;
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "[listPublicRankingsByTagWithAuthors] RPC unavailable, falling back to REST composition.",
+      );
+    }
+
+    const rankings = await listPublicRankingsByTag(params);
+    const uniqueUserIds = [...new Set(rankings.map((ranking) => ranking.userId))];
+    const profiles = await getUserProfilesBatch(uniqueUserIds);
+    const profileMap = new Map<string, UserProfile>(
+      profiles.map((profile) => [profile.id, profile]),
+    );
+
+    return rankings.map((ranking) => ({
+      ...ranking,
+      author: profileMap.get(ranking.userId) ?? {
+        id: ranking.userId,
+        displayName: "ユーザー",
+        avatarUrl: null,
+        displayUserId: null,
+      },
+    }));
+  }
+}
+
+/**
+ * service_role_key を使って複数ユーザーのプロフィールを一括取得する。
+ */
+export async function getUserProfilesBatch(
+  userIds: string[],
+): Promise<UserProfile[]> {
+  if (userIds.length === 0) return [];
+  const uniqueUserIds = [...new Set(userIds)];
+  const env = readSupabaseServiceRoleEnv();
+
+  const query = new URLSearchParams({
+    select: "id,display_name,avatar_url,display_user_id",
+  });
+  query.set("id", `in.${toPostgrestInList(uniqueUserIds)}`);
+
+  const response = await fetch(
+    `${env.url}/rest/v1/user_profiles?${query.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        apikey: env.serviceRoleKey,
+        Authorization: `Bearer ${env.serviceRoleKey}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[getUserProfilesBatch] failed: ${response.status} ${response.statusText}`);
+      console.warn("[getUserProfilesBatch] detail:", detail);
+    }
     return [];
   }
+
+  const rows = (await response.json()) as Array<{
+    id: string;
+    display_name: string;
+    avatar_url: string | null;
+    display_user_id: string | null;
+  }>;
+
+  return rows.map(mapUserProfileRow);
 }
 
 /**
@@ -685,7 +956,10 @@ export async function listBookmarkedRankings(params: {
   // rankings が null のもの（削除済み等）はスキップ
   return rows
     .filter((row): row is { ranking_id: string; rankings: SupabaseRankingRow } => row.rankings !== null)
-    .map((row) => mapRankingRow(row.rankings));
+    .map((row) => ({
+      ...mapRankingRow(row.rankings),
+      isBookmarked: true,
+    }));
 }
 
 

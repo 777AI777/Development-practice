@@ -2,20 +2,18 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getUserProfile, listPublicRankingsByUser } from "@/lib/supabase-rest";
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { isValidUserProfileIdentifier } from "@/lib/user-utils";
 
 const paramsSchema = z.object({
-  userId: z.string().regex(UUID_PATTERN, "ユーザーIDはUUID形式で指定してください。"),
+  userId: z
+    .string()
+    .trim()
+    .refine(
+      (value) => isValidUserProfileIdentifier(value),
+      "User ID must be a UUID or a display user ID.",
+    ),
 });
 
-/**
- * GET /api/v1/users/:userId
- *
- * ユーザープロフィールと公開ランキング一覧を取得する（認証不要）。
- * - プロフィール: service_role_key で user_profiles VIEW から取得
- * - 公開ランキング: anon key + is_public=true フィルタで取得
- */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ userId: string }> },
@@ -36,26 +34,26 @@ export async function GET(
   }
 
   try {
-    // プロフィールと公開ランキングを並列取得
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!anonKey) {
       return NextResponse.json(
-        { error: { code: "SERVER", message: "サーバー設定エラーです。" } },
+        { error: { code: "SERVER", message: "Server configuration is missing." } },
         { status: 500 },
       );
     }
 
-    const [profile, rankings] = await Promise.all([
-      getUserProfile(userId),
-      listPublicRankingsByUser({ userId, accessToken: anonKey }),
-    ]);
-
+    const profile = await getUserProfile(userId);
     if (!profile) {
       return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "ユーザーが見つかりません。" } },
+        { error: { code: "NOT_FOUND", message: "User not found." } },
         { status: 404 },
       );
     }
+
+    const rankings = await listPublicRankingsByUser({
+      userId: profile.id,
+      accessToken: anonKey,
+    });
 
     return NextResponse.json({
       data: {
@@ -69,7 +67,7 @@ export async function GET(
       console.error("[GET /api/v1/users/:userId] detail:", error);
     }
     return NextResponse.json(
-      { error: { code: "SERVER", message: "ユーザー情報の取得に失敗しました。" } },
+      { error: { code: "SERVER", message: "Failed to load user profile." } },
       { status: 500 },
     );
   }

@@ -13,6 +13,18 @@ import {
 
 const SUPPRESS_TRANSITION_PATHS = new Set(["/login", "/settings/logout"]);
 const SAFETY_TIMEOUT_MS = 10_000;
+const INTERACTIVE_CLICK_SELECTOR = [
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "summary",
+  "label",
+  "[role='button']",
+  "[role='menuitem']",
+  "[contenteditable='true']",
+  "[data-page-transition-ignore]",
+].join(",");
 
 // ---------------------------------------------------------------------------
 // Context
@@ -51,6 +63,15 @@ function supportsViewTransitions(): boolean {
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function isNestedInteractiveClick(
+  target: HTMLElement,
+  anchor: HTMLAnchorElement,
+): boolean {
+  const interactiveElement = target.closest(INTERACTIVE_CLICK_SELECTOR);
+  if (!interactiveElement) return false;
+  return interactiveElement !== anchor && anchor.contains(interactiveElement);
 }
 
 // ---------------------------------------------------------------------------
@@ -241,10 +262,14 @@ export function PageTransitionProvider({
       if (isTransitioningRef.current) return;
 
       // クリックされた要素から最も近い <a> タグを探す
-      const anchor = (e.target as HTMLElement).closest("a");
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const anchor = target.closest("a");
       if (!anchor) return;
 
       // 内部リンクかチェック
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      if (isNestedInteractiveClick(target, anchor)) return;
       const href = anchor.getAttribute("href");
       if (
         !href ||

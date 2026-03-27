@@ -38,9 +38,9 @@ const getCachedSession = cache(async () => {
  * Supabase getUser() をリクエスト単位でメモ化。
  * JWT 署名検証（Supabase API への HTTP 通信）を同一リクエスト内で1回のみに抑える。
  */
-const getCachedUser = cache(async () => {
+const getCachedClaims = cache(async (accessToken: string) => {
   const supabase = await getCachedClient();
-  return supabase.auth.getUser();
+  return supabase.auth.getClaims(accessToken);
 });
 
 export async function getAuthenticatedUserId(): Promise<AuthResult> {
@@ -59,28 +59,37 @@ export async function getAuthenticatedUserId(): Promise<AuthResult> {
   }
 
   // ユーザーの存在をサーバーサイドで検証（JWT署名検証、cache済み）
-  const {
-    data: { user },
-    error,
-  } = await getCachedUser();
+  const { data, error } = await getCachedClaims(session.access_token);
 
   if (error) {
-    console.error("[auth-guard] getUser failed");
+    console.error("[auth-guard] getClaims failed");
     if (process.env.NODE_ENV !== "production") {
       console.error("[auth-guard] detail:", error.message);
     }
     return { ok: false, reason: "server_error" };
   }
 
-  if (!user) {
+  const userId =
+    typeof data?.claims?.sub === "string" ? data.claims.sub : null;
+
+  if (!userId) {
     return { ok: false, reason: "unauthorized" };
   }
 
+  const userMetadata: Record<string, unknown> | null =
+    data?.claims?.user_metadata &&
+    typeof data.claims.user_metadata === "object"
+      ? data.claims.user_metadata
+      : null;
+
   return {
     ok: true,
-    userId: user.id,
+    userId,
     accessToken: session.access_token,
     userName:
-      user.user_metadata?.name ?? user.user_metadata?.full_name ?? null,
+      (typeof userMetadata?.name === "string" && userMetadata.name) ||
+      (typeof userMetadata?.full_name === "string" &&
+        userMetadata.full_name) ||
+      null,
   };
 }
