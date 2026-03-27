@@ -490,7 +490,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="relative min-w-0 flex-1">
             <input
               type="text"
-              placeholder="タグ検索 / @user_id"
+              placeholder="検索"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
