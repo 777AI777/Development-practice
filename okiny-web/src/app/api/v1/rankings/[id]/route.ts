@@ -35,6 +35,7 @@ const updateSchema = z.object({
     title: z.string().trim().min(1, "タイトルは必須です。").max(50, "タイトルは50文字以内にしてください。"),
     tagId: z.string().uuid("タグIDはUUID形式で指定してください。"),
     items: rankingItemsSchema,
+    isPublic: z.boolean().default(true),
   }),
 });
 
@@ -121,6 +122,7 @@ export async function PATCH(
       title: parsed.data.ranking.title,
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
+      isPublic: parsed.data.ranking.isPublic,
       expectedUpdatedAt: parsed.data.expectedUpdatedAt,
       accessToken,
     });

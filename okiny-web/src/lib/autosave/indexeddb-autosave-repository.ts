@@ -89,7 +89,11 @@ export class IndexedDbAutosaveRepository implements AutosaveRepository {
     }
 
     const { id: _id, ...rest } = record as AutosaveRecord & { id: string };
-    return rest as AutosaveRecord;
+    // 旧レコードに isPublic が存在しない場合は true にフォールバック
+    return {
+      ...rest,
+      isPublic: rest.isPublic ?? true,
+    } as AutosaveRecord;
   }
 
   async save(userId: string, key: string, data: AutosaveSaveInput): Promise<void> {
@@ -112,6 +116,7 @@ export class IndexedDbAutosaveRepository implements AutosaveRepository {
       title: data.title,
       tagId: data.tagId,
       items: [...data.items],
+      isPublic: data.isPublic,
       updatedAt: now,
       ...(data.newTagName ? { newTagName: data.newTagName } : {}),
       ...(data.selectedTagName ? { selectedTagName: data.selectedTagName } : {}),
@@ -128,6 +133,7 @@ export class IndexedDbAutosaveRepository implements AutosaveRepository {
         title: data.title,
         tagId: data.tagId,
         items: [...data.items],
+        isPublic: data.isPublic,
         updatedAt: now,
         ...(data.newTagName ? { newTagName: data.newTagName } : {}),
         ...(data.selectedTagName ? { selectedTagName: data.selectedTagName } : {}),

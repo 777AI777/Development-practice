@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
@@ -16,6 +17,7 @@ import type { DraftLocalRecord } from "@/lib/types";
 
 export default function DraftsPage() {
   const { signalReady } = usePageTransition();
+  const router = useRouter();
   const { isReady, user } = useSessionUser();
   const { pushToast } = useToast();
   const [drafts, setDrafts] = useState<DraftLocalRecord[]>([]);
@@ -82,13 +84,17 @@ export default function DraftsPage() {
 
     const result = await publishRanking({
       userId: user.id,
-      ranking: { title: draft.title, tagId: resolvedTagId, items: draft.items },
+      ranking: { title: draft.title, tagId: resolvedTagId, items: draft.items, isPublic: draft.isPublic ?? true },
       draftId: draft.draftId,
       draftRepository,
       apiClient: publishedApiClient,
     });
     setPublishingId(null);
     pushToast(result.toast);
+    if (result.ok) {
+      router.replace("/");
+      return;
+    }
     await loadDrafts();
   };
 

@@ -168,9 +168,16 @@ function MyRankContent({
                               · {formatSmartDate(ranking.createdAt)}
                             </span>
                           </div>
-                          <h3 className="font-semibold text-[15px] text-foreground">
-                            {ranking.title}
-                          </h3>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="font-semibold text-[15px] text-foreground">
+                              {ranking.title}
+                            </h3>
+                            {ranking.isPublic === false && (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label="非公開">
+                                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
                           <div className="space-y-0">
                             {ranking.items.slice(0, 5).map((item, itemIdx) => (
                               <p
@@ -180,6 +187,22 @@ function MyRankContent({
                                 {itemIdx + 1}. {item || "未入力"}
                               </p>
                             ))}
+                          </div>
+                          {/* インプレッション */}
+                          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                              {ranking.viewCount}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                              </svg>
+                              {ranking.bookmarkCount}
+                            </span>
                           </div>
                         </div>
                       </div>

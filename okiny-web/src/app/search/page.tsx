@@ -10,8 +10,10 @@ import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { useTags, separateTags, getRecommendedTags } from "@/hooks/use-tags";
 import { TAG_QUERY_LIMITS } from "@/lib/constants";
+import { formatSmartDate } from "@/lib/format-date";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
-import type { PublishedRanking, TagItem } from "@/lib/types";
+import type { PublicRankingWithAuthor, TagItem } from "@/lib/types";
+import { getUserInitial } from "@/lib/user-utils";
 
 const apiClient = new HttpPublishedApiClient();
 
@@ -33,9 +35,20 @@ function SearchPageContent() {
   const { signalReady } = usePageTransition();
   const { tags, searchResults, isLoading: isTagsLoading, fetchTags, search, clearSearch } = useTags();
 
-  const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
+  // Restore selectedTag from URL searchParams on mount
+  const initialTag = useMemo<TagItem | null>(() => {
+    const tagId = searchParams.get("tagId");
+    const tagName = searchParams.get("tagName");
+    if (tagId && tagName) {
+      return { id: tagId, name: tagName, readings: [], usageCount: 0, myUsageCount: 0, createdAt: "" };
+    }
+    return null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally empty — only restore on mount
+
+  const [selectedTag, setSelectedTag] = useState<TagItem | null>(initialTag);
   const [isRankingsLoading, setIsRankingsLoading] = useState(false);
-  const [results, setResults] = useState<PublishedRanking[]>([]);
+  const [results, setResults] = useState<PublicRankingWithAuthor[]>([]);
   const [rankingsError, setRankingsError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [hasStartedLoading, setHasStartedLoading] = useState(false);
@@ -62,7 +75,16 @@ function SearchPageContent() {
     }
     setSelectedTag(null);
     setResults([]);
-  }, [q, search, clearSearch]);
+    // Clear tag params from URL when search query changes
+    const currentTagId = searchParams.get("tagId");
+    if (currentTagId) {
+      const nextParams = new URLSearchParams(searchParams.toString());
+      nextParams.delete("tagId");
+      nextParams.delete("tagName");
+      const qs = nextParams.toString();
+      router.replace(qs ? `/search?${qs}` : "/search");
+    }
+  }, [q, search, clearSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch rankings when tag selected
   useEffect(() => {
@@ -77,7 +99,7 @@ function SearchPageContent() {
     setRankingsError(null);
 
     void apiClient
-      .listPublishedRankings(selectedTag.id)
+      .listPublicRankingsByTag(selectedTag.id)
       .then((data) => {
         if (canceled) return;
         setResults(data);
@@ -105,15 +127,38 @@ function SearchPageContent() {
     setRetryCount((prev) => prev + 1);
   };
 
+  // Helper: update URL searchParams without polluting browser history
+  const updateSearchParams = (params: Record<string, string | null>) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(params)) {
+      if (value === null) {
+        nextParams.delete(key);
+      } else {
+        nextParams.set(key, value);
+      }
+    }
+    const qs = nextParams.toString();
+    router.replace(qs ? `/search?${qs}` : "/search");
+  };
+
   // Tag click handler
   const handleTagSelect = (tag: TagItem) => {
-    setSelectedTag((prev) => (prev?.id === tag.id ? null : tag));
+    const isDeselect = selectedTag?.id === tag.id;
+    const nextTag = isDeselect ? null : tag;
+    setSelectedTag(nextTag);
+
+    if (nextTag) {
+      updateSearchParams({ tagId: nextTag.id, tagName: nextTag.name });
+    } else {
+      updateSearchParams({ tagId: null, tagName: null });
+    }
   };
 
   // Back button handler
   const handleBack = () => {
     if (selectedTag) {
       setSelectedTag(null);
+      updateSearchParams({ tagId: null, tagName: null });
     } else if (q) {
       router.push("/search");
     } else {
@@ -336,7 +381,7 @@ function SearchResultsView({
   );
 }
 
-/** State 5: Selected tag — show ranking cards */
+/** State 5: Selected tag — show public rankings from other users */
 function SelectedTagView({
   selectedTag,
   isLoading,
@@ -346,10 +391,12 @@ function SelectedTagView({
 }: {
   selectedTag: TagItem;
   isLoading: boolean;
-  results: PublishedRanking[];
+  results: PublicRankingWithAuthor[];
   error: string | null;
   onRetry: () => void;
 }) {
+  const router = useRouter();
+
   if (isLoading) {
     return <p className="text-xs text-muted-foreground">読み込み中...</p>;
   }
@@ -373,7 +420,7 @@ function SelectedTagView({
     return (
       <div className="rounded-xl border border-border bg-card p-6 text-center">
         <p className="text-sm text-muted-foreground">
-          選択したタグのランキングは見つかりませんでした。
+          このタグの公開ランキングはまだありません。
         </p>
         <Link
           href={`/rankings/new?tagId=${encodeURIComponent(selectedTag.id)}`}
@@ -385,20 +432,85 @@ function SelectedTagView({
     );
   }
 
+  const handleAvatarClick = (e: React.MouseEvent, userId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/users/${userId}`);
+  };
+
   return (
-    <div className="space-y-3">
-      {results.map((ranking) => (
-        <Link
-          key={ranking.id}
-          href={`/rankings/${ranking.id}`}
-          className="block rounded-xl bg-card p-4 transition-colors hover:bg-muted/50"
-        >
-          <p className="font-semibold text-foreground">{ranking.title}</p>
-          <span className="mt-1 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-            {selectedTag.name}
-          </span>
-        </Link>
-      ))}
+    <div className="overflow-hidden rounded-xl bg-card">
+      {results.map((ranking, idx) => {
+        const authorInitial = getUserInitial(ranking.author.displayName, "?");
+        return (
+          <Link
+            key={ranking.id}
+            href={`/rankings/${ranking.id}`}
+            className="block transition hover:bg-muted/50"
+            style={{ borderBottom: idx < results.length - 1 ? "1px solid var(--border)" : "none" }}
+          >
+            <div className="p-4 flex gap-3">
+              <button
+                type="button"
+                onClick={(e) => handleAvatarClick(e, ranking.author.id)}
+                className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label={`${ranking.author.displayName}のプロフィール`}
+              >
+                {ranking.author.avatarUrl ? (
+                  <img
+                    src={ranking.author.avatarUrl}
+                    alt={ranking.author.displayName}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {authorInitial}
+                  </div>
+                )}
+              </button>
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-foreground">
+                    {ranking.author.displayName}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    · {formatSmartDate(ranking.createdAt)}
+                  </span>
+                </div>
+                <h3 className="font-semibold text-[15px] text-foreground">
+                  {ranking.title}
+                </h3>
+                <div className="space-y-0">
+                  {ranking.items.slice(0, 5).map((item, itemIdx) => (
+                    <p
+                      key={`${ranking.id}-item-${itemIdx}`}
+                      className="text-sm leading-relaxed text-muted-foreground"
+                    >
+                      {itemIdx + 1}. {item || "未入力"}
+                    </p>
+                  ))}
+                </div>
+                {/* インプレッション */}
+                <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    {ranking.viewCount}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                    {ranking.bookmarkCount}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }

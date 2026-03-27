@@ -18,6 +18,7 @@ const draftRepository: DraftRepository = {
       title: "t",
       tagId: "movie",
       items: items("x"),
+      isPublic: true,
       updatedAt: new Date().toISOString(),
     }) as DraftLocalRecord,
   delete: vi.fn(async () => {}),
@@ -28,6 +29,7 @@ describe("publishRanking", () => {
   it("deletes local draft after publish succeeds", async () => {
     const apiClient: PublishedApiClient = {
       listPublishedRankings: async () => [],
+      listPublicRankingsByTag: async () => [],
       getPublishedRanking: async () => {
         throw new Error("not used in this test");
       },
@@ -37,8 +39,11 @@ describe("publishRanking", () => {
         title: "title",
         tagId: "movie",
         items: items("movie"),
+        isPublic: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        viewCount: 0,
+        bookmarkCount: 0,
       }),
       updatePublishedRanking: async (_input) => {
         throw new Error("not used in this test");
@@ -47,6 +52,9 @@ describe("publishRanking", () => {
       createTag: async () => {
         throw new Error("not used in this test");
       },
+      bookmarkRanking: async () => {},
+      unbookmarkRanking: async () => {},
+      recordView: async () => {},
     };
 
     const result = await publishRanking({
@@ -55,6 +63,7 @@ describe("publishRanking", () => {
         title: "title",
         tagId: "movie",
         items: items("movie"),
+        isPublic: true,
       },
       draftId: "draft-1",
       draftRepository,

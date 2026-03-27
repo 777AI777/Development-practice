@@ -24,6 +24,7 @@ describe("saveDraftWithFeedback", () => {
       title: "title",
       tagId: "movie",
       items: items(),
+      isPublic: true,
     });
 
     expect(result.ok).toBe(false);
@@ -44,6 +45,7 @@ describe("saveDraftWithFeedback", () => {
       title: "title",
       tagId: "movie",
       items: items(),
+      isPublic: true,
     });
 
     expect(result.ok).toBe(false);

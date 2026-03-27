@@ -31,6 +31,7 @@ describe("IndexedDbDraftRepository", () => {
       title: "映画トップ5",
       tagId: "movie",
       items: rankingItems("movie"),
+      isPublic: true,
     });
 
     const repositoryB = new IndexedDbDraftRepository();
@@ -48,6 +49,7 @@ describe("IndexedDbDraftRepository", () => {
         title: `draft-${index}`,
         tagId: "movie",
         items: rankingItems(`item-${index}`),
+        isPublic: true,
       });
     }
 
@@ -56,6 +58,7 @@ describe("IndexedDbDraftRepository", () => {
         title: "draft-over-limit",
         tagId: "movie",
         items: rankingItems("overflow"),
+        isPublic: true,
       }),
     ).rejects.toBeInstanceOf(DraftLimitError);
   });
@@ -67,12 +70,14 @@ describe("IndexedDbDraftRepository", () => {
       title: "a-only",
       tagId: "movie",
       items: rankingItems("a"),
+      isPublic: true,
     });
 
     await repository.save("user-b", {
       title: "b-only",
       tagId: "music",
       items: rankingItems("b"),
+      isPublic: true,
     });
 
     const aDrafts = await repository.list("user-a");

@@ -108,7 +108,7 @@ export function OnboardingWizard() {
       }
 
       const ranking = await publishedApiClient.createPublishedRanking({
-        ranking: { title, tagId, items },
+        ranking: { title, tagId, items, isPublic: true },
       })
 
       try {

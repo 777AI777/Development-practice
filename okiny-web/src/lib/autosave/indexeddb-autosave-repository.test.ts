@@ -12,6 +12,7 @@ function makeInput(seed: string) {
     title: `${seed}-title`,
     tagId: `${seed}-tag`,
     items: [`${seed}-1`, `${seed}-2`, `${seed}-3`, `${seed}-4`, `${seed}-5`],
+    isPublic: true,
   };
 }
 
