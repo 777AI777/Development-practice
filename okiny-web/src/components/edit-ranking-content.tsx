@@ -139,9 +139,9 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
         open={restoreDialogOpen}
         onConfirm={handleRestoreConfirm}
         onCancel={handleRestoreCancel}
-        title="編集中のデータがあります。復元しますか？"
-        confirmLabel="復元する"
-        cancelLabel="破棄してサーバーのデータを使用"
+        title="前回編集時の内容が残っています。復元しますか？"
+        confirmLabel="復元"
+        cancelLabel="破棄"
       />
     </AppShell>
   );

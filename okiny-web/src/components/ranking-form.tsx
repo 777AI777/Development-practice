@@ -39,6 +39,7 @@ interface RankingFormProps {
   onCancel?: () => void;
   onBack?: () => void;
   autosaveConfig?: { userId: string; key: string };
+  isDraftMode?: boolean;
 }
 
 function toRankingItems(items: string[]): RankingItems {
@@ -128,6 +129,7 @@ export function RankingForm({
   onCancel,
   onBack,
   autosaveConfig,
+  isDraftMode,
 }: RankingFormProps) {
   const [form, setForm] = useState<RankingInput>(
     initialValue ?? {
@@ -142,8 +144,36 @@ export function RankingForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [autosavedAt, setAutosavedAt] = useState<Date | null>(null);
+
+  // initialValue propの変更にフォームを追従させる（復元確認ダイアログ後など）
+  // isDirtyがtrueの場合はユーザー編集中なので上書きしない
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isDirtyは意図的に依存配列から除外
+  useEffect(() => {
+    if (initialValue && !isDirty) {
+      setForm(initialValue);
+    }
+  }, [initialValue]);
+
+  // initialTagName, initialNewTagNameの変更にも追従する
+  // undefinedでない場合（空文字含む）はstateを更新する。
+  // undefinedは「まだ値が決まっていない」を意味するので無視する。
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isDirtyは意図的に依存配列から除外
+  useEffect(() => {
+    if (!isDirty) {
+      if (initialTagName !== undefined) {
+        setTagDisplayName(initialTagName);
+      }
+      if (initialNewTagName !== undefined) {
+        setNewTagName(initialNewTagName);
+      }
+    }
+  }, [initialTagName, initialNewTagName]);
+
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const [navigationDialogOpen, setNavigationDialogOpen] = useState(false);
+  const [pendingNavigationUrl, setPendingNavigationUrl] = useState<string | null>(null);
 
   const dndContextId = useId();
   const itemIdsRef = useRef<string[]>(
@@ -191,7 +221,9 @@ export function RankingForm({
     if (!autosaveConfig || !isDirty) return;
     const { userId, key } = autosaveConfig;
     const timer = window.setTimeout(() => {
-      void autosaveRepository.save(userId, key, buildDraftPayload());
+      void autosaveRepository.save(userId, key, buildDraftPayload()).then(() => {
+        setAutosavedAt(new Date());
+      });
     }, 1200);
     return () => window.clearTimeout(timer);
   }, [autosaveConfig, form, isDirty, newTagName, tagDisplayName, buildDraftPayload]);
@@ -209,6 +241,29 @@ export function RankingForm({
       window.removeEventListener("beforeunload", onBeforeUnload);
     };
   }, [isDirty]);
+
+  // SPA内部リンクの遷移ガード
+  useEffect(() => {
+    if (!isDirty || isDraftMode) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (!anchor) return;
+
+      const href = anchor.getAttribute("href");
+      if (!href || !href.startsWith("/")) return;
+      if (anchor.target === "_blank") return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavigationUrl(href);
+      setNavigationDialogOpen(true);
+    };
+
+    window.addEventListener("click", handleClick, true);
+    return () => window.removeEventListener("click", handleClick, true);
+  }, [isDirty, isDraftMode]);
 
   const submit = async () => {
     const validation = validateInput(form, newTagName);
@@ -313,6 +368,10 @@ export function RankingForm({
     if (!onCancel) {
       return;
     }
+    if (isDraftMode) {
+      onCancel();
+      return;
+    }
     if (isDirty) {
       setCancelDialogOpen(true);
       return;
@@ -329,6 +388,11 @@ export function RankingForm({
 
   const triggerBack = () => {
     if (!onBack) return;
+
+    if (isDraftMode) {
+      onBack();
+      return;
+    }
 
     if (isFormEmpty(form, newTagName)) {
       // 空なら即戻る + autosave クリア
@@ -416,6 +480,14 @@ export function RankingForm({
         </button>
       </div>
 
+      {/* Autosave indicator */}
+      {autosaveConfig && autosavedAt ? (
+        <p className="text-xs text-muted-foreground text-right">
+          {"自動保存済み "}
+          {autosavedAt.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+        </p>
+      ) : null}
+
       {/* Ranking items */}
       <div className="rounded-xl overflow-hidden bg-card">
         <DndContext
@@ -477,6 +549,34 @@ export function RankingForm({
         onCancel={() => setDiscardDialogOpen(false)}
         title="未保存の変更があります"
         message="破棄して戻りますか？"
+        confirmLabel="破棄する"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={navigationDialogOpen}
+        onConfirm={() => {
+          setNavigationDialogOpen(false);
+          if (pendingNavigationUrl) {
+            const url = pendingNavigationUrl;
+            void (async () => {
+              if (autosaveConfig) {
+                try {
+                  await autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key);
+                } catch {
+                  // IndexedDB cleanup failed — non-critical
+                }
+              }
+              window.location.href = url;
+            })();
+          }
+        }}
+        onCancel={() => {
+          setNavigationDialogOpen(false);
+          setPendingNavigationUrl(null);
+        }}
+        title="未保存の変更があります"
+        message="破棄して移動しますか？"
         confirmLabel="破棄する"
         variant="destructive"
       />

@@ -94,8 +94,16 @@ export class IndexedDbAutosaveRepository implements AutosaveRepository {
 
   async save(userId: string, key: string, data: AutosaveSaveInput): Promise<void> {
     const database = await getDatabase();
-    const transaction = database.transaction(AUTOSAVE_STORE_NAME, "readwrite");
-    const store = transaction.objectStore(AUTOSAVE_STORE_NAME);
+
+    const isDraftKey = key.startsWith("draft:");
+    const storeNames: string[] = isDraftKey
+      ? [AUTOSAVE_STORE_NAME, DRAFT_STORE_NAME]
+      : [AUTOSAVE_STORE_NAME];
+
+    const transaction = database.transaction(storeNames, "readwrite");
+    const autosaveStore = transaction.objectStore(AUTOSAVE_STORE_NAME);
+
+    const now = new Date().toISOString();
 
     const record = {
       id: buildId(userId, key),
@@ -104,12 +112,29 @@ export class IndexedDbAutosaveRepository implements AutosaveRepository {
       title: data.title,
       tagId: data.tagId,
       items: [...data.items],
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
       ...(data.newTagName ? { newTagName: data.newTagName } : {}),
       ...(data.selectedTagName ? { selectedTagName: data.selectedTagName } : {}),
     };
 
-    store.put(record);
+    autosaveStore.put(record);
+
+    if (isDraftKey) {
+      const draftId = key.substring("draft:".length);
+      const draftStore = transaction.objectStore(DRAFT_STORE_NAME);
+      const draftRecord = {
+        draftId,
+        userId,
+        title: data.title,
+        tagId: data.tagId,
+        items: [...data.items],
+        updatedAt: now,
+        ...(data.newTagName ? { newTagName: data.newTagName } : {}),
+        ...(data.selectedTagName ? { selectedTagName: data.selectedTagName } : {}),
+      };
+      draftStore.put(draftRecord);
+    }
+
     await transactionToPromise(transaction);
   }
 

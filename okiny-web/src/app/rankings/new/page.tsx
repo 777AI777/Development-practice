@@ -57,23 +57,24 @@ function NewRankingPageContent() {
       void (async () => {
         const hasAutosave = await autosaveRepository.has(user.id, key);
         if (hasAutosave && !preselectedTagId) {
+          // 復元ダイアログを表示し、結果を待つ
+          // initialDraft等はhandleRestoreConfirm/handleRestoreCancelで設定する
           setRestoreDialogOpen(true);
+          signalReady();
         } else {
+          if (preselectedTagId) {
+            setInitialDraft({
+              title: "",
+              tagId: preselectedTagId,
+              items: EMPTY_ITEMS,
+            });
+          }
+          setInitialTagName(undefined);
+          setInitialNewTagName(undefined);
+          setActiveDraftId(undefined);
           setRestoreDecided(true);
+          signalReady();
         }
-        if (preselectedTagId) {
-          setInitialDraft({
-            title: "",
-            tagId: preselectedTagId,
-            items: EMPTY_ITEMS,
-          });
-        } else {
-          setInitialDraft(undefined);
-        }
-        setInitialTagName(undefined);
-        setInitialNewTagName(undefined);
-        setActiveDraftId(undefined);
-        signalReady();
       })();
       return;
     }
@@ -83,7 +84,18 @@ function NewRankingPageContent() {
     void (async () => {
       const hasAutosave = await autosaveRepository.has(user.id, draftAutosaveKey);
       if (hasAutosave) {
-        setRestoreDialogOpen(true);
+        const record = await autosaveRepository.get(user.id, draftAutosaveKey);
+        if (record) {
+          setInitialDraft({
+            title: record.title,
+            tagId: record.tagId,
+            items: toRankingItems([...record.items]),
+          });
+          setInitialTagName(record.selectedTagName);
+          setInitialNewTagName(record.newTagName);
+        }
+        setActiveDraftId(draftId);
+        setRestoreDecided(true);
         signalReady();
         return;
       }
@@ -171,8 +183,8 @@ function NewRankingPageContent() {
           tagId: record.tagId,
           items: toRankingItems([...record.items]),
         });
-        setInitialTagName(record.selectedTagName);
-        setInitialNewTagName(record.newTagName);
+        setInitialTagName(record.selectedTagName ?? "");
+        setInitialNewTagName(record.newTagName ?? "");
       }
       const draftId = searchParams.get("draftId");
       if (draftId) {
@@ -233,6 +245,7 @@ function NewRankingPageContent() {
         onCancel={() => router.back()}
         onBack={() => router.back()}
         autosaveConfig={autosaveConfig}
+        isDraftMode={!!activeDraftId}
       />
       <ConfirmDialog
         open={restoreDialogOpen}
