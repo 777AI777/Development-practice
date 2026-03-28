@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { BookmarkButton } from "@/components/bookmark-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { formatSmartDate } from "@/lib/format-date";
@@ -88,14 +89,7 @@ export function RankingDetailContent({
       <div className="space-y-4">
         {/* Header row: back + title + menu */}
         <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center bg-transparent text-lg font-bold text-foreground"
-            aria-label="戻る"
-          >
-            {"\u2190"}
-          </button>
+          <BackButton />
           <div className="flex-1 justify-center">
             <h1 className="truncate text-center text-xl font-bold text-foreground">
               {ranking.title}

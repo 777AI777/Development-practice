@@ -6,14 +6,11 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { ComingSoon } from "@/components/coming-soon";
+import { FollowingContent } from "@/components/following-content";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { RankingCard } from "@/components/ranking-card";
 import { useSessionUser } from "@/hooks/use-session-user";
-import type {
-  PublicRankingWithAuthor,
-  PublishedRanking,
-  UserProfile,
-} from "@/lib/types";
+import type { PublishedRanking, UserProfile } from "@/lib/types";
 import { buildUserProfilePath } from "@/lib/user-utils";
 
 type TabId = "myrank" | "recommend" | "following";
@@ -186,73 +183,6 @@ function MyRankContent({
   );
 }
 
-function FollowingContent({
-  isLoading,
-  errorMessage,
-  rankings,
-  onRetry,
-  onAvatarClick,
-  onTagClick,
-}: {
-  isLoading: boolean;
-  errorMessage: string | null;
-  rankings: PublicRankingWithAuthor[];
-  onRetry: () => void;
-  onAvatarClick: (author: UserProfile) => void;
-  onTagClick: (tagName: string) => void;
-}) {
-  if (isLoading) {
-    return (
-      <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-        <p className="text-sm text-muted-foreground">読み込み中...</p>
-      </div>
-    );
-  }
-
-  if (errorMessage) {
-    return <ErrorCard message={errorMessage} onRetry={onRetry} />;
-  }
-
-  if (rankings.length === 0) {
-    return (
-      <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-        <h2 className="text-2xl font-bold text-foreground">
-          フォローの公開ランキングはまだありません
-        </h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          気になるユーザーをフォローすると、ここに公開ランキングが並びます。
-        </p>
-        <Link
-          href="/search"
-          className="mt-8 inline-flex h-11 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-bold text-foreground hover:bg-muted"
-        >
-          ユーザーを探す
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-hidden rounded-xl bg-card">
-      {rankings.map((ranking, index) => (
-        <RankingCard
-          key={ranking.id}
-          ranking={ranking}
-          showBorder={index < rankings.length - 1}
-          showTagBadge
-          showBookmark
-          onAvatarClick={(_event, author) => {
-            onAvatarClick(author);
-          }}
-          onTagClick={(_event, tagName) => {
-            onTagClick(tagName);
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 interface RankingsListContentProps {
   initialRankings: PublishedRanking[];
   userName?: string;
@@ -276,76 +206,10 @@ function RankingsListContentInner({
   const [errorMessage] = useState<string | null>(null);
   const [collapsedTagIds, setCollapsedTagIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>("myrank");
-  const [followingRankings, setFollowingRankings] = useState<
-    PublicRankingWithAuthor[]
-  >([]);
-  const [isFollowingLoading, setIsFollowingLoading] = useState(false);
-  const [followingError, setFollowingError] = useState<string | null>(null);
-  const [hasLoadedFollowing, setHasLoadedFollowing] = useState(false);
-  const [followingReloadKey, setFollowingReloadKey] = useState(0);
 
   useEffect(() => {
     signalReady();
   }, [signalReady]);
-
-  useEffect(() => {
-    if (activeTab !== "following" || hasLoadedFollowing || isFollowingLoading) {
-      return;
-    }
-
-    const controller = new AbortController();
-    let cancelled = false;
-
-    async function loadFollowingRankings() {
-      setIsFollowingLoading(true);
-      setFollowingError(null);
-
-      try {
-        const response = await fetch("/api/v1/rankings/following", {
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        const body = (await response.json().catch(() => ({}))) as {
-          data?: PublicRankingWithAuthor[];
-          error?: { message?: string };
-        };
-
-        if (!response.ok || !body.data) {
-          throw new Error(
-            body.error?.message ?? "フォローランキングの読み込みに失敗しました。",
-          );
-        }
-
-        if (cancelled) {
-          return;
-        }
-
-        setFollowingRankings(body.data);
-        setHasLoadedFollowing(true);
-      } catch (error) {
-        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) {
-          return;
-        }
-
-        setFollowingError(
-          error instanceof Error
-            ? error.message
-            : "フォローランキングの読み込みに失敗しました。",
-        );
-      } finally {
-        if (!cancelled) {
-          setIsFollowingLoading(false);
-        }
-      }
-    }
-
-    void loadFollowingRankings();
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [activeTab, followingReloadKey, hasLoadedFollowing, isFollowingLoading]);
 
   const author: UserProfile = {
     id: user?.id ?? rankings[0]?.userId ?? "",
@@ -388,14 +252,6 @@ function RankingsListContentInner({
 
       {activeTab === "following" ? (
         <FollowingContent
-          isLoading={isFollowingLoading}
-          errorMessage={followingError}
-          rankings={followingRankings}
-          onRetry={() => {
-            setHasLoadedFollowing(false);
-            setFollowingError(null);
-            setFollowingReloadKey((current) => current + 1);
-          }}
           onAvatarClick={(clickedAuthor) => {
             router.push(buildUserProfilePath(clickedAuthor));
           }}

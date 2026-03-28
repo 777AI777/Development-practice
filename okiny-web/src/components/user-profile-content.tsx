@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { FollowButton } from "@/components/follow-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { RankingCard } from "@/components/ranking-card";
@@ -36,25 +37,6 @@ interface UserProfileContentProps {
   rankings: readonly PublishedRanking[];
   initialIsFollowing: boolean;
   isOwnProfile: boolean;
-}
-
-function BackArrowIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 12H5" />
-      <path d="m12 19-7-7 7-7" />
-    </svg>
-  );
 }
 
 function PencilIcon() {
@@ -530,14 +512,7 @@ function UserProfileContentInner({
       {/* AppShellのpx-4, py-6を打ち消してフルブリードの白背景にする */}
       <div className="-mx-4 -mt-6 min-h-screen bg-card">
         <div className="mb-2 px-4 pt-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          >
-            <BackArrowIcon />
-            <span>戻る</span>
-          </button>
+          <BackButton label="戻る" />
         </div>
 
         <section className="border-b border-border px-4 pb-5 pt-2">

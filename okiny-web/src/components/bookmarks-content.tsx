@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { BookmarkButton } from "@/components/bookmark-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { formatSmartDate } from "@/lib/format-date";
@@ -12,25 +12,6 @@ import type { PublishedRanking } from "@/lib/types";
 
 interface BookmarksContentProps {
   initialRankings: PublishedRanking[];
-}
-
-function BackArrowIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 12H5" />
-      <path d="m12 19-7-7 7-7" />
-    </svg>
-  );
 }
 
 function EmptyBookmarksState() {
@@ -64,7 +45,6 @@ function EmptyBookmarksState() {
 }
 
 function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
-  const router = useRouter();
   const { signalReady } = usePageTransition();
   const [rankings, setRankings] = useState(initialRankings);
 
@@ -79,14 +59,7 @@ function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
   return (
     <AppShell>
       <div className="mb-4 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center justify-center rounded-lg bg-transparent p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label="戻る"
-        >
-          <BackArrowIcon />
-        </button>
+        <BackButton />
         <h1 className="text-lg font-bold text-foreground">ブックマーク</h1>
       </div>
 

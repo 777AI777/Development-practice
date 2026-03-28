@@ -75,7 +75,7 @@ export function ItemsStep({
           disabled={isPublishing}
           className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
         >
-          戻る
+          
         </button>
         <button
           type="button"

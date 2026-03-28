@@ -113,7 +113,7 @@ function SettingsAccordion({
       {settingsExpanded && (
         <div className="pl-10">
           <Link
-            href={profilePath ?? "#"}
+            href={profilePath ? `${profilePath}?edit=true` : "#"}
             onClick={onNavigate}
             className="block w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
           >

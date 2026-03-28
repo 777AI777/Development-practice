@@ -58,13 +58,13 @@ interface SupabaseRequestInit {
   accessToken: string;
 }
 
-function toPostgrestInList(values: readonly string[]): string {
+export function toPostgrestInList(values: readonly string[]): string {
   return `(${values
     .map((value) => `"${value.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"")}"`)
     .join(",")})`;
 }
 
-async function requestSupabase(
+export async function requestSupabase(
   path: string,
   init: SupabaseRequestInit,
 ): Promise<Response> {
@@ -91,7 +91,7 @@ async function requestSupabase(
   });
 }
 
-async function requestSupabaseWithServiceRole(
+export async function requestSupabaseWithServiceRole(
   path: string,
   init?: Omit<SupabaseRequestInit, "accessToken"> & {
     revalidateSeconds?: number;
@@ -196,7 +196,7 @@ export class ConflictError extends Error {
   }
 }
 
-async function ensureResponseOk(response: Response): Promise<void> {
+export async function ensureResponseOk(response: Response): Promise<void> {
   if (response.ok) {
     return;
   }
@@ -271,7 +271,7 @@ class PublicRankingsByTagRpcUnavailableError extends Error {
   }
 }
 
-function mapPublicRankingWithAuthorRow(row: {
+export function mapPublicRankingWithAuthorRow(row: {
   id: string;
   user_id: string;
   title: string;
@@ -1152,166 +1152,12 @@ export async function getUserProfileWithCounts(
   return row ? mapUserProfileRowWithCounts(row) : null;
 }
 
-/**
- * フォローを追加する（冪等 — 409 Conflict は握りつぶす）。
- * パターン: addBookmark と同じ。
- */
-export async function addFollow(params: {
-  followerId: string;
-  followingId: string;
-  accessToken: string;
-}): Promise<void> {
-  const response = await requestSupabase("follows", {
-    method: "POST",
-    accessToken: params.accessToken,
-    prefer: "return=minimal",
-    body: [{ follower_id: params.followerId, following_id: params.followingId }],
-  });
-  // 409 Conflict（既にフォロー済み）は正常として扱う
-  if (response.status === 409) {
-    return;
-  }
-  await ensureResponseOk(response);
-}
-
-/**
- * フォローを解除する（冪等）。
- * パターン: removeBookmark と同じ。
- */
-export async function removeFollow(params: {
-  followerId: string;
-  followingId: string;
-  accessToken: string;
-}): Promise<void> {
-  const query = new URLSearchParams({
-    follower_id: `eq.${params.followerId}`,
-    following_id: `eq.${params.followingId}`,
-  });
-  const response = await requestSupabase(`follows?${query.toString()}`, {
-    method: "DELETE",
-    accessToken: params.accessToken,
-  });
-  await ensureResponseOk(response);
-}
-
-/**
- * 指定ユーザーIDリストのうちフォロー済みのIDを Set で返す。
- * パターン: getBookmarkedRankingIds と同じ。
- */
-export async function getFollowingUserIds(params: {
-  followerId: string;
-  targetUserIds: readonly string[];
-  accessToken: string;
-}): Promise<Set<string>> {
-  if (params.targetUserIds.length === 0) {
-    return new Set();
-  }
-
-  const query = new URLSearchParams({
-    select: "following_id",
-    follower_id: `eq.${params.followerId}`,
-  });
-  query.set("following_id", `in.${toPostgrestInList(params.targetUserIds)}`);
-
-  const response = await requestSupabase(`follows?${query.toString()}`, {
-    method: "GET",
-    accessToken: params.accessToken,
-  });
-  await ensureResponseOk(response);
-
-  const rows = (await response.json()) as Array<{ following_id: string }>;
-  return new Set(rows.map((row) => row.following_id));
-}
-
-/**
- * 指定ユーザーのフォロワー一覧を UserProfile[] で返す。
- * follows テーブルから follower_id を取得 → getUserProfilesBatch で解決。
- */
-export async function listFollowers(params: {
-  userId: string;
-}): Promise<UserProfile[]> {
-  const query = new URLSearchParams({
-    select: "follower_id",
-    following_id: `eq.${params.userId}`,
-    order: "created_at.desc",
-  });
-
-  const response = await requestSupabaseWithServiceRole(
-    `follows?${query.toString()}`,
-  );
-  await ensureResponseOk(response);
-
-  const rows = (await response.json()) as Array<{ follower_id: string }>;
-  const userIds = rows.map((row) => row.follower_id);
-  return getUserProfilesBatch(userIds);
-}
-
-/**
- * 指定ユーザーのフォロー一覧を UserProfile[] で返す。
- * follows テーブルから following_id を取得 → getUserProfilesBatch で解決。
- */
-export async function listFollowing(params: {
-  userId: string;
-}): Promise<UserProfile[]> {
-  const query = new URLSearchParams({
-    select: "following_id",
-    follower_id: `eq.${params.userId}`,
-    order: "created_at.desc",
-  });
-
-  const response = await requestSupabaseWithServiceRole(
-    `follows?${query.toString()}`,
-  );
-  await ensureResponseOk(response);
-
-  const rows = (await response.json()) as Array<{ following_id: string }>;
-  const userIds = rows.map((row) => row.following_id);
-  return getUserProfilesBatch(userIds);
-}
-
-/**
- * フォローユーザーの公開ランキング一覧を取得する。
- * RPC: list_following_rankings を呼び出し。
- * パターン: listPublicRankingsByTagWithAuthors の RPC 呼び出しと同じ。
- */
-export async function listFollowingRankings(params: {
-  viewerUserId: string;
-  accessToken: string;
-}): Promise<PublicRankingWithAuthor[]> {
-  const response = await requestSupabase("rpc/list_following_rankings", {
-    method: "POST",
-    accessToken: params.accessToken,
-    body: {
-      p_viewer_user_id: params.viewerUserId,
-    },
-  });
-
-  if (!response.ok) {
-    const detail = await response.text();
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[listFollowingRankings] failed:", detail);
-    }
-    throw new Error(`list_following_rankings failed (${response.status})`);
-  }
-
-  const rows = (await response.json()) as Array<{
-    id: string;
-    user_id: string;
-    title: string;
-    tag_id: string;
-    tag_name: string | null;
-    is_public: boolean;
-    created_at: string;
-    updated_at: string;
-    view_count: number;
-    impression_count: number;
-    bookmark_count: number;
-    ranking_items: Array<{ rank: number; item_text: string }> | null;
-    author_display_name: string | null;
-    author_avatar_url: string | null;
-    author_display_user_id: string | null;
-    is_bookmarked: boolean;
-  }>;
-
-  return rows.map(mapPublicRankingWithAuthorRow);
-}
+export {
+  addFollow,
+  removeFollow,
+  removeFollower,
+  getFollowingUserIds,
+  listFollowers,
+  listFollowing,
+  listFollowingRankings,
+} from "./supabase-rest-follows";
