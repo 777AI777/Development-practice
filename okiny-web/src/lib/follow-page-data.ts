@@ -14,6 +14,7 @@ export interface FollowPageData {
   readonly following: readonly UserProfile[];
   readonly isOwnProfile: boolean;
   readonly followingUserIds: ReadonlySet<string>;
+  readonly currentUserId: string | null;
 }
 
 /**
@@ -64,5 +65,6 @@ export async function getFollowPageData(
     following,
     isOwnProfile,
     followingUserIds,
+    currentUserId: auth.ok ? auth.userId : null,
   };
 }

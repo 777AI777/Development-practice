@@ -22,39 +22,35 @@ function BackArrowIcon() {
   );
 }
 
-const buttonClassName = "inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground";
+const buttonClassName = "inline-flex items-center rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground";
 
 type BackButtonProps =
-  | { href: string; label?: string; onClick?: never }
-  | { onClick?: () => void; label?: string; href?: never };
+  | { href: string; onClick?: never }
+  | { onClick?: () => void; href?: never };
 
-function BackButtonWithRouter({ onClick, label }: { onClick?: () => void; label?: string }) {
+function BackButtonWithRouter({ onClick }: { onClick?: () => void }) {
   const router = useRouter();
-  const ariaLabel = label ? undefined : "戻る";
 
   return (
     <button
       type="button"
       onClick={onClick ?? (() => router.back())}
       className={buttonClassName}
-      aria-label={ariaLabel}
+      aria-label="戻る"
     >
       <BackArrowIcon />
-      {label && <span>{label}</span>}
     </button>
   );
 }
 
 export function BackButton(props: BackButtonProps) {
   if (props.href) {
-    const ariaLabel = props.label ? undefined : "戻る";
     return (
-      <Link href={props.href} className={buttonClassName} aria-label={ariaLabel}>
+      <Link href={props.href} className={buttonClassName} aria-label="戻る">
         <BackArrowIcon />
-        {props.label && <span>{props.label}</span>}
       </Link>
     );
   }
 
-  return <BackButtonWithRouter onClick={props.onClick} label={props.label} />;
+  return <BackButtonWithRouter onClick={props.onClick} />;
 }

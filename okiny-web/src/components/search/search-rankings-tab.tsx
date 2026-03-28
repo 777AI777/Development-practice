@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RankingCard } from "@/components/ranking-card";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -49,6 +50,7 @@ export function SearchRankingsTab({
     isInitialized,
     loadMore,
     reset,
+    refresh,
   } = useSearch<PublicRankingWithAuthor>({ fetcher: fetchRankings });
   const normalizedQuery = query.trim();
   const { signalReady } = usePageTransition();
@@ -121,7 +123,7 @@ export function SearchRankingsTab({
   }
 
   return (
-    <div>
+    <PullToRefresh onRefresh={refresh}>
       <div className="overflow-hidden rounded-xl bg-card">
         {items.map((ranking, idx) => (
           <RankingCard
@@ -146,6 +148,6 @@ export function SearchRankingsTab({
           )}
         </div>
       )}
-    </div>
+    </PullToRefresh>
   );
 }

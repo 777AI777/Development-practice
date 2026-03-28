@@ -213,12 +213,12 @@ export function RankingCard({
                     e.stopPropagation();
                     onTagClick(e, ranking.tagName!);
                   }}
-                  className="text-xs text-muted-foreground transition hover:text-foreground"
+                  className="text-xs text-primary transition hover:text-primary/70"
                 >
                   #{ranking.tagName}
                 </button>
               ) : (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-primary">
                   #{ranking.tagName}
                 </span>
               )

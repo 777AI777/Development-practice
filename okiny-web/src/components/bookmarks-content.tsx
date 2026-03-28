@@ -64,7 +64,7 @@ function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
               <div className="p-4">
                 <div className="flex items-center gap-1.5">
                   {ranking.tagName ? (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-primary">
                       #{ranking.tagName}
                     </span>
                   ) : null}

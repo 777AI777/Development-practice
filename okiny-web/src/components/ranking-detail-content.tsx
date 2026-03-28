@@ -266,7 +266,7 @@ export function RankingDetailContent({
                   `/search?q=${encodeURIComponent('#' + ranking.tagName!)}&tab=rankings`,
                 )
               }
-              className="text-sm text-muted-foreground transition hover:text-foreground"
+              className="text-sm text-primary transition hover:text-primary/70"
             >
               #{ranking.tagName}
             </button>

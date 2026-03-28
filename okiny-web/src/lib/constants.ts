@@ -10,7 +10,7 @@ export const RANKING_ITEMS_PREVIEW_LIMIT = 5;
 
 // --- Search Constants ---
 
-export const SEARCH_LIMIT = 20;
+export const SEARCH_LIMIT = 10;
 
 export const SEARCH_DEBOUNCE_MS = 300;
 
@@ -28,4 +28,4 @@ export const VIEWED_USERS_KEY = "okiny:viewed_users";
 
 // --- Following Feed Constants ---
 
-export const FOLLOWING_FEED_LIMIT = 20;
+export const FOLLOWING_FEED_LIMIT = 10;

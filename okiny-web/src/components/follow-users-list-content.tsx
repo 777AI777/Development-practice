@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { type MouseEvent, type ReactNode, Suspense, useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
@@ -20,6 +21,7 @@ interface FollowUsersListContentProps {
   initialTab: "followers" | "following";
   isOwnProfile: boolean;
   followingUserIds: ReadonlySet<string>;
+  currentUserId: string | null;
 }
 
 function UserAvatar({ user }: { user: UserProfile }) {
@@ -107,7 +109,9 @@ function FollowUsersListContentInner({
   initialTab,
   isOwnProfile,
   followingUserIds,
+  currentUserId,
 }: FollowUsersListContentProps) {
+  const router = useRouter();
   const { signalReady } = usePageTransition();
   const { pushToast } = useToast();
 
@@ -256,13 +260,20 @@ function FollowUsersListContentInner({
     <AppShell>
       {/* ヘッダー: 戻るボタン + ユーザー名 */}
       <div className="mb-4">
-        <Link
-          href={buildUserProfilePath(profile)}
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push(buildUserProfilePath(profile));
+            }
+          }}
           className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
         >
           <span aria-hidden="true">{"\u2190"}</span>
           <span>{profile.displayName}</span>
-        </Link>
+        </button>
       </div>
 
       {/* タブバー */}
@@ -304,7 +315,7 @@ function FollowUsersListContentInner({
             <div>
               {followingList.map((user) => {
                 const profilePath = buildUserProfilePath(user);
-                const isSelf = user.id === profile.id;
+                const isSelf = user.id === profile.id || user.id === currentUserId;
 
                 return (
                   <UserListItem
@@ -339,7 +350,7 @@ function FollowUsersListContentInner({
             <div>
               {followersList.map((user) => {
                 const profilePath = buildUserProfilePath(user);
-                const isSelf = user.id === profile.id;
+                const isSelf = user.id === profile.id || user.id === currentUserId;
 
                 return (
                   <UserListItem

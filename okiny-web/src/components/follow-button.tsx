@@ -4,6 +4,10 @@ import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
 import { useToast } from "@/components/toast-provider";
 import { invalidateMyProfileStats } from "@/hooks/use-my-profile-stats";
+import {
+  clearFollowingFeedCache,
+  removeUserFromFeedCache,
+} from "@/lib/feed-cache";
 import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 
 interface FollowButtonProps {
@@ -64,6 +68,11 @@ export function FollowButton({
         }
 
         invalidateMyProfileStats();
+        if (nextIsFollowing) {
+          clearFollowingFeedCache();
+        } else {
+          removeUserFromFeedCache(userId);
+        }
         onChange?.(nextIsFollowing);
       } catch {
         setIsFollowing(previousIsFollowing);

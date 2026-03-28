@@ -95,7 +95,7 @@ export function SearchTagsTab({
               key={tag.id}
               type="button"
               onClick={() => onTagSelect(tag.name)}
-              className="text-sm text-muted-foreground transition hover:text-foreground"
+              className="text-sm text-primary transition hover:text-primary/70"
             >
               #{tag.name}
             </button>

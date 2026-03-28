@@ -1,18 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { EmptyStateMessage } from "@/components/empty-state-message";
+import { usePageTransition } from "@/components/page-transition-provider";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RankingCard } from "@/components/ranking-card";
 import { useFollowingFeed } from "@/hooks/use-following-feed";
+import { useScrollRestore } from "@/hooks/use-scroll-restore";
+import { touchFollowingFeedCache } from "@/lib/feed-cache";
 import type { UserProfile } from "@/lib/types";
 
 interface FollowingContentProps {
+  enabled: boolean;
   onAvatarClick: (author: UserProfile) => void;
   onTagClick: (tagName: string) => void;
 }
 
 export function FollowingContent({
+  enabled,
   onAvatarClick,
   onTagClick,
 }: FollowingContentProps) {
@@ -22,17 +29,29 @@ export function FollowingContent({
     isLoadingMore,
     hasMore,
     error,
+    hasFetched,
     retry,
     sentinelRef,
-  } = useFollowingFeed({ enabled: true });
+    restoredFromCache,
+  } = useFollowingFeed({ enabled });
 
-  if (isLoading) {
-    return (
-      <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-        <p className="text-sm text-muted-foreground">読み込み中...</p>
-      </div>
-    );
-  }
+  useScrollRestore({ key: "scroll:following", enabled: restoredFromCache });
+
+  useEffect(() => {
+    if (enabled && restoredFromCache) {
+      touchFollowingFeedCache();
+    }
+  }, [enabled, restoredFromCache]);
+
+  const { startTransitionLoading, signalReady } = usePageTransition();
+
+  useEffect(() => {
+    if (isLoading) {
+      startTransitionLoading();
+    } else {
+      signalReady();
+    }
+  }, [isLoading, startTransitionLoading, signalReady]);
 
   if (error) {
     return (
@@ -52,7 +71,7 @@ export function FollowingContent({
     );
   }
 
-  if (rankings.length === 0) {
+  if (hasFetched && !isLoading && rankings.length === 0) {
     return (
       <EmptyStateMessage
         title="フォローの公開ランキングはまだありません。"
@@ -69,7 +88,7 @@ export function FollowingContent({
   }
 
   return (
-    <div>
+    <PullToRefresh onRefresh={retry}>
       <div className="overflow-hidden rounded-xl bg-card">
         {rankings.map((ranking, index) => (
           <RankingCard
@@ -94,6 +113,6 @@ export function FollowingContent({
           )}
         </div>
       )}
-    </div>
+    </PullToRefresh>
   );
 }
