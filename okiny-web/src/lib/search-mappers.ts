@@ -53,6 +53,7 @@ export function mapSearchRankingRow(row: {
       displayName: row.author_display_name ?? "",
       avatarUrl: row.author_avatar_url ?? null,
       displayUserId: row.author_display_user_id ?? null,
+      introduction: null,
     },
   };
 }

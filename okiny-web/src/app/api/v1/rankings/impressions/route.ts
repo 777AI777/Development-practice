@@ -5,7 +5,6 @@ import {
   authErrorResponse,
   getAuthenticatedUserId,
 } from "@/lib/supabase/auth-guard";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { incrementImpressionCount } from "@/lib/supabase-rest";
 
 const bodySchema = z.object({
@@ -49,35 +48,7 @@ export async function POST(request: Request) {
 
   const { userId, accessToken } = auth;
 
-  try {
-    const rateResult = await checkRateLimit(`impressions:${userId}`);
-    if (!rateResult.success) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "RATE_LIMIT",
-            message: "リクエスト数が上限を超えました。しばらく待ってから再度お試しください。",
-          },
-        },
-        { status: 429 },
-      );
-    }
-  } catch (error) {
-    console.error("[POST /api/v1/rankings/impressions] rate limit check failed");
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[POST /api/v1/rankings/impressions] rate limit detail:", error);
-    }
-
-    return NextResponse.json(
-      {
-        error: {
-          code: "SERVER",
-          message: "一時的にアクセス制御を確認できませんでした。しばらくしてからもう一度お試しください。",
-        },
-      },
-      { status: 500 },
-    );
-  }
+  // レートリミットは middleware で一元管理しているため、ここでは行わない。
 
   let payload: unknown;
   try {

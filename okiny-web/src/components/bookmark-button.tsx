@@ -76,44 +76,50 @@ export function BookmarkButton({
       event.preventDefault();
       event.stopPropagation();
 
-      if (isPending) return;
+      if (isPending) {
+        return;
+      }
 
-      const prevBookmarked = isBookmarked;
-      const prevCount = count;
-      const nextBookmarked = !isBookmarked;
-      const nextCount = nextBookmarked ? count + 1 : Math.max(0, count - 1);
+      const previousIsBookmarked = isBookmarked;
+      const previousCount = count;
+      const nextIsBookmarked = !isBookmarked;
+      const nextCount = nextIsBookmarked ? count + 1 : Math.max(0, count - 1);
 
-      setIsBookmarked(nextBookmarked);
+      setIsBookmarked(nextIsBookmarked);
       setCount(nextCount);
       setIsPending(true);
 
       try {
-        const method = nextBookmarked ? "POST" : "DELETE";
         const response = await fetch(`/api/v1/bookmarks/${rankingId}`, {
-          method,
+          method: nextIsBookmarked ? "POST" : "DELETE",
         });
 
         if (!response.ok) {
-          setIsBookmarked(prevBookmarked);
-          setCount(prevCount);
+          setIsBookmarked(previousIsBookmarked);
+          setCount(previousCount);
+
           if (response.status === 401) {
             pushToast(buildSessionExpiredToast());
           } else {
             pushToast({
               type: "error",
-              message: "ブックマークに失敗しました。",
+              message: nextIsBookmarked
+                ? "ブックマークに失敗しました。"
+                : "ブックマーク解除に失敗しました。",
             });
           }
           return;
         }
 
-        onChange?.(nextBookmarked, nextCount);
+        onChange?.(nextIsBookmarked, nextCount);
       } catch {
-        setIsBookmarked(prevBookmarked);
-        setCount(prevCount);
+        setIsBookmarked(previousIsBookmarked);
+        setCount(previousCount);
         pushToast({
           type: "error",
-          message: "ブックマークに失敗しました。",
+          message: nextIsBookmarked
+            ? "ブックマークに失敗しました。"
+            : "ブックマーク解除に失敗しました。",
         });
       } finally {
         setIsPending(false);

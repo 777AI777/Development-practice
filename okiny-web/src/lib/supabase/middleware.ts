@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { shouldRedirectToOnboarding } from "@/lib/onboarding-utils";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, RATE_LIMIT_AUTHENTICATED, RATE_LIMIT_UNAUTHENTICATED } from "@/lib/rate-limit";
 import { buildContentSecurityPolicy } from "@/lib/security-headers";
 
 const EXACT_PUBLIC_PATHS = ["/login", "/api/auth/callback", "/terms", "/privacy"] as const;
@@ -85,7 +85,10 @@ export async function updateSession(request: NextRequest, nonce: string) {
     const identifier = await extractRateLimitIdentifier(request);
 
     try {
-      const rateLimitResult = await checkRateLimit(identifier);
+      const maxRequests = identifier.startsWith("cookie:")
+        ? RATE_LIMIT_AUTHENTICATED
+        : RATE_LIMIT_UNAUTHENTICATED;
+      const rateLimitResult = await checkRateLimit(identifier, maxRequests);
 
       if (!rateLimitResult.success) {
         return setCspHeaders(

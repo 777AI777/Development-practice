@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePageTransition } from "@/components/page-transition-provider";
 import {
   getSearchHistory,
   removeSearchHistory,
@@ -14,6 +15,8 @@ import { getUserInitial } from "@/lib/user-utils";
 
 interface SearchInitialViewProps {
   userId: string;
+  isUserReady: boolean;
+  isTagsLoading: boolean;
   myTags: TagItem[];
   popularTags: TagItem[];
   onSearchQuery: (query: string) => void;
@@ -22,18 +25,36 @@ interface SearchInitialViewProps {
 
 export function SearchInitialView({
   userId,
+  isUserReady,
+  isTagsLoading,
   myTags,
   popularTags,
   onSearchQuery,
   onTagSelect,
 }: SearchInitialViewProps) {
+  const { signalReady } = usePageTransition();
   const [history, setHistory] = useState<string[]>([]);
   const [viewedUsers, setViewedUsers] = useState<ViewedUserEntry[]>([]);
+  const [hasLoadedClientState, setHasLoadedClientState] = useState(false);
 
   useEffect(() => {
+    if (!isUserReady) {
+      setHasLoadedClientState(false);
+      return;
+    }
+
     setHistory(getSearchHistory(userId));
     setViewedUsers(getViewedUsers(userId));
-  }, [userId]);
+    setHasLoadedClientState(true);
+  }, [isUserReady, userId]);
+
+  useEffect(() => {
+    if (!isUserReady || !hasLoadedClientState || isTagsLoading) {
+      return;
+    }
+
+    signalReady();
+  }, [hasLoadedClientState, isTagsLoading, isUserReady, signalReady]);
 
   const handleRemoveHistory = useCallback(
     (query: string) => {

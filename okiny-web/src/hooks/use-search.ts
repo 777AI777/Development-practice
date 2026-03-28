@@ -1,35 +1,25 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 
 interface UseSearchOptions<TItem> {
-  /** APIからデータを取得する関数。cursorがnullなら最初のページ */
   fetcher: (
     query: string,
     cursor: string | null,
     signal: AbortSignal,
   ) => Promise<{ items: TItem[]; nextCursor: string | null }>;
-  /** デバウンスミリ秒（デフォルト: SEARCH_DEBOUNCE_MS） */
   debounceMs?: number;
-  /** 最小クエリ長（デフォルト: 1） */
   minQueryLength?: number;
 }
 
 interface UseSearchReturn<TItem> {
-  /** 検索結果（ページネーションで累積） */
   items: TItem[];
-  /** 初回ロード中 */
   isLoading: boolean;
-  /** 追加ページロード中 */
   isLoadingMore: boolean;
-  /** 次のページがあるか */
   hasMore: boolean;
-  /** エラーメッセージ */
   error: string | null;
-  /** 次のページを読み込む */
   loadMore: () => void;
-  /** 結果をリセットする */
   reset: () => void;
 }
 
@@ -49,19 +39,22 @@ export function useSearch<TItem>({
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const abortRef = useRef<AbortController | null>(null);
   const cursorRef = useRef<string | null>(null);
-  const queryRef = useRef<string>("");
+  const queryRef = useRef("");
+  const cacheRef = useRef<Map<string, { items: TItem[]; nextCursor: string | null }>>(
+    new Map(),
+  );
 
-  // クリーンアップ
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
       abortRef.current?.abort();
     };
   }, []);
 
   const fetchPage = useCallback(
     async (query: string, cursor: string | null, isMore: boolean) => {
-      // 前のリクエストをキャンセル
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
@@ -76,18 +69,31 @@ export function useSearch<TItem>({
       try {
         const result = await fetcher(query, cursor, controller.signal);
 
-        if (isMore) {
-          setItems((prev) => [...prev, ...result.items]);
-        } else {
-          setItems(result.items);
-        }
+      if (isMore) {
+        let mergedItems: TItem[] = [];
+        setItems((prev) => {
+          mergedItems = [...prev, ...result.items];
+          return mergedItems;
+        });
+        cacheRef.current.set(query, {
+          items: mergedItems,
+          nextCursor: result.nextCursor,
+        });
+      } else {
+        setItems(result.items);
+        cacheRef.current.set(query, {
+          items: result.items,
+          nextCursor: result.nextCursor,
+        });
+      }
 
         cursorRef.current = result.nextCursor;
         setHasMore(result.nextCursor !== null);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") {
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
+
         setError("検索に失敗しました");
         if (!isMore) {
           setItems([]);
@@ -107,40 +113,65 @@ export function useSearch<TItem>({
 
   const search = useCallback(
     (query: string) => {
-      // 前のdebounceをクリア
+      const trimmedQuery = query.trim();
+
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
         debounceRef.current = undefined;
       }
-      // 前のリクエストをキャンセル
+
       abortRef.current?.abort();
       abortRef.current = null;
+      queryRef.current = trimmedQuery;
 
-      queryRef.current = query;
-
-      if (!query.trim() || query.trim().length < minQueryLength) {
+      if (!trimmedQuery || trimmedQuery.length < minQueryLength) {
         setItems([]);
         setIsLoading(false);
+        setIsLoadingMore(false);
         setHasMore(false);
+        setError(null);
         cursorRef.current = null;
         return;
       }
 
+      const cached = cacheRef.current.get(trimmedQuery);
+      if (cached) {
+        setItems(cached.items);
+        setIsLoading(false);
+        setIsLoadingMore(false);
+        setHasMore(cached.nextCursor !== null);
+        setError(null);
+        cursorRef.current = cached.nextCursor;
+        return;
+      }
+
+      setItems([]);
+      setIsLoading(true);
+      setIsLoadingMore(false);
+      setHasMore(false);
+      setError(null);
+      cursorRef.current = null;
+
       debounceRef.current = setTimeout(() => {
-        cursorRef.current = null;
-        fetchPage(query.trim(), null, false);
+        fetchPage(trimmedQuery, null, false);
       }, debounceMs);
     },
-    [fetchPage, debounceMs, minQueryLength],
+    [debounceMs, fetchPage, minQueryLength],
   );
 
   const loadMore = useCallback(() => {
-    if (isLoadingMore || !hasMore || !cursorRef.current) return;
-    fetchPage(queryRef.current.trim(), cursorRef.current, true);
-  }, [isLoadingMore, hasMore, fetchPage]);
+    if (isLoadingMore || !hasMore || !cursorRef.current) {
+      return;
+    }
+
+    fetchPage(queryRef.current, cursorRef.current, true);
+  }, [fetchPage, hasMore, isLoadingMore]);
 
   const reset = useCallback(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = undefined;
+    }
     abortRef.current?.abort();
     abortRef.current = null;
     setItems([]);

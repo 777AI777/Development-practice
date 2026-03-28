@@ -1,21 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { ComingSoon } from "@/components/coming-soon";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { RankingCard } from "@/components/ranking-card";
 import { useSessionUser } from "@/hooks/use-session-user";
-import type { PublicRankingWithAuthor, PublishedRanking, UserProfile } from "@/lib/types";
+import type {
+  PublicRankingWithAuthor,
+  PublishedRanking,
+  UserProfile,
+} from "@/lib/types";
+import { buildUserProfilePath } from "@/lib/user-utils";
 
 type TabId = "myrank" | "recommend" | "following";
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: "myrank", label: "\u30DE\u30A4\u30E9\u30F3\u30AF", icon: "\u2630" },
-  { id: "recommend", label: "\u304A\u3059\u3059\u3081", icon: "\u2605" },
-  { id: "following", label: "\u30D5\u30A9\u30ED\u30FC\u4E2D", icon: "\u2665" },
+  { id: "myrank", label: "マイランク", icon: "☰" },
+  { id: "recommend", label: "おすすめ", icon: "★" },
+  { id: "following", label: "フォロー中", icon: "♥" },
 ];
 
 function groupRankingsByTag(rankings: PublishedRanking[]) {
@@ -24,67 +30,76 @@ function groupRankingsByTag(rankings: PublishedRanking[]) {
   for (const ranking of rankings) {
     const existing = groups.get(ranking.tagId);
     if (existing) {
-      groups.set(ranking.tagId, { ...existing, items: [...existing.items, ranking] });
-    } else {
-      groups.set(ranking.tagId, {
-        tagName: ranking.tagName ?? ranking.tagId,
-        items: [ranking],
-      });
+      existing.items.push(ranking);
+      continue;
     }
+
+    groups.set(ranking.tagId, {
+      tagName: ranking.tagName ?? ranking.tagId,
+      items: [ranking],
+    });
   }
 
   return Array.from(groups.entries())
     .map(([tagId, group]) => ({ tagId, tagName: group.tagName, items: group.items }))
-    .sort((a, b) => a.tagId.localeCompare(b.tagId));
+    .sort((a, b) => a.tagName.localeCompare(b.tagName, "ja"));
 }
 
-function MyRankContent({
-  isLoading,
-  errorMessage,
-  isEmpty,
-  groupedRankings,
-  collapsedTagIds,
-  toggleTagAccordion,
-  author,
+function ErrorCard({
+  message,
+  onRetry,
 }: {
-  isLoading: boolean;
-  errorMessage: string | null;
-  isEmpty: boolean;
-  groupedRankings: { tagId: string; tagName: string; items: PublishedRanking[] }[];
-  collapsedTagIds: string[];
-  toggleTagAccordion: (tagId: string) => void;
-  author: UserProfile;
+  message: string;
+  onRetry?: () => void;
 }) {
-  if (isLoading) {
-    return null;
-  }
-
-  if (errorMessage) {
-    return (
-      <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
-        <p className="text-base font-bold text-destructive">
-          ランキングの読み込みに失敗しました。
-        </p>
-        <p className="mt-1 text-sm text-destructive/80">{errorMessage}</p>
+  return (
+    <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
+      <p className="text-base font-bold text-destructive">
+        読み込みに失敗しました。
+      </p>
+      <p className="mt-1 text-sm text-destructive/80">{message}</p>
+      {onRetry ? (
         <button
           type="button"
-          onClick={() => window.location.reload()}
+          onClick={onRetry}
           className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-destructive/30 bg-card px-4 text-sm font-semibold text-destructive"
         >
           再読み込み
         </button>
-      </div>
-    );
+      ) : null}
+    </div>
+  );
+}
+
+function MyRankContent({
+  rankings,
+  errorMessage,
+  collapsedTagIds,
+  onToggleTag,
+  author,
+  onAvatarClick,
+}: {
+  rankings: PublishedRanking[];
+  errorMessage: string | null;
+  collapsedTagIds: string[];
+  onToggleTag: (tagId: string) => void;
+  author: UserProfile;
+  onAvatarClick: (author: UserProfile) => void;
+}) {
+  const groupedRankings = useMemo(() => groupRankingsByTag(rankings), [rankings]);
+
+  if (errorMessage) {
+    return <ErrorCard message={errorMessage} />;
   }
 
-  if (isEmpty) {
+  if (rankings.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
         <h2 className="text-2xl font-bold text-foreground">
           ランキングがまだありません
         </h2>
         <p className="mt-3 text-sm text-muted-foreground">
-          新規作成から、あなたの好きなものを登録できます。
+          新しいランキングを作るか、検索から他のランキングを探せます。
         </p>
         <div className="mt-8 space-y-3">
           <Link
@@ -97,7 +112,7 @@ function MyRankContent({
             href="/search"
             className="flex h-11 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-bold text-foreground hover:bg-muted"
           >
-            タグ検索へ
+            検索へ
           </Link>
         </div>
       </div>
@@ -112,7 +127,7 @@ function MyRankContent({
           aria-label="新規ランキング作成"
           className="inline-flex items-center justify-center rounded-lg bg-primary px-2.5 py-1 text-sm font-bold text-primary-foreground hover:opacity-90"
         >
-＋
+          ＋
         </Link>
       </div>
 
@@ -125,7 +140,7 @@ function MyRankContent({
             <section key={group.tagId} className="space-y-1.5">
               <button
                 type="button"
-                onClick={() => toggleTagAccordion(group.tagId)}
+                onClick={() => onToggleTag(group.tagId)}
                 aria-expanded={!isCollapsed}
                 aria-controls={panelId}
                 className="flex h-9 w-full cursor-pointer items-center justify-between rounded-lg border border-border bg-muted px-4 text-left transition hover:opacity-80"
@@ -134,38 +149,96 @@ function MyRankContent({
                   {group.tagName}
                 </span>
                 <span
-                  className={`text-xs font-bold text-muted-foreground transition-transform ${isCollapsed ? "-rotate-90" : "rotate-0"}`}
+                  className={`text-xs font-bold text-muted-foreground transition-transform ${
+                    isCollapsed ? "-rotate-90" : "rotate-0"
+                  }`}
                 >
-                  {"\u25BC"}
+                  ▼
                 </span>
               </button>
 
-              <div
-                id={panelId}
-                className={`${isCollapsed ? "hidden" : ""}`}
-              >
-                <div className="overflow-hidden rounded-xl bg-card">
-                  {group.items.map((ranking, idx) => {
-                    const rankingWithAuthor: PublicRankingWithAuthor = {
-                      ...ranking,
-                      author,
-                    };
-                    return (
-                      <RankingCard
-                        key={ranking.id}
-                        ranking={rankingWithAuthor}
-                        showBorder={idx < group.items.length - 1}
-                        showLockIcon
-                      />
-                    );
-                  })}
+              {!isCollapsed ? (
+                <div id={panelId} className="overflow-hidden rounded-xl bg-card">
+                  {group.items.map((ranking, index) => (
+                    <RankingCard
+                      key={ranking.id}
+                      ranking={{ ...ranking, author }}
+                      showBorder={index < group.items.length - 1}
+                      showLockIcon
+                      onAvatarClick={(_event, clickedAuthor) => {
+                        onAvatarClick(clickedAuthor);
+                      }}
+                    />
+                  ))}
                 </div>
-              </div>
+              ) : null}
             </section>
           );
         })}
       </div>
     </>
+  );
+}
+
+function FollowingContent({
+  isLoading,
+  errorMessage,
+  rankings,
+  onRetry,
+  onAvatarClick,
+}: {
+  isLoading: boolean;
+  errorMessage: string | null;
+  rankings: PublicRankingWithAuthor[];
+  onRetry: () => void;
+  onAvatarClick: (author: UserProfile) => void;
+}) {
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
+        <p className="text-sm text-muted-foreground">読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return <ErrorCard message={errorMessage} onRetry={onRetry} />;
+  }
+
+  if (rankings.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
+        <h2 className="text-2xl font-bold text-foreground">
+          フォロー中の公開ランキングはまだありません
+        </h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          気になるユーザーをフォローすると、ここに公開ランキングが並びます。
+        </p>
+        <Link
+          href="/search"
+          className="mt-8 inline-flex h-11 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-bold text-foreground hover:bg-muted"
+        >
+          ユーザーを探す
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl bg-card">
+      {rankings.map((ranking, index) => (
+        <RankingCard
+          key={ranking.id}
+          ranking={ranking}
+          showBorder={index < rankings.length - 1}
+          showTagBadge
+          showBookmark
+          onAvatarClick={(_event, author) => {
+            onAvatarClick(author);
+          }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -175,72 +248,147 @@ interface RankingsListContentProps {
   userAvatarUrl?: string;
 }
 
-function RankingsListContentInner({ initialRankings, userName: serverUserName, userAvatarUrl: serverAvatarUrl }: RankingsListContentProps) {
+function RankingsListContentInner({
+  initialRankings,
+  userName: serverUserName,
+  userAvatarUrl: serverAvatarUrl,
+}: RankingsListContentProps) {
+  const router = useRouter();
   const { user } = useSessionUser();
   const { signalReady } = usePageTransition();
 
-  const displayName = user?.name ?? serverUserName;
-  const displayAvatarUrl = user?.avatarUrl ?? serverAvatarUrl;
+  const displayName = user?.name ?? serverUserName ?? "Unknown";
+  const displayAvatarUrl = user?.avatarUrl ?? serverAvatarUrl ?? null;
   const displayUserId = user?.displayUserId ?? null;
 
-  const [rankings, setRankings] = useState<PublishedRanking[]>(initialRankings);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [rankings] = useState<PublishedRanking[]>(initialRankings);
+  const [errorMessage] = useState<string | null>(null);
   const [collapsedTagIds, setCollapsedTagIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>("myrank");
+  const [followingRankings, setFollowingRankings] = useState<
+    PublicRankingWithAuthor[]
+  >([]);
+  const [isFollowingLoading, setIsFollowingLoading] = useState(false);
+  const [followingError, setFollowingError] = useState<string | null>(null);
+  const [hasLoadedFollowing, setHasLoadedFollowing] = useState(false);
+  const [followingReloadKey, setFollowingReloadKey] = useState(0);
 
-  const toggleTagAccordion = useCallback((tagId: string) => {
-    setCollapsedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
-    );
-  }, []);
-
-  // データは SSR 済みなのでマウント時に即 signalReady
   useEffect(() => {
     signalReady();
   }, [signalReady]);
 
-  const groupedRankings = useMemo(() => groupRankingsByTag(rankings), [rankings]);
-  const isEmpty = !isLoading && !errorMessage && rankings.length === 0;
+  useEffect(() => {
+    if (activeTab !== "following" || hasLoadedFollowing || isFollowingLoading) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadFollowingRankings() {
+      setIsFollowingLoading(true);
+      setFollowingError(null);
+
+      try {
+        const response = await fetch("/api/v1/rankings/following", {
+          cache: "no-store",
+        });
+        const body = (await response.json().catch(() => ({}))) as {
+          data?: PublicRankingWithAuthor[];
+          error?: { message?: string };
+        };
+
+        if (!response.ok || !body.data) {
+          throw new Error(
+            body.error?.message ?? "フォロー中ランキングの読み込みに失敗しました。",
+          );
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setFollowingRankings(body.data);
+        setHasLoadedFollowing(true);
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setFollowingError(
+          error instanceof Error
+            ? error.message
+            : "フォロー中ランキングの読み込みに失敗しました。",
+        );
+      } finally {
+        if (!cancelled) {
+          setIsFollowingLoading(false);
+        }
+      }
+    }
+
+    void loadFollowingRankings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, followingReloadKey, hasLoadedFollowing, isFollowingLoading]);
+
+  const author: UserProfile = {
+    id: user?.id ?? rankings[0]?.userId ?? "",
+    displayName,
+    avatarUrl: displayAvatarUrl,
+    displayUserId,
+    introduction: user?.introduction ?? null,
+  };
 
   return (
     <AppShell>
-      {/* Tab content */}
-      {activeTab === "myrank" && (
+      {activeTab === "myrank" ? (
         <MyRankContent
-          isLoading={isLoading}
+          rankings={rankings}
           errorMessage={errorMessage}
-          isEmpty={isEmpty}
-          groupedRankings={groupedRankings}
           collapsedTagIds={collapsedTagIds}
-          toggleTagAccordion={toggleTagAccordion}
-          author={{
-            id: user?.id ?? "",
-            displayName: displayName ?? "Unknown",
-            avatarUrl: displayAvatarUrl ?? null,
-            displayUserId,
+          onToggleTag={(tagId) => {
+            setCollapsedTagIds((current) =>
+              current.includes(tagId)
+                ? current.filter((id) => id !== tagId)
+                : [...current, tagId],
+            );
+          }}
+          author={author}
+          onAvatarClick={(clickedAuthor) => {
+            router.push(buildUserProfilePath(clickedAuthor));
           }}
         />
-      )}
+      ) : null}
 
-      {activeTab === "recommend" && (
+      {activeTab === "recommend" ? (
         <ComingSoon
           title="おすすめ"
-          description="おすすめランキングは現在開発中です"
+          description="おすすめランキングは現在準備中です。"
         />
-      )}
+      ) : null}
 
-      {activeTab === "following" && (
-        <ComingSoon
-          title="フォロー中"
-          description="フォロー機能は現在開発中です"
+      {activeTab === "following" ? (
+        <FollowingContent
+          isLoading={isFollowingLoading}
+          errorMessage={followingError}
+          rankings={followingRankings}
+          onRetry={() => {
+            setHasLoadedFollowing(false);
+            setFollowingError(null);
+            setFollowingReloadKey((current) => current + 1);
+          }}
+          onAvatarClick={(clickedAuthor) => {
+            router.push(buildUserProfilePath(clickedAuthor));
+          }}
         />
-      )}
+      ) : null}
 
-      {/* Bottom tab bar */}
-      <nav className="fixed bottom-0 left-1/2 z-40 flex h-[60px] w-full max-w-[480px] -translate-x-1/2 rounded-t-lg border-t border-l border-r border-border bg-card">
+      <nav className="fixed bottom-0 left-1/2 z-40 flex h-[60px] w-full max-w-[480px] -translate-x-1/2 rounded-t-lg border-x border-t border-border bg-card">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
+
           return (
             <button
               key={tab.id}
@@ -248,16 +396,12 @@ function RankingsListContentInner({ initialRankings, userName: serverUserName, u
               onClick={() => setActiveTab(tab.id)}
               className="relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 bg-transparent transition"
               style={{
-                color: isActive
-                  ? "var(--primary)"
-                  : "var(--muted-foreground)",
+                color: isActive ? "var(--primary)" : "var(--muted-foreground)",
               }}
             >
-              {isActive && (
-                <span
-                  className="absolute top-0 left-4 right-4 h-0.5 rounded-full bg-primary"
-                />
-              )}
+              {isActive ? (
+                <span className="absolute left-4 right-4 top-0 h-0.5 rounded-full bg-primary" />
+              ) : null}
               <span className="text-lg">{tab.icon}</span>
               <span className="text-[10px] font-medium">{tab.label}</span>
             </button>
@@ -265,7 +409,6 @@ function RankingsListContentInner({ initialRankings, userName: serverUserName, u
         })}
       </nav>
 
-      {/* Bottom bar spacer */}
       <div className="h-[60px]" aria-hidden="true" />
     </AppShell>
   );

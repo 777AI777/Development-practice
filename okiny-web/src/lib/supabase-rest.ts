@@ -253,12 +253,14 @@ function mapUserProfileRow(row: {
   display_name: string;
   avatar_url: string | null;
   display_user_id: string | null;
+  introduction?: string | null;
 }): UserProfile {
   return {
     id: row.id,
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     displayUserId: row.display_user_id,
+    introduction: row.introduction ?? null,
   };
 }
 
@@ -310,6 +312,7 @@ function mapPublicRankingWithAuthorRow(row: {
       displayName: row.author_display_name ?? "ユーザー",
       avatarUrl: row.author_avatar_url,
       displayUserId: row.author_display_user_id,
+      introduction: null,
     },
   };
 }
@@ -723,7 +726,7 @@ export async function getUserProfile(
 
   const env = readSupabaseServiceRoleEnv();
   const query = new URLSearchParams({
-    select: "id,display_name,avatar_url,display_user_id",
+    select: "id,display_name,avatar_url,display_user_id,introduction",
     limit: "1",
   });
   query.set(lookup.column, `eq.${lookup.value}`);
@@ -860,6 +863,7 @@ export async function listPublicRankingsByTagWithAuthors(params: {
         displayName: "ユーザー",
         avatarUrl: null,
         displayUserId: null,
+        introduction: null,
       },
     }));
   }
@@ -1091,12 +1095,14 @@ function mapUserProfileRowWithCounts(row: {
   display_user_id: string | null;
   follower_count: number;
   following_count: number;
+  introduction?: string | null;
 }): UserProfileWithCounts {
   return {
     id: row.id,
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     displayUserId: row.display_user_id,
+    introduction: row.introduction ?? null,
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
   };
@@ -1116,7 +1122,7 @@ export async function getUserProfileWithCounts(
   }
 
   const query = new URLSearchParams({
-    select: "id,display_name,avatar_url,display_user_id,follower_count,following_count",
+    select: "id,display_name,avatar_url,display_user_id,introduction,follower_count,following_count",
     limit: "1",
   });
   query.set(lookup.column, `eq.${lookup.value}`);

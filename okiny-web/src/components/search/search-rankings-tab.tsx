@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useSearch } from "@/hooks/use-search";
-import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { RankingCard } from "@/components/ranking-card";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { useSearch } from "@/hooks/use-search";
 import { SEARCH_LIMIT } from "@/lib/constants";
 import type { PublicRankingWithAuthor } from "@/lib/types";
+import { buildUserProfilePath } from "@/lib/user-utils";
 
 interface SearchRankingsTabProps {
   query: string;
@@ -18,15 +20,24 @@ async function fetchRankings(
   signal: AbortSignal,
 ): Promise<{ items: PublicRankingWithAuthor[]; nextCursor: string | null }> {
   const params = new URLSearchParams({ q: query, limit: String(SEARCH_LIMIT) });
-  if (cursor) params.set("cursor", cursor);
+  if (cursor) {
+    params.set("cursor", cursor);
+  }
 
   const res = await fetch(`/api/v1/search/rankings?${params}`, { signal });
-  if (!res.ok) throw new Error("検索に失敗しました");
+  if (!res.ok) {
+    throw new Error("Failed to search rankings");
+  }
+
   const json = await res.json();
   return json.data;
 }
 
-export function SearchRankingsTab({ query, isActive }: SearchRankingsTabProps) {
+export function SearchRankingsTab({
+  query,
+  isActive,
+}: SearchRankingsTabProps) {
+  const router = useRouter();
   const {
     search,
     items,
@@ -37,14 +48,18 @@ export function SearchRankingsTab({ query, isActive }: SearchRankingsTabProps) {
     loadMore,
     reset,
   } = useSearch<PublicRankingWithAuthor>({ fetcher: fetchRankings });
+  const normalizedQuery = query.trim();
 
   useEffect(() => {
-    if (isActive && query) {
-      search(query);
-    } else {
+    if (!normalizedQuery) {
       reset();
+      return;
     }
-  }, [query, isActive, search, reset]);
+
+    if (isActive) {
+      search(normalizedQuery);
+    }
+  }, [isActive, normalizedQuery, reset, search]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,
@@ -52,7 +67,9 @@ export function SearchRankingsTab({ query, isActive }: SearchRankingsTabProps) {
     hasMore,
   });
 
-  if (!isActive) return null;
+  if (!isActive) {
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -68,7 +85,7 @@ export function SearchRankingsTab({ query, isActive }: SearchRankingsTabProps) {
         <p className="text-xs text-destructive">{error}</p>
         <button
           type="button"
-          onClick={() => search(query)}
+          onClick={() => search(normalizedQuery)}
           className="mt-2 text-xs text-primary hover:underline"
         >
           再試行
@@ -81,7 +98,7 @@ export function SearchRankingsTab({ query, isActive }: SearchRankingsTabProps) {
     return (
       <div className="px-6 py-12 text-center">
         <p className="text-sm text-muted-foreground">
-          「{query}」に一致する投稿は見つかりませんでした
+          「{normalizedQuery}」に一致する投稿は見つかりませんでした
         </p>
       </div>
     );
@@ -96,6 +113,9 @@ export function SearchRankingsTab({ query, isActive }: SearchRankingsTabProps) {
             ranking={ranking}
             showBorder={idx < items.length - 1}
             showBookmark
+            onAvatarClick={(_event, author) => {
+              router.push(buildUserProfilePath(author));
+            }}
           />
         ))}
       </div>

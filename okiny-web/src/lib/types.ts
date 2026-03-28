@@ -46,6 +46,7 @@ export interface UserProfile {
   displayName: string;
   avatarUrl: string | null;
   displayUserId: string | null;
+  introduction: string | null;
 }
 
 export interface UserProfileWithCounts extends UserProfile {

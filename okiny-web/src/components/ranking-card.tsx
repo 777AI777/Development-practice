@@ -1,3 +1,5 @@
+import type * as React from "react";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -5,10 +7,6 @@ import { BookmarkButton } from "@/components/bookmark-button";
 import { formatSmartDate } from "@/lib/format-date";
 import type { PublicRankingWithAuthor } from "@/lib/types";
 import { getUserInitial } from "@/lib/user-utils";
-
-// ---------------------------------------------------------------------------
-// SVG Icons
-// ---------------------------------------------------------------------------
 
 function ViewIcon() {
   return (
@@ -85,37 +83,23 @@ function LockIcon() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 interface AvatarInfo {
-  readonly displayName: string;
-  readonly avatarUrl: string | null;
-  readonly displayUserId: string | null;
+  displayName: string;
+  avatarUrl: string | null;
+  displayUserId: string | null;
 }
 
 export interface RankingCardProps {
-  /** ランキングデータ */
-  readonly ranking: PublicRankingWithAuthor;
-  /** 最後の要素でない場合にborder-bottomを表示 */
-  readonly showBorder?: boolean;
-  /** 非公開アイコンを表示（自分のランキング一覧で使用） */
-  readonly showLockIcon?: boolean;
-  /** タグバッジを表示（プロフィールページで使用） */
-  readonly showTagBadge?: boolean;
-  /** ブックマークボタンを表示（検索ページで使用） */
-  readonly showBookmark?: boolean;
-  /** アバタークリック時のコールバック（検索ページのプロフィール遷移用） */
-  readonly onAvatarClick?: (
-    e: React.MouseEvent,
+  ranking: PublicRankingWithAuthor;
+  showBorder?: boolean;
+  showLockIcon?: boolean;
+  showTagBadge?: boolean;
+  showBookmark?: boolean;
+  onAvatarClick?: (
+    event: React.MouseEvent<HTMLButtonElement>,
     author: PublicRankingWithAuthor["author"],
   ) => void;
 }
-
-// ---------------------------------------------------------------------------
-// Avatar sub-component
-// ---------------------------------------------------------------------------
 
 function AvatarImage({
   avatar,
@@ -128,7 +112,7 @@ function AvatarImage({
 }) {
   const initial = getUserInitial(avatar.displayName, "?");
 
-  const imageEl = avatar.avatarUrl ? (
+  const image = avatar.avatarUrl ? (
     <Image
       src={avatar.avatarUrl}
       alt={avatar.displayName}
@@ -142,25 +126,25 @@ function AvatarImage({
     </div>
   );
 
-  if (onAvatarClick) {
-    return (
-      <button
-        type="button"
-        onClick={(e) => onAvatarClick(e, author)}
-        className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        aria-label={`${avatar.displayName}のプロフィール`}
-      >
-        {imageEl}
-      </button>
-    );
+  if (!onAvatarClick) {
+    return <div className="shrink-0">{image}</div>;
   }
 
-  return <div className="shrink-0">{imageEl}</div>;
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onAvatarClick(event, author);
+      }}
+      className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      aria-label={`${avatar.displayName}のプロフィール`}
+    >
+      {image}
+    </button>
+  );
 }
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 
 const MAX_VISIBLE_ITEMS = 5;
 
@@ -186,15 +170,15 @@ export function RankingCard({
         borderBottom: showBorder ? "1px solid var(--border)" : "none",
       }}
     >
-      <div className={`p-4 flex gap-3${onAvatarClick ? " items-start" : ""}`}>
+    <div className="flex items-start gap-3 p-4">
         <AvatarImage
           avatar={avatar}
           onAvatarClick={onAvatarClick}
           author={ranking.author}
         />
-        <div className="flex-1 min-w-0 space-y-1">
-          {/* Author info row */}
-          <div className="flex items-center gap-1.5">
+
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-sm font-bold text-foreground">
               {avatar.displayName}
             </span>
@@ -204,36 +188,33 @@ export function RankingCard({
               </span>
             ) : null}
             <span className="text-xs text-muted-foreground">
-              · {formatSmartDate(ranking.createdAt)}
+              {formatSmartDate(ranking.createdAt)}
             </span>
           </div>
 
-          {/* Title row */}
-          <div className="flex items-center gap-1.5">
-            <h3 className="font-semibold text-[15px] text-foreground">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <h3 className="text-[15px] font-semibold text-foreground">
               {ranking.title}
             </h3>
-            {showLockIcon && ranking.isPublic === false && <LockIcon />}
-            {showTagBadge && ranking.tagName && (
+            {showLockIcon && ranking.isPublic === false ? <LockIcon /> : null}
+            {showTagBadge && ranking.tagName ? (
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 {ranking.tagName}
               </span>
-            )}
+            ) : null}
           </div>
 
-          {/* Ranking items */}
-          <div className="space-y-0">
-            {ranking.items.slice(0, MAX_VISIBLE_ITEMS).map((item, itemIdx) => (
+          <div className="space-y-0.5">
+            {ranking.items.slice(0, MAX_VISIBLE_ITEMS).map((item, index) => (
               <p
-                key={`${ranking.id}-item-${itemIdx}`}
+                key={`${ranking.id}-item-${index}`}
                 className="text-sm leading-relaxed text-muted-foreground"
               >
-                {itemIdx + 1}. {item || "未入力"}
+                {index + 1}. {item || "未入力"}
               </p>
             ))}
           </div>
 
-          {/* Stats row */}
           <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <ViewIcon />

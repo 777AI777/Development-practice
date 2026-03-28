@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSearch } from "@/hooks/use-search";
-import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { UserCard } from "@/components/user-card";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { useSearch } from "@/hooks/use-search";
 import { SEARCH_LIMIT } from "@/lib/constants";
 import type { UserSearchResult } from "@/lib/types";
 
@@ -18,15 +18,23 @@ async function fetchUsers(
   signal: AbortSignal,
 ): Promise<{ items: UserSearchResult[]; nextCursor: string | null }> {
   const params = new URLSearchParams({ q: query, limit: String(SEARCH_LIMIT) });
-  if (cursor) params.set("cursor", cursor);
+  if (cursor) {
+    params.set("cursor", cursor);
+  }
 
   const res = await fetch(`/api/v1/search/users?${params}`, { signal });
-  if (!res.ok) throw new Error("検索に失敗しました");
+  if (!res.ok) {
+    throw new Error("Failed to search users");
+  }
+
   const json = await res.json();
   return json.data;
 }
 
-export function SearchUsersTab({ query, isActive }: SearchUsersTabProps) {
+export function SearchUsersTab({
+  query,
+  isActive,
+}: SearchUsersTabProps) {
   const {
     search,
     items,
@@ -37,14 +45,18 @@ export function SearchUsersTab({ query, isActive }: SearchUsersTabProps) {
     loadMore,
     reset,
   } = useSearch<UserSearchResult>({ fetcher: fetchUsers });
+  const normalizedQuery = query.trim();
 
   useEffect(() => {
-    if (isActive && query) {
-      search(query);
-    } else {
+    if (!normalizedQuery) {
       reset();
+      return;
     }
-  }, [query, isActive, search, reset]);
+
+    if (isActive) {
+      search(normalizedQuery);
+    }
+  }, [isActive, normalizedQuery, reset, search]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,
@@ -52,7 +64,9 @@ export function SearchUsersTab({ query, isActive }: SearchUsersTabProps) {
     hasMore,
   });
 
-  if (!isActive) return null;
+  if (!isActive) {
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -68,7 +82,7 @@ export function SearchUsersTab({ query, isActive }: SearchUsersTabProps) {
         <p className="text-xs text-destructive">{error}</p>
         <button
           type="button"
-          onClick={() => search(query)}
+          onClick={() => search(normalizedQuery)}
           className="mt-2 text-xs text-primary hover:underline"
         >
           再試行
@@ -81,7 +95,7 @@ export function SearchUsersTab({ query, isActive }: SearchUsersTabProps) {
     return (
       <div className="px-6 py-12 text-center">
         <p className="text-sm text-muted-foreground">
-          「{query}」に一致するアカウントは見つかりませんでした
+          「{normalizedQuery}」に一致するアカウントは見つかりませんでした
         </p>
       </div>
     );

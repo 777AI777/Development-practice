@@ -68,9 +68,11 @@ CREATE TRIGGER follows_update_counts
   AFTER INSERT OR DELETE ON public.follows
   FOR EACH ROW EXECUTE FUNCTION update_follow_counts();
 
--- ⑤ user_profiles VIEW 再定義（follower_count / following_count 追加）
+-- ⑤ user_profiles VIEW 再定義（follower_count / following_count + introduction 追加）
 -- 既存定義（008_add_display_user_id_to_user_profiles.sql）に user_stats を LEFT JOIN して拡張
-CREATE OR REPLACE VIEW public.user_profiles AS
+-- ※ CREATE OR REPLACE では列名・列順の変更不可のため DROP → CREATE で再定義
+DROP VIEW IF EXISTS public.user_profiles;
+CREATE VIEW public.user_profiles AS
 SELECT
   au.id,
   COALESCE(
@@ -81,6 +83,7 @@ SELECT
   ) AS display_name,
   NULLIF(btrim(au.raw_user_meta_data ->> 'avatar_url'), '') AS avatar_url,
   NULLIF(lower(btrim(au.raw_user_meta_data ->> 'display_user_id')), '') AS display_user_id,
+  NULLIF(btrim(au.raw_user_meta_data ->> 'introduction'), '') AS introduction,
   COALESCE(us.follower_count, 0) AS follower_count,
   COALESCE(us.following_count, 0) AS following_count
 FROM auth.users au
@@ -119,7 +122,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT
-    r.id, r.user_id, r.title, r.tag_id,
+    r.id, r.user_id::uuid AS user_id, r.title, r.tag_id::uuid,
     t.name AS tag_name,
     r.is_public, r.created_at, r.updated_at,
     r.view_count, r.impression_count, r.bookmark_count,
@@ -130,8 +133,8 @@ AS $$
     u.raw_user_meta_data->>'display_user_id' AS author_display_user_id,
     EXISTS (SELECT 1 FROM bookmarks b WHERE b.user_id = p_viewer_user_id AND b.ranking_id = r.id) AS is_bookmarked
   FROM follows f
-  JOIN rankings r ON r.user_id = f.following_id AND r.is_public = true
-  JOIN auth.users u ON u.id = r.user_id
+  JOIN rankings r ON r.user_id::uuid = f.following_id AND r.is_public = true
+  JOIN auth.users u ON u.id = r.user_id::uuid
   LEFT JOIN tags t ON t.id = r.tag_id
   WHERE f.follower_id = p_viewer_user_id
   ORDER BY r.created_at DESC

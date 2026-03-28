@@ -1,7 +1,12 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-const RATE_LIMIT_MAX_REQUESTS = 30;
+/** 認証済みユーザー（Cookie ベース）のデフォルト上限 */
+export const RATE_LIMIT_AUTHENTICATED = 120;
+
+/** 未認証ユーザー（IP ベース）のデフォルト上限 */
+export const RATE_LIMIT_UNAUTHENTICATED = 30;
+
 const RATE_LIMIT_WINDOW = "1 m";
 
 export type RateLimitResult = {
@@ -11,7 +16,8 @@ export type RateLimitResult = {
   reset: number;
 };
 
-let rateLimiter: Ratelimit | null = null;
+let redisInstance: Redis | null = null;
+const limiters = new Map<number, Ratelimit>();
 
 function getRequiredEnv(name: "UPSTASH_REDIS_REST_URL" | "UPSTASH_REDIS_REST_TOKEN"): string {
   const value = process.env[name];
@@ -22,28 +28,41 @@ function getRequiredEnv(name: "UPSTASH_REDIS_REST_URL" | "UPSTASH_REDIS_REST_TOK
   return value;
 }
 
-function getRateLimiter(): Ratelimit {
-  if (rateLimiter) {
-    return rateLimiter;
+function getRedis(): Redis {
+  if (redisInstance) {
+    return redisInstance;
   }
 
-  const redis = new Redis({
+  redisInstance = new Redis({
     url: getRequiredEnv("UPSTASH_REDIS_REST_URL"),
     token: getRequiredEnv("UPSTASH_REDIS_REST_TOKEN"),
   });
 
-  rateLimiter = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW),
-    analytics: true,
-    prefix: "okiny:ratelimit",
-  });
-
-  return rateLimiter;
+  return redisInstance;
 }
 
-export async function checkRateLimit(identifier: string): Promise<RateLimitResult> {
-  const limiter = getRateLimiter();
+function getRateLimiter(maxRequests: number): Ratelimit {
+  const existing = limiters.get(maxRequests);
+  if (existing) {
+    return existing;
+  }
+
+  const limiter = new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit.slidingWindow(maxRequests, RATE_LIMIT_WINDOW),
+    analytics: true,
+    prefix: `okiny:ratelimit:${maxRequests}`,
+  });
+
+  limiters.set(maxRequests, limiter);
+  return limiter;
+}
+
+export async function checkRateLimit(
+  identifier: string,
+  maxRequests: number = RATE_LIMIT_UNAUTHENTICATED,
+): Promise<RateLimitResult> {
+  const limiter = getRateLimiter(maxRequests);
 
   try {
     const result = await limiter.limit(identifier);
