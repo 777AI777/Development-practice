@@ -60,21 +60,14 @@ function SearchPageContent() {
 
   const handleTagSelect = useCallback(
     (tagName: string) => {
-      router.push(`/search?q=${encodeURIComponent(tagName)}&tab=rankings`);
+      router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
     },
     [router],
   );
 
+  // タグクリック経由の場合、URLには「#映画」が入るが、API検索には「映画」を渡す
+  const searchQuery = q.replace(/^[#＃]/, "");
   const hasQuery = q.trim().length > 0;
-  const { signalReady } = usePageTransition();
-
-  // 検索結果表示時は signalReady を呼んでローディングバーを解除する
-  // （SearchInitialView はクエリなし時のみ signalReady を呼ぶため）
-  useEffect(() => {
-    if (hasQuery) {
-      signalReady();
-    }
-  }, [hasQuery, signalReady]);
 
   return (
     <AppShell>
@@ -83,15 +76,15 @@ function SearchPageContent() {
           <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />
           <div className="px-4 pb-4">
             <SearchRankingsTab
-              query={q}
+              query={searchQuery}
               isActive={activeTab === "rankings"}
             />
             <SearchUsersTab
-              query={q}
+              query={searchQuery}
               isActive={activeTab === "accounts"}
             />
             <SearchTagsTab
-              query={q}
+              query={searchQuery}
               isActive={activeTab === "tags"}
               onTagSelect={handleTagSelect}
             />

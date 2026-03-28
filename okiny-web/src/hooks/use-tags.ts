@@ -8,6 +8,7 @@ interface UseTagsReturn {
   tags: TagItem[];
   searchResults: TagItem[];
   isLoading: boolean;
+  isSearchInitialized: boolean;
   fetchTags: () => Promise<void>;
   search: (query: string) => void;
   clearSearch: () => void;
@@ -25,6 +26,7 @@ export function useTags(): UseTagsReturn {
   const [tags, setTags] = useState<TagItem[]>(() => bootstrapCache?.data ?? []);
   const [searchResults, setSearchResults] = useState<TagItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSearchInitialized, setIsSearchInitialized] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const abortRef = useRef<AbortController | null>(null);
@@ -90,6 +92,7 @@ export function useTags(): UseTagsReturn {
     if (!trimmedQuery) {
       setSearchResults([]);
       setIsLoading(false);
+      setIsSearchInitialized(false);
       return;
     }
 
@@ -97,11 +100,13 @@ export function useTags(): UseTagsReturn {
     if (cached) {
       setSearchResults(cached);
       setIsLoading(false);
+      setIsSearchInitialized(true);
       return;
     }
 
     setSearchResults([]);
     setIsLoading(true);
+    setIsSearchInitialized(false);
     debounceRef.current = setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
@@ -127,6 +132,7 @@ export function useTags(): UseTagsReturn {
       } finally {
         abortRef.current = null;
         setIsLoading(false);
+        setIsSearchInitialized(true);
       }
     }, 300);
   }, []);
@@ -140,12 +146,14 @@ export function useTags(): UseTagsReturn {
     abortRef.current = null;
     setSearchResults([]);
     setIsLoading(false);
+    setIsSearchInitialized(false);
   }, []);
 
   return {
     tags,
     searchResults,
     isLoading,
+    isSearchInitialized,
     fetchTags,
     search,
     clearSearch,

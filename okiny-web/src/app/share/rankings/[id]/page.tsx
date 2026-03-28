@@ -96,8 +96,8 @@ export default async function ShareRankingPage({ params }: Props) {
               {ranking.title}
             </h2>
             {ranking.tagName && (
-              <span className="rounded-full bg-muted px-4 py-1 text-sm text-muted-foreground">
-                {ranking.tagName}
+              <span className="text-sm text-muted-foreground">
+                #{ranking.tagName}
               </span>
             )}
           {/* Ranking Items (TOP 5) */}

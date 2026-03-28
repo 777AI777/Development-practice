@@ -78,6 +78,7 @@ function MyRankContent({
   onToggleTag,
   author,
   onAvatarClick,
+  onTagClick,
 }: {
   rankings: PublishedRanking[];
   errorMessage: string | null;
@@ -85,6 +86,7 @@ function MyRankContent({
   onToggleTag: (tagId: string) => void;
   author: UserProfile;
   onAvatarClick: (author: UserProfile) => void;
+  onTagClick: (tagName: string) => void;
 }) {
   const groupedRankings = useMemo(() => groupRankingsByTag(rankings), [rankings]);
 
@@ -146,7 +148,7 @@ function MyRankContent({
                 className="flex h-9 w-full cursor-pointer items-center justify-between rounded-lg border border-border bg-muted px-4 text-left transition hover:opacity-80"
               >
                 <span className="text-sm font-bold text-foreground">
-                  {group.tagName}
+                  #{group.tagName}
                 </span>
                 <span
                   className={`text-xs font-bold text-muted-foreground transition-transform ${
@@ -165,8 +167,12 @@ function MyRankContent({
                       ranking={{ ...ranking, author }}
                       showBorder={index < group.items.length - 1}
                       showLockIcon
+                      showTagBadge
                       onAvatarClick={(_event, clickedAuthor) => {
                         onAvatarClick(clickedAuthor);
+                      }}
+                      onTagClick={(_event, tagName) => {
+                        onTagClick(tagName);
                       }}
                     />
                   ))}
@@ -186,12 +192,14 @@ function FollowingContent({
   rankings,
   onRetry,
   onAvatarClick,
+  onTagClick,
 }: {
   isLoading: boolean;
   errorMessage: string | null;
   rankings: PublicRankingWithAuthor[];
   onRetry: () => void;
   onAvatarClick: (author: UserProfile) => void;
+  onTagClick: (tagName: string) => void;
 }) {
   if (isLoading) {
     return (
@@ -235,6 +243,9 @@ function FollowingContent({
           showBookmark
           onAvatarClick={(_event, author) => {
             onAvatarClick(author);
+          }}
+          onTagClick={(_event, tagName) => {
+            onTagClick(tagName);
           }}
         />
       ))}
@@ -282,6 +293,7 @@ function RankingsListContentInner({
       return;
     }
 
+    const controller = new AbortController();
     let cancelled = false;
 
     async function loadFollowingRankings() {
@@ -291,6 +303,7 @@ function RankingsListContentInner({
       try {
         const response = await fetch("/api/v1/rankings/following", {
           cache: "no-store",
+          signal: controller.signal,
         });
         const body = (await response.json().catch(() => ({}))) as {
           data?: PublicRankingWithAuthor[];
@@ -310,7 +323,7 @@ function RankingsListContentInner({
         setFollowingRankings(body.data);
         setHasLoadedFollowing(true);
       } catch (error) {
-        if (cancelled) {
+        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) {
           return;
         }
 
@@ -330,6 +343,7 @@ function RankingsListContentInner({
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [activeTab, followingReloadKey, hasLoadedFollowing, isFollowingLoading]);
 
@@ -359,6 +373,9 @@ function RankingsListContentInner({
           onAvatarClick={(clickedAuthor) => {
             router.push(buildUserProfilePath(clickedAuthor));
           }}
+          onTagClick={(tagName) => {
+            router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
+          }}
         />
       ) : null}
 
@@ -381,6 +398,9 @@ function RankingsListContentInner({
           }}
           onAvatarClick={(clickedAuthor) => {
             router.push(buildUserProfilePath(clickedAuthor));
+          }}
+          onTagClick={(tagName) => {
+            router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
           }}
         />
       ) : null}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useTags } from "@/hooks/use-tags";
 
 interface SearchTagsTabProps {
@@ -14,8 +15,10 @@ export function SearchTagsTab({
   isActive,
   onTagSelect,
 }: SearchTagsTabProps) {
-  const { searchResults, isLoading, search, clearSearch } = useTags();
+  const { searchResults, isLoading, isSearchInitialized, search, clearSearch } = useTags();
   const normalizedQuery = query.trim();
+  const { startTransitionLoading, signalReady } = usePageTransition();
+  const transitionActiveRef = useRef(false);
 
   useEffect(() => {
     if (!normalizedQuery) {
@@ -27,6 +30,34 @@ export function SearchTagsTab({
       search(normalizedQuery);
     }
   }, [clearSearch, isActive, normalizedQuery, search]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    if (isLoading && normalizedQuery) {
+      transitionActiveRef.current = true;
+      startTransitionLoading();
+    }
+  }, [isActive, isLoading, normalizedQuery, startTransitionLoading]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    if (!normalizedQuery) {
+      if (transitionActiveRef.current) {
+        transitionActiveRef.current = false;
+        signalReady();
+      }
+      return;
+    }
+
+    if (isSearchInitialized && !isLoading) {
+      if (transitionActiveRef.current) {
+        transitionActiveRef.current = false;
+        signalReady();
+      }
+    }
+  }, [isActive, normalizedQuery, isSearchInitialized, isLoading, signalReady]);
 
   if (!isActive) {
     return null;
@@ -64,7 +95,7 @@ export function SearchTagsTab({
               key={tag.id}
               type="button"
               onClick={() => onTagSelect(tag.name)}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition hover:bg-muted"
+              className="text-xs text-muted-foreground transition hover:text-foreground"
             >
               #{tag.name}
             </button>

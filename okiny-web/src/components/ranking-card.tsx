@@ -99,6 +99,10 @@ export interface RankingCardProps {
     event: React.MouseEvent<HTMLButtonElement>,
     author: PublicRankingWithAuthor["author"],
   ) => void;
+  onTagClick?: (
+    event: React.MouseEvent<HTMLButtonElement>,
+    tagName: string,
+  ) => void;
 }
 
 function AvatarImage({
@@ -155,6 +159,7 @@ export function RankingCard({
   showTagBadge = false,
   showBookmark = false,
   onAvatarClick,
+  onTagClick,
 }: RankingCardProps) {
   const avatar: AvatarInfo = {
     displayName: ranking.author.displayName,
@@ -192,15 +197,31 @@ export function RankingCard({
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {ranking.title}
-            </h3>
-            {showLockIcon && ranking.isPublic === false ? <LockIcon /> : null}
+          <div className="flex flex-col items-start gap-0.5">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                {ranking.title}
+              </h3>
+              {showLockIcon && ranking.isPublic === false ? <LockIcon /> : null}
+            </div>
             {showTagBadge && ranking.tagName ? (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                {ranking.tagName}
-              </span>
+              onTagClick ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onTagClick(e, ranking.tagName!);
+                  }}
+                  className="text-xs text-muted-foreground transition hover:text-foreground"
+                >
+                  #{ranking.tagName}
+                </button>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  #{ranking.tagName}
+                </span>
+              )
             ) : null}
           </div>
 

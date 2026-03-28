@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { UserCard } from "@/components/user-card";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useSearch } from "@/hooks/use-search";
 import { SEARCH_LIMIT } from "@/lib/constants";
@@ -42,10 +43,12 @@ export function SearchUsersTab({
     isLoadingMore,
     hasMore,
     error,
+    isInitialized,
     loadMore,
     reset,
   } = useSearch<UserSearchResult>({ fetcher: fetchUsers });
   const normalizedQuery = query.trim();
+  const { signalReady } = usePageTransition();
 
   useEffect(() => {
     if (!normalizedQuery) {
@@ -57,6 +60,19 @@ export function SearchUsersTab({
       search(normalizedQuery);
     }
   }, [isActive, normalizedQuery, reset, search]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    if (!normalizedQuery) {
+      signalReady();
+      return;
+    }
+
+    if (isInitialized && !isLoading) {
+      signalReady();
+    }
+  }, [isActive, normalizedQuery, isInitialized, isLoading, signalReady]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,

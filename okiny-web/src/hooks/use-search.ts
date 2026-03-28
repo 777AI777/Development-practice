@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants";
 
 interface UseSearchOptions<TItem> {
@@ -19,6 +20,7 @@ interface UseSearchReturn<TItem> {
   isLoadingMore: boolean;
   hasMore: boolean;
   error: string | null;
+  isInitialized: boolean;
   loadMore: () => void;
   reset: () => void;
 }
@@ -35,11 +37,15 @@ export function useSearch<TItem>({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  const { startTransitionLoading, signalReady } = usePageTransition();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const abortRef = useRef<AbortController | null>(null);
   const cursorRef = useRef<string | null>(null);
   const queryRef = useRef("");
+  const transitionActiveRef = useRef(false);
   const cacheRef = useRef<Map<string, { items: TItem[]; nextCursor: string | null }>>(
     new Map(),
   );
@@ -69,23 +75,23 @@ export function useSearch<TItem>({
       try {
         const result = await fetcher(query, cursor, controller.signal);
 
-      if (isMore) {
-        let mergedItems: TItem[] = [];
-        setItems((prev) => {
-          mergedItems = [...prev, ...result.items];
-          return mergedItems;
-        });
-        cacheRef.current.set(query, {
-          items: mergedItems,
-          nextCursor: result.nextCursor,
-        });
-      } else {
-        setItems(result.items);
-        cacheRef.current.set(query, {
-          items: result.items,
-          nextCursor: result.nextCursor,
-        });
-      }
+        if (isMore) {
+          let mergedItems: TItem[] = [];
+          setItems((prev) => {
+            mergedItems = [...prev, ...result.items];
+            return mergedItems;
+          });
+          cacheRef.current.set(query, {
+            items: mergedItems,
+            nextCursor: result.nextCursor,
+          });
+        } else {
+          setItems(result.items);
+          cacheRef.current.set(query, {
+            items: result.items,
+            nextCursor: result.nextCursor,
+          });
+        }
 
         cursorRef.current = result.nextCursor;
         setHasMore(result.nextCursor !== null);
@@ -105,10 +111,15 @@ export function useSearch<TItem>({
           setIsLoadingMore(false);
         } else {
           setIsLoading(false);
+          if (transitionActiveRef.current) {
+            transitionActiveRef.current = false;
+            signalReady();
+          }
         }
+        setIsInitialized(true);
       }
     },
-    [fetcher],
+    [fetcher, signalReady],
   );
 
   const search = useCallback(
@@ -131,6 +142,11 @@ export function useSearch<TItem>({
         setHasMore(false);
         setError(null);
         cursorRef.current = null;
+        setIsInitialized(false);
+        if (transitionActiveRef.current) {
+          transitionActiveRef.current = false;
+          signalReady();
+        }
         return;
       }
 
@@ -142,6 +158,7 @@ export function useSearch<TItem>({
         setHasMore(cached.nextCursor !== null);
         setError(null);
         cursorRef.current = cached.nextCursor;
+        setIsInitialized(true);
         return;
       }
 
@@ -152,11 +169,14 @@ export function useSearch<TItem>({
       setError(null);
       cursorRef.current = null;
 
+      transitionActiveRef.current = true;
+      startTransitionLoading();
+
       debounceRef.current = setTimeout(() => {
         fetchPage(trimmedQuery, null, false);
       }, debounceMs);
     },
-    [debounceMs, fetchPage, minQueryLength],
+    [debounceMs, fetchPage, minQueryLength, signalReady, startTransitionLoading],
   );
 
   const loadMore = useCallback(() => {
@@ -181,6 +201,7 @@ export function useSearch<TItem>({
     setError(null);
     cursorRef.current = null;
     queryRef.current = "";
+    setIsInitialized(false);
   }, []);
 
   return {
@@ -190,6 +211,7 @@ export function useSearch<TItem>({
     isLoadingMore,
     hasMore,
     error,
+    isInitialized,
     loadMore,
     reset,
   };

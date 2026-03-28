@@ -226,83 +226,59 @@ export function RankingDetailContent({
 
         {/* 著者情報 */}
         {authorProfile && (
-          <Link
-            href={buildUserProfilePath(authorProfile)}
-            className="flex items-center gap-2 transition hover:opacity-80"
-          >
-            {authorProfile.avatarUrl ? (
-              <Image
-                src={authorProfile.avatarUrl}
-                alt={authorProfile.displayName}
-                width={32}
-                height={32}
-                className="h-8 w-8 rounded-full object-cover"
-              />
-            ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
-                {authorProfile.displayName.charAt(0)}
-              </span>
-            )}
-            <div className="min-w-0">
-              <span className="block truncate text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 pl-2">
+            <Link
+              href={buildUserProfilePath(authorProfile)}
+              className="flex items-center gap-2 transition hover:opacity-80"
+            >
+              {authorProfile.avatarUrl ? (
+                <Image
+                  src={authorProfile.avatarUrl}
+                  alt={authorProfile.displayName}
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                  {authorProfile.displayName.charAt(0)}
+                </span>
+              )}
+              <span className="text-sm font-bold text-foreground">
                 {authorProfile.displayName}
               </span>
-              {authorProfile.displayUserId ? (
-                <span className="block truncate text-xs text-muted-foreground">
+            </Link>
+            {authorProfile.displayUserId ? (
+              <>
+                <span className="text-xs text-muted-foreground">
                   @{authorProfile.displayUserId}
                 </span>
-              ) : null}
-            </div>
-          </Link>
+                <span className="text-xs text-muted-foreground">・</span>
+              </>
+            ) : null}
+            <span className="text-xs text-muted-foreground">
+              {formatSmartDate(ranking.createdAt)}
+            </span>
+          </div>
         )}
 
         {/* Tag + date + stats */}
-        <div className="flex items-center gap-3">
-          <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-            {ranking.tagName ?? ranking.tagId}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {formatSmartDate(ranking.createdAt)}
-          </span>
-          {/* 閲覧数 */}
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        <div className="flex items-center gap-3 pl-8">
+          {ranking.tagName ? (
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  `/search?q=${encodeURIComponent('#' + ranking.tagName!)}&tab=rankings`,
+                )
+              }
+              className="text-sm text-muted-foreground transition hover:text-foreground"
             >
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            {ranking.viewCount}
-          </span>
-          {/* インプレッション数 */}
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="20" x2="18" y2="10" />
-              <line x1="12" y1="20" x2="12" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="14" />
-            </svg>
-            {ranking.impressionCount}
-          </span>
-          {/* ブックマーク数 */}
-          {isOwner ? (
+              #{ranking.tagName}
+            </button>
+          ) : null}
+          <div className="ml-auto flex items-center gap-3">
+            {/* 閲覧数 */}
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -315,19 +291,58 @@ export function RankingDetailContent({
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
-              {ranking.bookmarkCount}
+              {ranking.viewCount}
             </span>
-          ) : (
-            <BookmarkButton
-              rankingId={ranking.id}
-              initialIsBookmarked={ranking.isBookmarked}
-              bookmarkCount={ranking.bookmarkCount}
-              compact
-              className="-my-1 -ml-1"
-            />
-          )}
+            {/* インプレッション数 */}
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+              </svg>
+              {ranking.impressionCount}
+            </span>
+            {/* ブックマーク数 */}
+            {isOwner ? (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+                {ranking.bookmarkCount}
+              </span>
+            ) : (
+              <BookmarkButton
+                rankingId={ranking.id}
+                initialIsBookmarked={ranking.isBookmarked}
+                bookmarkCount={ranking.bookmarkCount}
+                compact
+                className="-my-1 -ml-1"
+              />
+            )}
+          </div>
         </div>
 
         {/* Ranking items */}

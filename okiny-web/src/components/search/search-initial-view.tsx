@@ -79,7 +79,7 @@ export function SearchInitialView({
       {history.length > 0 && (
         <section>
           <div className="flex items-center justify-between px-4">
-            <h3 className="text-sm font-medium text-foreground">検索履歴</h3>
+            <h3 className="text-xs font-medium text-muted-foreground">検索履歴</h3>
             <button
               type="button"
               onClick={handleClearHistory}
@@ -88,20 +88,20 @@ export function SearchInitialView({
               すべて消去
             </button>
           </div>
-          <div className="mt-2 flex flex-wrap gap-2 px-4">
+          <div className="mt-1 flex flex-col gap-0.5 px-4">
             {history.map((query) => (
-              <div key={query} className="flex items-center gap-1">
+              <div key={query} className="flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => onSearchQuery(query)}
-                  className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition hover:bg-muted"
+                  className="text-xs text-muted-foreground transition hover:text-foreground"
                 >
                   {query}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleRemoveHistory(query)}
-                  className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  className="flex h-4 w-4 items-center justify-center text-muted-foreground/50 transition hover:text-muted-foreground"
                   aria-label={`${query}を削除`}
                 >
                   <span className="text-[10px] leading-none">{"\u2715"}</span>
@@ -170,7 +170,7 @@ export function SearchInitialView({
                 key={tag.id}
                 type="button"
                 onClick={() => onTagSelect(tag.name)}
-                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition hover:bg-muted"
+                className="text-xs text-muted-foreground transition hover:text-foreground"
               >
                 #{tag.name}
               </button>
@@ -190,7 +190,7 @@ export function SearchInitialView({
                 key={tag.id}
                 type="button"
                 onClick={() => onTagSelect(tag.name)}
-                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition hover:bg-muted"
+                className="text-xs text-muted-foreground transition hover:text-foreground"
               >
                 #{tag.name}
               </button>

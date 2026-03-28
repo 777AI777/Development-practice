@@ -154,10 +154,8 @@ export async function updateSession(request: NextRequest, nonce: string) {
   });
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const user = session?.user ?? null;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const isPublicPath =
     EXACT_PUBLIC_PATHS.some((p) => pathname === p) ||

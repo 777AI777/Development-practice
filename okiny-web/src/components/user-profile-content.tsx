@@ -353,6 +353,9 @@ function UserProfileContentInner({
               onAvatarClick={(_event, author) => {
                 router.push(buildUserProfilePath(author));
               }}
+              onTagClick={(_event, tagName) => {
+                router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
+              }}
             />
           ))}
         </div>

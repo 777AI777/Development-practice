@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { RankingCard } from "@/components/ranking-card";
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useSearch } from "@/hooks/use-search";
 import { SEARCH_LIMIT } from "@/lib/constants";
@@ -45,10 +46,12 @@ export function SearchRankingsTab({
     isLoadingMore,
     hasMore,
     error,
+    isInitialized,
     loadMore,
     reset,
   } = useSearch<PublicRankingWithAuthor>({ fetcher: fetchRankings });
   const normalizedQuery = query.trim();
+  const { signalReady } = usePageTransition();
 
   useEffect(() => {
     if (!normalizedQuery) {
@@ -60,6 +63,19 @@ export function SearchRankingsTab({
       search(normalizedQuery);
     }
   }, [isActive, normalizedQuery, reset, search]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    if (!normalizedQuery) {
+      signalReady();
+      return;
+    }
+
+    if (isInitialized && !isLoading) {
+      signalReady();
+    }
+  }, [isActive, normalizedQuery, isInitialized, isLoading, signalReady]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,
@@ -112,9 +128,13 @@ export function SearchRankingsTab({
             key={ranking.id}
             ranking={ranking}
             showBorder={idx < items.length - 1}
+            showTagBadge
             showBookmark
             onAvatarClick={(_event, author) => {
               router.push(buildUserProfilePath(author));
+            }}
+            onTagClick={(_event, tagName) => {
+              router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
             }}
           />
         ))}
