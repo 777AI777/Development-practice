@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { UserCard } from "@/components/user-card";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useSearch } from "@/hooks/use-search";
 import {
   SEARCH_LIMIT,
-  SEARCH_USERS_CACHE_KEY,
   SEARCH_USERS_SCROLL_KEY,
-  SEARCH_CACHE_TTL_MS,
 } from "@/lib/constants";
 import type { UserSearchResult } from "@/lib/types";
 
@@ -53,22 +51,46 @@ export function SearchUsersTab({
     reset,
   } = useSearch<UserSearchResult>({
     fetcher: fetchUsers,
-    cacheKey: SEARCH_USERS_CACHE_KEY,
-    cacheTtlMs: SEARCH_CACHE_TTL_MS,
+    namespace: "users",
   });
   const normalizedQuery = query.trim();
   const { signalReady } = usePageTransition();
 
+  // --- タブ切替で search() が再発火しないよう ref で管理 ---
+  const isActiveRef = useRef(isActive);
+  const pendingQueryRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    isActiveRef.current = isActive;
+
+    // タブがアクティブになったとき、保留中のクエリがあれば実行
+    if (isActive && pendingQueryRef.current !== null) {
+      const pending = pendingQueryRef.current;
+      pendingQueryRef.current = null;
+      search(pending);
+    }
+  }, [isActive, search]);
+
+  const searchIfActive = useCallback(
+    (q: string) => {
+      if (isActiveRef.current) {
+        search(q);
+      } else {
+        pendingQueryRef.current = q;
+      }
+    },
+    [search],
+  );
+
   useEffect(() => {
     if (!normalizedQuery) {
       reset();
+      pendingQueryRef.current = null;
       return;
     }
 
-    if (isActive) {
-      search(normalizedQuery);
-    }
-  }, [isActive, normalizedQuery, reset, search]);
+    searchIfActive(normalizedQuery);
+  }, [normalizedQuery, reset, searchIfActive]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -86,6 +108,27 @@ export function SearchUsersTab({
   // --- スクロール復元 ---
   const scrollRestoredRef = useRef(false);
 
+  // scrollイベントで常時保存（throttle 200ms）
+  useEffect(() => {
+    if (!isActive || items.length === 0) return;
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const handleScroll = () => {
+      if (timeoutId) return;
+      timeoutId = setTimeout(() => {
+        sessionStorage.setItem(SEARCH_USERS_SCROLL_KEY, String(window.scrollY));
+        timeoutId = null;
+      }, 200);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isActive, items.length]);
+
+  // データ復元後にスクロール位置を復元
   useEffect(() => {
     if (!isActive || !isInitialized || isLoading || items.length === 0) return;
     if (scrollRestoredRef.current) return;
@@ -93,8 +136,8 @@ export function SearchUsersTab({
     scrollRestoredRef.current = true;
     const saved = sessionStorage.getItem(SEARCH_USERS_SCROLL_KEY);
     if (saved !== null) {
-      const scrollY = Number(saved);
       sessionStorage.removeItem(SEARCH_USERS_SCROLL_KEY);
+      const scrollY = Number(saved);
       if (Number.isFinite(scrollY)) {
         requestAnimationFrame(() => {
           window.scrollTo(0, scrollY);
@@ -102,14 +145,6 @@ export function SearchUsersTab({
       }
     }
   }, [isActive, isInitialized, isLoading, items.length]);
-
-  // アンマウント時にスクロール位置を保存
-  useEffect(() => {
-    if (!isActive) return;
-    return () => {
-      sessionStorage.setItem(SEARCH_USERS_SCROLL_KEY, String(window.scrollY));
-    };
-  }, [isActive]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,

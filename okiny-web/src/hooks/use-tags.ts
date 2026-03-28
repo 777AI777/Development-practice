@@ -22,6 +22,12 @@ let bootstrapCache: { data: TagItem[]; fetchedAt: number } | null = null;
 let bootstrapInflight: Promise<TagItem[]> | null = null;
 const BOOTSTRAP_CACHE_TTL_MS = 5 * 60 * 1000; // 5 分
 
+/**
+ * モジュールスコープのタグ検索キャッシュ。
+ * コンポーネント再マウント（ページ遷移→戻る）でも保持される。
+ */
+const tagSearchCache = new Map<string, TagItem[]>();
+
 export function useTags(): UseTagsReturn {
   const [tags, setTags] = useState<TagItem[]>(() => bootstrapCache?.data ?? []);
   const [searchResults, setSearchResults] = useState<TagItem[]>([]);
@@ -30,7 +36,8 @@ export function useTags(): UseTagsReturn {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const abortRef = useRef<AbortController | null>(null);
-  const cacheRef = useRef<Map<string, TagItem[]>>(new Map());
+  /** マウント直後の初回検索かどうか。true=キャッシュ復元、false=フレッシュフェッチ */
+  const isMountSearchRef = useRef(true);
 
   useEffect(() => {
     return () => {
@@ -96,12 +103,19 @@ export function useTags(): UseTagsReturn {
       return;
     }
 
-    const cached = cacheRef.current.get(trimmedQuery);
-    if (cached) {
-      setSearchResults(cached);
-      setIsLoading(false);
-      setIsSearchInitialized(true);
-      return;
+    if (isMountSearchRef.current) {
+      // マウント直後の初回: キャッシュから復元（戻るナビゲーション用）
+      isMountSearchRef.current = false;
+      const cached = tagSearchCache.get(trimmedQuery);
+      if (cached) {
+        setSearchResults(cached);
+        setIsLoading(false);
+        setIsSearchInitialized(true);
+        return;
+      }
+    } else {
+      // 2回目以降（能動的検索）: キャッシュを削除してフレッシュフェッチ
+      tagSearchCache.delete(trimmedQuery);
     }
 
     setSearchResults([]);
@@ -122,7 +136,7 @@ export function useTags(): UseTagsReturn {
 
         const json = await res.json();
         const results = (json.data ?? []) as TagItem[];
-        cacheRef.current.set(trimmedQuery, results);
+        tagSearchCache.set(trimmedQuery, results);
         setSearchResults(results);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {

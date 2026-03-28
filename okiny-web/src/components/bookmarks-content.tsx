@@ -1,33 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
-import { BookmarkButton } from "@/components/bookmark-button";
 import { EmptyStateMessage } from "@/components/empty-state-message";
 import { usePageTransition } from "@/components/page-transition-provider";
+import { RankingCard } from "@/components/ranking-card";
 import { useListCache } from "@/hooks/use-list-cache";
 import type { PageResult } from "@/hooks/use-list-cache";
 import { BOOKMARKS_CACHE_KEY, SCROLL_KEY_BOOKMARKS } from "@/lib/constants";
 import { clearListCache } from "@/lib/list-cache";
-import { formatSmartDate } from "@/lib/format-date";
-import type { PublishedRanking } from "@/lib/types";
+import type { PublicRankingWithAuthor } from "@/lib/types";
+import { buildUserProfilePath } from "@/lib/user-utils";
 
 async function fetchBookmarks(
   cursor: string | null,
   signal: AbortSignal,
-): Promise<PageResult<PublishedRanking>> {
+): Promise<PageResult<PublicRankingWithAuthor>> {
+  void cursor;
+
   const res = await fetch("/api/v1/bookmarks", { signal });
   if (!res.ok) {
     const json = await res.json().catch(() => null);
     throw new Error(
       (json as { error?: { message?: string } } | null)?.error?.message ??
-        "ブックマークの取得に失敗しました",
+        "ブックマークの取得に失敗しました。",
     );
   }
-  const json = await res.json();
+
+  const json = (await res.json()) as { data: PublicRankingWithAuthor[] };
   return { items: json.data, nextCursor: null };
 }
 
@@ -45,6 +49,7 @@ function EmptyBookmarksState() {
 }
 
 function BookmarksContentInner() {
+  const router = useRouter();
   const { signalReady } = usePageTransition();
 
   const {
@@ -53,7 +58,7 @@ function BookmarksContentInner() {
     error,
     hasFetched,
     refresh,
-  } = useListCache<PublishedRanking>({
+  } = useListCache<PublicRankingWithAuthor>({
     cache: { cacheKey: BOOKMARKS_CACHE_KEY },
     fetcher: fetchBookmarks,
     enabled: true,
@@ -62,11 +67,10 @@ function BookmarksContentInner() {
 
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const rankings = useMemo(
-    () => bookmarkedRankings.filter((r) => !hiddenIds.has(r.id)),
+    () => bookmarkedRankings.filter((ranking) => !hiddenIds.has(ranking.id)),
     [bookmarkedRankings, hiddenIds],
   );
 
-  // 再フェッチ後に hiddenIds をリセット
   useEffect(() => {
     setHiddenIds(new Set());
   }, [bookmarkedRankings]);
@@ -112,73 +116,28 @@ function BookmarksContentInner() {
         <EmptyBookmarksState />
       ) : (
         <div className="overflow-hidden rounded-xl bg-card">
-          {rankings.map((ranking, idx) => (
-            <Link
+          {rankings.map((ranking, index) => (
+            <RankingCard
               key={ranking.id}
-              href={`/rankings/${ranking.id}`}
-              className="block transition hover:bg-muted/50"
-              style={{
-                borderBottom:
-                  idx < rankings.length - 1 ? "1px solid var(--border)" : "none",
+              ranking={ranking}
+              showBorder={index < rankings.length - 1}
+              showTagBadge
+              showBookmark
+              onAvatarClick={(_event, author) => {
+                router.push(buildUserProfilePath(author));
               }}
-            >
-              <div className="p-4">
-                <div className="flex items-center gap-1.5">
-                  {ranking.tagName ? (
-                    <span className="text-xs text-primary">
-                      #{ranking.tagName}
-                    </span>
-                  ) : null}
-                  <span className="text-xs text-muted-foreground">
-                    · {formatSmartDate(ranking.createdAt)}
-                  </span>
-                </div>
-                <h3 className="mt-1.5 text-[15px] font-semibold text-foreground">
-                  {ranking.title}
-                </h3>
-                <div className="mt-1 space-y-0">
-                  {ranking.items.slice(0, 5).map((item, itemIdx) => (
-                    <p
-                      key={`${ranking.id}-item-${itemIdx}`}
-                      className="text-sm leading-relaxed text-muted-foreground"
-                    >
-                      {itemIdx + 1}. {item || "未入力"}
-                    </p>
-                  ))}
-                </div>
-                <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    {ranking.viewCount}
-                  </span>
-                  <BookmarkButton
-                    rankingId={ranking.id}
-                    initialIsBookmarked={true}
-                    bookmarkCount={ranking.bookmarkCount}
-                    compact
-                    className="-my-1 -ml-1"
-                    onChange={(nextIsBookmarked) => {
-                      if (nextIsBookmarked) return;
-                      setHiddenIds((prev) => new Set([...prev, ranking.id]));
-                      clearListCache({ cacheKey: BOOKMARKS_CACHE_KEY });
-                    }}
-                  />
-                </div>
-              </div>
-            </Link>
+              onTagClick={(_event, tagName) => {
+                router.push(`/search?q=${encodeURIComponent(`#${tagName}`)}&tab=rankings`);
+              }}
+              onBookmarkChange={(nextIsBookmarked) => {
+                if (nextIsBookmarked) {
+                  return;
+                }
+
+                setHiddenIds((prev) => new Set([...prev, ranking.id]));
+                clearListCache({ cacheKey: BOOKMARKS_CACHE_KEY });
+              }}
+            />
           ))}
         </div>
       )}

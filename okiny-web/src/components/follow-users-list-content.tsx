@@ -160,9 +160,9 @@ function FollowUsersListContentInner({
       const newPath = tab === "followers"
         ? `${basePath}/followers`
         : `${basePath}/following`;
-      window.history.replaceState(null, "", newPath);
+      router.replace(newPath, { scroll: false });
     },
-    [profile],
+    [profile, router],
   );
 
   const handleRemoveFollowerClick = useCallback(

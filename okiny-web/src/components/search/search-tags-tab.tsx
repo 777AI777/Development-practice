@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useTags } from "@/hooks/use-tags";
 
@@ -20,16 +20,41 @@ export function SearchTagsTab({
   const { startTransitionLoading, signalReady } = usePageTransition();
   const transitionActiveRef = useRef(false);
 
+  // --- タブ切替で search() が再発火しないよう ref で管理 ---
+  const isActiveRef = useRef(isActive);
+  const pendingQueryRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    isActiveRef.current = isActive;
+
+    // タブがアクティブになったとき、保留中のクエリがあれば実行
+    if (isActive && pendingQueryRef.current !== null) {
+      const pending = pendingQueryRef.current;
+      pendingQueryRef.current = null;
+      search(pending);
+    }
+  }, [isActive, search]);
+
+  const searchIfActive = useCallback(
+    (q: string) => {
+      if (isActiveRef.current) {
+        search(q);
+      } else {
+        pendingQueryRef.current = q;
+      }
+    },
+    [search],
+  );
+
   useEffect(() => {
     if (!normalizedQuery) {
       clearSearch();
+      pendingQueryRef.current = null;
       return;
     }
 
-    if (isActive) {
-      search(normalizedQuery);
-    }
-  }, [clearSearch, isActive, normalizedQuery, search]);
+    searchIfActive(normalizedQuery);
+  }, [clearSearch, normalizedQuery, searchIfActive]);
 
   useEffect(() => {
     if (!isActive) return;

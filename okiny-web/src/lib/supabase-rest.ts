@@ -961,7 +961,7 @@ export async function removeBookmark(params: {
 export async function listBookmarkedRankings(params: {
   userId: string;
   accessToken: string;
-}): Promise<ReturnType<typeof mapRankingRow>[]> {
+}): Promise<PublicRankingWithAuthor[]> {
   // bookmarks テーブルから rankings を JOIN して取得
   const query = new URLSearchParams({
     select: "ranking_id,rankings(id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name))",
@@ -982,13 +982,29 @@ export async function listBookmarkedRankings(params: {
     rankings: SupabaseRankingRow | null;
   }>;
 
-  // rankings が null のもの（削除済み等）はスキップ
-  return rows
+  const bookmarkedRankings = rows
     .filter((row): row is { ranking_id: string; rankings: SupabaseRankingRow } => row.rankings !== null)
     .map((row) => ({
       ...mapRankingRow(row.rankings),
       isBookmarked: true,
     }));
+
+  const userIds = [...new Set(bookmarkedRankings.map((ranking) => ranking.userId))];
+  const profiles = await getUserProfilesBatch(userIds);
+  const profileMap = new Map<string, UserProfile>(
+    profiles.map((profile) => [profile.id, profile]),
+  );
+
+  return bookmarkedRankings.map((ranking) => ({
+    ...ranking,
+    author: profileMap.get(ranking.userId) ?? {
+      id: ranking.userId,
+      displayName: "ユーザー",
+      avatarUrl: null,
+      displayUserId: null,
+      introduction: null,
+    },
+  }));
 }
 
 /**

@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import type { ListCacheConfig, ListCacheEntry } from "@/lib/list-cache";
+import type { ListCacheConfig } from "@/lib/list-cache";
 import {
   clearListCache,
   getInvalidationEventName,
@@ -11,20 +12,15 @@ import {
   touchListCache,
 } from "@/lib/list-cache";
 
-/** ページ取得結果 */
 export interface PageResult<T> {
   items: T[];
   nextCursor: string | null;
 }
 
 interface UseListCacheOptions<T> {
-  /** sessionStorageキャッシュ設定。nullならキャッシュ無効 */
   cache: ListCacheConfig | null;
-  /** データ取得関数 */
   fetcher: (cursor: string | null, signal: AbortSignal) => Promise<PageResult<T>>;
-  /** フックの有効/無効（タブ切替等） */
   enabled?: boolean;
-  /** スクロール復元キー。nullなら復元しない */
   scrollRestoreKey?: string | null;
 }
 
@@ -47,24 +43,39 @@ export function useListCache<T>({
   enabled = true,
   scrollRestoreKey = null,
 }: UseListCacheOptions<T>): UseListCacheReturn<T> {
-  // --- キャッシュ初期化 ---
-  const cachedEntry = cache ? getListCache<T>(cache) : null;
+  const cacheKey = cache?.cacheKey ?? null;
+  const ttlMs = cache?.ttlMs;
 
-  const [items, setItems] = useState<T[]>(() => cachedEntry?.items ?? []);
-  const [isLoading, setIsLoading] = useState(!cachedEntry && enabled);
+  const [items, setItems] = useState<T[]>([]);
+  const [isLoading, setIsLoading] = useState(enabled);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(() => cachedEntry?.hasMore ?? false);
+  const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [restoredFromCache] = useState(() => cachedEntry !== null);
-  const [hasFetched, setHasFetched] = useState(() => cachedEntry !== null);
+  const [hasFetched, setHasFetched] = useState(false);
+  const [restoredFromCache, setRestoredFromCache] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
-  const cursorRef = useRef<string | null>(cachedEntry?.nextCursor ?? null);
-  const itemsRef = useRef<T[]>(cachedEntry?.items ?? []);
+  const cursorRef = useRef<string | null>(null);
+  const itemsRef = useRef<T[]>([]);
   const isLoadingRef = useRef(false);
-  const hasFetchedRef = useRef(cachedEntry !== null);
+  const hasFetchedRef = useRef(false);
 
-  // --- Strict Mode 対策: cleanup で全ref リセット ---
+  const resetState = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    cursorRef.current = null;
+    itemsRef.current = [];
+    isLoadingRef.current = false;
+    hasFetchedRef.current = false;
+
+    setItems([]);
+    setHasMore(false);
+    setHasFetched(false);
+    setRestoredFromCache(false);
+    setIsLoading(false);
+    setError(null);
+  }, []);
+
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
@@ -74,7 +85,6 @@ export function useListCache<T>({
     };
   }, []);
 
-  // --- フェッチ処理 ---
   const fetchPage = useCallback(
     async (cursor: string | null, isMore: boolean) => {
       if (isLoadingRef.current) return;
@@ -93,36 +103,25 @@ export function useListCache<T>({
 
       try {
         const result = await fetcher(cursor, controller.signal);
-
         const nextCursor = result.nextCursor;
         const nextHasMore = nextCursor !== null;
+        const nextItems = isMore
+          ? [...itemsRef.current, ...result.items]
+          : result.items;
 
-        if (isMore) {
-          const merged = [...itemsRef.current, ...result.items];
-          itemsRef.current = merged;
-          setItems(merged);
-          if (cache) {
-            setListCache(cache, {
-              items: merged,
-              nextCursor,
-              hasMore: nextHasMore,
-            });
-          }
-        } else {
-          itemsRef.current = result.items;
-          setItems(result.items);
-          if (cache) {
-            setListCache(cache, {
-              items: result.items,
-              nextCursor,
-              hasMore: nextHasMore,
-            });
-          }
-        }
-
+        itemsRef.current = nextItems;
         cursorRef.current = nextCursor;
+
+        setItems(nextItems);
         setHasMore(nextHasMore);
         setHasFetched(true);
+
+        if (cacheKey) {
+          setListCache(
+            { cacheKey, ttlMs },
+            { items: nextItems, nextCursor, hasMore: nextHasMore },
+          );
+        }
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
           return;
@@ -140,8 +139,8 @@ export function useListCache<T>({
         }
       } finally {
         if (abortRef.current === controller) {
-          isLoadingRef.current = false;
           abortRef.current = null;
+          isLoadingRef.current = false;
 
           if (isMore) {
             setIsLoadingMore(false);
@@ -151,12 +150,35 @@ export function useListCache<T>({
         }
       }
     },
-    // fetcher と cache はオプションとして渡され、呼び出し側で安定化される前提
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [fetcher, cacheKey, ttlMs],
   );
 
-  // --- 初回フェッチ: enabled && 未フェッチ && キャッシュ復元なし ---
+  useEffect(() => {
+    if (!enabled) return;
+
+    if (!cacheKey) {
+      setRestoredFromCache(false);
+      return;
+    }
+
+    const freshEntry = getListCache<T>({ cacheKey, ttlMs });
+    if (!freshEntry) {
+      setRestoredFromCache(false);
+      return;
+    }
+
+    itemsRef.current = freshEntry.items;
+    cursorRef.current = freshEntry.nextCursor;
+    hasFetchedRef.current = true;
+
+    setItems(freshEntry.items);
+    setHasMore(freshEntry.hasMore);
+    setHasFetched(true);
+    setIsLoading(false);
+    setError(null);
+    setRestoredFromCache(true);
+  }, [enabled, cacheKey, ttlMs]);
+
   useEffect(() => {
     if (!enabled) return;
     if (hasFetchedRef.current) return;
@@ -164,17 +186,13 @@ export function useListCache<T>({
     hasFetchedRef.current = true;
     cursorRef.current = null;
     fetchPage(null, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [enabled, fetchPage]);
 
-  // --- TTLリフレッシュ: キャッシュ復元時にタイムスタンプをリセット ---
   useEffect(() => {
-    if (!enabled || !restoredFromCache || !cache) return;
-    touchListCache(cache);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, restoredFromCache]);
+    if (!enabled || !restoredFromCache || !cacheKey) return;
+    touchListCache({ cacheKey, ttlMs });
+  }, [enabled, restoredFromCache, cacheKey, ttlMs]);
 
-  // --- スクロール復元 ---
   useEffect(() => {
     if (!scrollRestoreKey || !restoredFromCache) return;
 
@@ -193,29 +211,15 @@ export function useListCache<T>({
     return () => {
       sessionStorage.setItem(key, String(window.scrollY));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollRestoreKey, restoredFromCache]);
 
-  // --- キャッシュ無効化検知: 外部から clearListCache が呼ばれたとき ---
   useEffect(() => {
-    if (!cache) return;
+    if (!cacheKey) return;
 
-    const eventName = getInvalidationEventName(cache.cacheKey);
-
+    const eventName = getInvalidationEventName(cacheKey);
     const handleInvalidated = () => {
-      // 進行中のフェッチをキャンセル
-      abortRef.current?.abort();
-      abortRef.current = null;
-      isLoadingRef.current = false;
-      hasFetchedRef.current = false;
-      cursorRef.current = null;
-      itemsRef.current = [];
-      setItems([]);
-      setHasMore(false);
-      setHasFetched(false);
-      setError(null);
+      resetState();
 
-      // enabled なら再フェッチ
       if (enabled) {
         hasFetchedRef.current = true;
         fetchPage(null, false);
@@ -226,63 +230,24 @@ export function useListCache<T>({
     return () => {
       window.removeEventListener(eventName, handleInvalidated);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, cache?.cacheKey]);
+  }, [enabled, cacheKey, fetchPage, resetState]);
 
-  // --- enabled切替: false → true でキャッシュから再読み込み ---
-  const prevEnabledRef = useRef(enabled);
-  useEffect(() => {
-    const wasDisabled = !prevEnabledRef.current;
-    prevEnabledRef.current = enabled;
-
-    if (!wasDisabled || !enabled || !cache) return;
-
-    // タブ切替で enabled が true に戻ったとき、sessionStorage から最新キャッシュを同期
-    const freshEntry = getListCache<T>(cache);
-    if (freshEntry) {
-      itemsRef.current = freshEntry.items;
-      setItems(freshEntry.items);
-      cursorRef.current = freshEntry.nextCursor;
-      setHasMore(freshEntry.hasMore);
-      setHasFetched(true);
-      hasFetchedRef.current = true;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
-
-  // --- loadMore ---
   const loadMore = useCallback(() => {
     if (isLoadingRef.current || !hasMore || !cursorRef.current) return;
-
     fetchPage(cursorRef.current, true);
   }, [fetchPage, hasMore]);
 
-  // --- refresh ---
   const refresh = useCallback(async () => {
-    if (cache) {
-      // clearListCache が CustomEvent を dispatch し、
-      // handleInvalidated でリセット + 再フェッチが実行される
-      clearListCache(cache);
-    } else {
-      // キャッシュ無効の場合は直接リセット + 再フェッチ
-      abortRef.current?.abort();
-      abortRef.current = null;
-      isLoadingRef.current = false;
-      hasFetchedRef.current = false;
-      cursorRef.current = null;
-      itemsRef.current = [];
-      setItems([]);
-      setHasMore(false);
-      setHasFetched(false);
-      setError(null);
-
-      hasFetchedRef.current = true;
-      fetchPage(null, false);
+    if (cacheKey) {
+      clearListCache({ cacheKey, ttlMs });
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchPage, cache?.cacheKey]);
 
-  // --- 無限スクロール統合 ---
+    resetState();
+    hasFetchedRef.current = true;
+    fetchPage(null, false);
+  }, [cacheKey, ttlMs, fetchPage, resetState]);
+
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,
     isLoading: isLoadingMore,
