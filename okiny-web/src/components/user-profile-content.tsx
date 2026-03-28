@@ -7,7 +7,6 @@ import {
   Suspense,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -450,6 +449,7 @@ function UserProfileContentInner({
   const { signalReady } = usePageTransition();
   const { user } = useSessionUser();
   const impressionSentRef = useRef(false);
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [followerCount, setFollowerCount] = useState(profile.followerCount);
   const [editingIntroduction, setEditingIntroduction] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -468,6 +468,10 @@ function UserProfileContentInner({
   useEffect(() => {
     setFollowerCount(profile.followerCount);
   }, [profile.followerCount]);
+
+  useEffect(() => {
+    setIsFollowing(initialIsFollowing);
+  }, [initialIsFollowing]);
 
   useEffect(() => {
     if (impressionSentRef.current || rankings.length === 0) {
@@ -506,6 +510,19 @@ function UserProfileContentInner({
     ...ranking,
     author: profile,
   }));
+  const handleFollowChange = useCallback(
+    (nextIsFollowing: boolean) => {
+      if (nextIsFollowing === isFollowing) {
+        return;
+      }
+
+      setIsFollowing(nextIsFollowing);
+      setFollowerCount((current) =>
+        nextIsFollowing ? current + 1 : Math.max(0, current - 1),
+      );
+    },
+    [isFollowing],
+  );
 
   return (
     <AppShell>
@@ -574,12 +591,8 @@ function UserProfileContentInner({
             {!isOwnProfile ? (
               <FollowButton
                 userId={profile.id}
-                initialIsFollowing={initialIsFollowing}
-                onChange={(nextIsFollowing) => {
-                  setFollowerCount((current) =>
-                    nextIsFollowing ? current + 1 : Math.max(0, current - 1),
-                  );
-                }}
+                initialIsFollowing={isFollowing}
+                onChange={handleFollowChange}
               />
             ) : null}
           </div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { EmptyStateMessage } from "@/components/empty-state-message";
 import { RankingCard } from "@/components/ranking-card";
 import { useFollowingFeed } from "@/hooks/use-following-feed";
 import type { UserProfile } from "@/lib/types";
@@ -53,20 +54,17 @@ export function FollowingContent({
 
   if (rankings.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-        <h2 className="text-2xl font-bold text-foreground">
-          フォローの公開ランキングはまだありません
-        </h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          気になるユーザーをフォローすると、ここに公開ランキングが並びます。
-        </p>
+      <EmptyStateMessage
+        title="フォローの公開ランキングはまだありません。"
+        description="気になるユーザーをフォローすると、ここに公開ランキングが表示されます。"
+      >
         <Link
           href="/search"
-          className="mt-8 inline-flex h-11 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-bold text-foreground hover:bg-muted"
+          className="text-sm font-medium text-primary transition hover:underline"
         >
           ユーザーを探す
         </Link>
-      </div>
+      </EmptyStateMessage>
     );
   }
 

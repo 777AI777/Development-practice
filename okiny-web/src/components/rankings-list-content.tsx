@@ -6,6 +6,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { ComingSoon } from "@/components/coming-soon";
+import { EmptyStateMessage } from "@/components/empty-state-message";
 import { FollowingContent } from "@/components/following-content";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { RankingCard } from "@/components/ranking-card";
@@ -93,28 +94,23 @@ function MyRankContent({
 
   if (rankings.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-        <h2 className="text-2xl font-bold text-foreground">
-          ランキングがまだありません
-        </h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          新しいランキングを作るか、検索から他のランキングを探せます。
-        </p>
-        <div className="mt-8 space-y-3">
-          <Link
-            href="/rankings/new"
-            className="flex h-12 items-center justify-center rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground hover:opacity-90"
-          >
-            新規ランキング作成
-          </Link>
-          <Link
-            href="/search"
-            className="flex h-11 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-bold text-foreground hover:bg-muted"
-          >
-            検索へ
-          </Link>
-        </div>
-      </div>
+      <EmptyStateMessage
+        title="ランキングがまだありません。"
+        description="新しいランキングを作るか、検索から他のランキングを探せます。"
+      >
+        <Link
+          href="/rankings/new"
+          className="text-sm font-medium text-primary transition hover:underline"
+        >
+          新規ランキング作成
+        </Link>
+        <Link
+          href="/search"
+          className="text-sm font-medium text-primary transition hover:underline"
+        >
+          検索へ
+        </Link>
+      </EmptyStateMessage>
     );
   }
 

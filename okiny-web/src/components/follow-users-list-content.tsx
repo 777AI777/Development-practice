@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type MouseEvent, type ReactNode, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { type MouseEvent, type ReactNode, Suspense, useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -114,18 +114,20 @@ function FollowUsersListContentInner({
   const [activeTab, setActiveTab] = useState<"followers" | "following">(initialTab);
   const [localFollowers, setLocalFollowers] = useState<readonly UserProfile[]>(initialFollowers);
   const [localFollowing, setLocalFollowing] = useState<readonly UserProfile[]>(following);
+  const [localFollowingUserIds, setLocalFollowingUserIds] = useState<Set<string>>(
+    () => new Set(followingUserIds),
+  );
   const [localFollowerCount, setLocalFollowerCount] = useState(profile.followerCount);
   const [localFollowingCount, setLocalFollowingCount] = useState(profile.followingCount);
   const [deleteTarget, setDeleteTarget] = useState<UserProfile | null>(null);
 
-  const localFollowersRef = useRef(localFollowers);
-  localFollowersRef.current = localFollowers;
-  const localFollowerCountRef = useRef(localFollowerCount);
-  localFollowerCountRef.current = localFollowerCount;
-
   useEffect(() => {
     signalReady();
   }, [signalReady]);
+
+  useEffect(() => {
+    setLocalFollowingUserIds(new Set(followingUserIds));
+  }, [followingUserIds]);
 
   const handleTabChange = useCallback(
     (tab: "followers" | "following") => {
@@ -156,8 +158,8 @@ function FollowUsersListContentInner({
     setDeleteTarget(null);
 
     // 楽観的更新: 即座にリストから除去 + カウント更新
-    const previousFollowers = localFollowersRef.current;
-    const previousFollowerCount = localFollowerCountRef.current;
+    const previousFollowers = localFollowers;
+    const previousFollowerCount = localFollowerCount;
     setLocalFollowers((prev) => prev.filter((u) => u.id !== targetUser.id));
     setLocalFollowerCount((prev) => Math.max(0, prev - 1));
 
@@ -185,10 +187,27 @@ function FollowUsersListContentInner({
         message: "フォロワーの削除に失敗しました",
       });
     }
-  }, [deleteTarget, pushToast]);
+  }, [deleteTarget, localFollowerCount, localFollowers, pushToast]);
 
   const handleFollowingChange = useCallback(
     (userId: string, nextIsFollowing: boolean) => {
+      const wasFollowing = localFollowingUserIds.has(userId);
+      if (wasFollowing === nextIsFollowing) {
+        return;
+      }
+
+      setLocalFollowingUserIds((prev) => {
+        const nextIds = new Set(prev);
+
+        if (nextIsFollowing) {
+          nextIds.add(userId);
+        } else {
+          nextIds.delete(userId);
+        }
+
+        return nextIds;
+      });
+
       if (!nextIsFollowing) {
         // フォロー解除 → followingリストから除去
         setLocalFollowing((prev) => prev.filter((u) => u.id !== userId));
@@ -199,18 +218,35 @@ function FollowUsersListContentInner({
         );
       }
     },
-    [isOwnProfile],
+    [isOwnProfile, localFollowingUserIds],
   );
 
   const handleFollowerFollowChange = useCallback(
-    (_userId: string, nextIsFollowing: boolean) => {
+    (userId: string, nextIsFollowing: boolean) => {
+      const wasFollowing = localFollowingUserIds.has(userId);
+      if (wasFollowing === nextIsFollowing) {
+        return;
+      }
+
+      setLocalFollowingUserIds((prev) => {
+        const nextIds = new Set(prev);
+
+        if (nextIsFollowing) {
+          nextIds.add(userId);
+        } else {
+          nextIds.delete(userId);
+        }
+
+        return nextIds;
+      });
+
       if (isOwnProfile) {
         setLocalFollowingCount((prev) =>
           nextIsFollowing ? prev + 1 : Math.max(0, prev - 1),
         );
       }
     },
-    [isOwnProfile],
+    [isOwnProfile, localFollowingUserIds],
   );
 
   const followingList = localFollowing;
@@ -279,9 +315,7 @@ function FollowUsersListContentInner({
                     followButton={
                       <FollowButton
                         userId={user.id}
-                        initialIsFollowing={
-                          isOwnProfile ? true : followingUserIds.has(user.id)
-                        }
+                        initialIsFollowing={localFollowingUserIds.has(user.id)}
                         onChange={(nextIsFollowing) =>
                           handleFollowingChange(user.id, nextIsFollowing)
                         }
@@ -316,7 +350,7 @@ function FollowUsersListContentInner({
                     followButton={
                       <FollowButton
                         userId={user.id}
-                        initialIsFollowing={followingUserIds.has(user.id)}
+                        initialIsFollowing={localFollowingUserIds.has(user.id)}
                         onChange={(nextIsFollowing) =>
                           handleFollowerFollowChange(user.id, nextIsFollowing)
                         }

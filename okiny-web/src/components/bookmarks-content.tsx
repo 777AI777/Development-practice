@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { BookmarkButton } from "@/components/bookmark-button";
+import { EmptyStateMessage } from "@/components/empty-state-message";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { formatSmartDate } from "@/lib/format-date";
 import type { PublishedRanking } from "@/lib/types";
@@ -16,31 +17,14 @@ interface BookmarksContentProps {
 
 function EmptyBookmarksState() {
   return (
-    <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="mx-auto text-muted-foreground"
-      >
-        <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-      </svg>
-      <p className="mt-4 text-sm text-muted-foreground">
-        ブックマークはまだありません
-      </p>
+    <EmptyStateMessage title="ブックマークはまだありません。">
       <Link
         href="/rankings"
-        className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground hover:opacity-90"
+        className="text-sm font-medium text-primary transition hover:underline"
       >
-        ランキング一覧へ
+        ランキング一覧を見る
       </Link>
-    </div>
+    </EmptyStateMessage>
   );
 }
 
