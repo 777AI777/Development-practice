@@ -1,49 +1,63 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-/** APIリクエスト数の上限（ウィンドウあたり） */
 const RATE_LIMIT_MAX_REQUESTS = 30;
-/** レート制限のウィンドウ期間 */
 const RATE_LIMIT_WINDOW = "1 m";
 
-function createRateLimiter(): Ratelimit | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+export type RateLimitResult = {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+};
 
-  if (!url || !token) {
-    if (process.env.NODE_ENV === "production") {
-      console.warn(
-        "[rate-limit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN が未設定です。レートリミットは無効化されます。",
-      );
-    }
-    return null;
+let rateLimiter: Ratelimit | null = null;
+
+function getRequiredEnv(name: "UPSTASH_REDIS_REST_URL" | "UPSTASH_REDIS_REST_TOKEN"): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`[rate-limit] ${name} is not configured.`);
   }
 
-  const redis = new Redis({ url, token });
+  return value;
+}
 
-  return new Ratelimit({
+function getRateLimiter(): Ratelimit {
+  if (rateLimiter) {
+    return rateLimiter;
+  }
+
+  const redis = new Redis({
+    url: getRequiredEnv("UPSTASH_REDIS_REST_URL"),
+    token: getRequiredEnv("UPSTASH_REDIS_REST_TOKEN"),
+  });
+
+  rateLimiter = new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW),
     analytics: true,
     prefix: "okiny:ratelimit",
   });
+
+  return rateLimiter;
 }
 
-const rateLimiter = createRateLimiter();
-
-export async function checkRateLimit(identifier: string): Promise<{
-  success: boolean;
-  limit: number;
-  remaining: number;
-  reset: number;
-} | null> {
-  if (!rateLimiter) return null;
+export async function checkRateLimit(identifier: string): Promise<RateLimitResult> {
+  const limiter = getRateLimiter();
 
   try {
-    return await rateLimiter.limit(identifier);
+    const result = await limiter.limit(identifier);
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[rate-limit] Upstash request failed:", message);
-    return null;
+    throw new Error("[rate-limit] Failed to check rate limit with Upstash.", {
+      cause: error instanceof Error ? error : undefined,
+    });
   }
 }

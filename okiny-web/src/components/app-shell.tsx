@@ -12,7 +12,6 @@ import {
   DISPLAY_USER_ID_MAX_LENGTH,
   getUserInitial,
   normalizeDisplayUserId,
-  parseDisplayUserIdSearchQuery,
 } from "@/lib/user-utils";
 
 const APP_BRAND = "OKINY";
@@ -476,12 +475,6 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   const handleSearchSubmit = useCallback(() => {
-    const profileSearchId = parseDisplayUserIdSearchQuery(searchQuery);
-    if (profileSearchId) {
-      router.push(`/users/${profileSearchId}`);
-      return;
-    }
-
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     } else {

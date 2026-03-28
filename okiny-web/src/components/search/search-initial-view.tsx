@@ -1,0 +1,182 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  getSearchHistory,
+  removeSearchHistory,
+  clearSearchHistory,
+} from "@/lib/search-history";
+import { getViewedUsers, clearViewedUsers } from "@/lib/viewed-users";
+import type { TagItem, ViewedUserEntry } from "@/lib/types";
+import { getUserInitial } from "@/lib/user-utils";
+
+interface SearchInitialViewProps {
+  userId: string;
+  myTags: TagItem[];
+  popularTags: TagItem[];
+  onSearchQuery: (query: string) => void;
+  onTagSelect: (tagName: string) => void;
+}
+
+export function SearchInitialView({
+  userId,
+  myTags,
+  popularTags,
+  onSearchQuery,
+  onTagSelect,
+}: SearchInitialViewProps) {
+  const [history, setHistory] = useState<string[]>([]);
+  const [viewedUsers, setViewedUsers] = useState<ViewedUserEntry[]>([]);
+
+  useEffect(() => {
+    setHistory(getSearchHistory(userId));
+    setViewedUsers(getViewedUsers(userId));
+  }, [userId]);
+
+  const handleRemoveHistory = useCallback(
+    (query: string) => {
+      removeSearchHistory(userId, query);
+      setHistory(getSearchHistory(userId));
+    },
+    [userId],
+  );
+
+  const handleClearHistory = useCallback(() => {
+    clearSearchHistory(userId);
+    setHistory([]);
+  }, [userId]);
+
+  const handleClearViewedUsers = useCallback(() => {
+    clearViewedUsers(userId);
+    setViewedUsers([]);
+  }, [userId]);
+
+  return (
+    <div className="space-y-6 pb-4">
+      {history.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between px-4">
+            <h3 className="text-sm font-medium text-foreground">検索履歴</h3>
+            <button
+              type="button"
+              onClick={handleClearHistory}
+              className="text-xs text-primary hover:underline"
+            >
+              すべて消去
+            </button>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2 px-4">
+            {history.map((query) => (
+              <div key={query} className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onSearchQuery(query)}
+                  className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition hover:bg-muted"
+                >
+                  {query}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveHistory(query)}
+                  className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  aria-label={`${query}を削除`}
+                >
+                  <span className="text-[10px] leading-none">{"\u2715"}</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {viewedUsers.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between px-4">
+            <h3 className="text-sm font-medium text-foreground">
+              最近見たユーザー
+            </h3>
+            <button
+              type="button"
+              onClick={handleClearViewedUsers}
+              className="text-xs text-primary hover:underline"
+            >
+              すべて消去
+            </button>
+          </div>
+          <div className="mt-2 flex gap-3 overflow-x-auto px-4 pb-2">
+            {viewedUsers.map((user) => (
+              <Link
+                key={user.userId}
+                href={
+                  user.displayUserId
+                    ? `/users/${user.displayUserId}`
+                    : `/users/${user.userId}`
+                }
+                className="flex w-16 shrink-0 flex-col items-center gap-1"
+              >
+                {user.avatarUrl ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt={user.displayName}
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                    {getUserInitial(user.displayName, "?")}
+                  </div>
+                )}
+                <span className="w-full truncate text-center text-[10px] text-muted-foreground">
+                  {user.displayName}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {myTags.length > 0 && (
+        <section>
+          <h3 className="px-4 text-sm font-medium text-foreground">
+            よく使うタグ
+          </h3>
+          <div className="mt-2 flex flex-wrap gap-2 px-4">
+            {myTags.map((tag) => (
+              <button
+                key={tag.id}
+                type="button"
+                onClick={() => onTagSelect(tag.name)}
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition hover:bg-muted"
+              >
+                #{tag.name}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {popularTags.length > 0 && (
+        <section>
+          <h3 className="px-4 text-sm font-medium text-foreground">
+            人気のタグ
+          </h3>
+          <div className="mt-2 flex flex-wrap gap-2 px-4">
+            {popularTags.map((tag) => (
+              <button
+                key={tag.id}
+                type="button"
+                onClick={() => onTagSelect(tag.name)}
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition hover:bg-muted"
+              >
+                #{tag.name}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}

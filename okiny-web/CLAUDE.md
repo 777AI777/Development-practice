@@ -34,22 +34,25 @@
 
 ## ページ構造
 
-| パス | 画面 | グループ |
-|------|------|---------|
-| `/login` | ログイン | main |
-| `/rankings` | ランキング一覧 | main |
-| `/rankings/new` | ランキング作成 | main |
-| `/rankings/[id]` | ランキング詳細 | main |
-| `/rankings/[id]/edit` | ランキング編集 | main |
-| `/rankings/[id]/delete` | 削除確認 | main |
-| `/search` | タグ検索 | main |
-| `/drafts` | 下書き一覧 | main |
-| `/settings` | 設定 | main |
-| `/settings/logout` | ログアウト確認 | main |
-| `/onboarding` | オンボーディング | main |
-| `/share/rankings/[id]` | ランキング公開共有 | public |
-| `/privacy` | プライバシーポリシー | legal |
-| `/terms` | 利用規約 | legal |
+| パス | 画面 | 備考 |
+|------|------|------|
+| `/` | ログインリダイレクト | 未認証→`/login` |
+| `/login` | ログイン | — |
+| `/onboarding` | オンボーディング | — |
+| `/rankings` | ランキング一覧 | — |
+| `/rankings/new` | ランキング作成 | — |
+| `/rankings/[id]` | ランキング詳細 | — |
+| `/rankings/[id]/edit` | ランキング編集 | — |
+| `/rankings/[id]/delete` | 削除確認 | — |
+| `/search` | タグ検索 | — |
+| `/drafts` | 下書き一覧 | — |
+| `/bookmarks` | ブックマーク一覧 | — |
+| `/users/[userId]` | ユーザープロフィール | 公開エンドポイント |
+| `/settings` | 設定 | — |
+| `/settings/logout` | ログアウト確認 | — |
+| `/share/rankings/[id]` | ランキング公開共有 | 未認証でもアクセス可 |
+| `/privacy` | プライバシーポリシー | 未認証でもアクセス可 |
+| `/terms` | 利用規約 | 未認証でもアクセス可 |
 
 ## 楽観ロック
 
@@ -65,6 +68,14 @@
 - シングルトン: `client-repository.ts` の `draftRepository` を使う
 - 公開成功後のドラフト削除を忘れると下書き枠が埋まっていく
 - テスト時は `fake-indexeddb` を使用
+
+### Autosave（IndexedDB）
+
+- Store: `autosave`（DB version: 2で追加）
+- キー: `userId:key` の複合形式
+- ランキングフォームの編集状態（title, tagId, items, isPublic等）を自動保存
+- draftsストアとは独立。`draft:` プレフィックスで始まるキーはdraftsストアにルーティング
+- `src/lib/autosave/` — Repository Pattern（interface → IndexedDB実装）
 
 ### RankingForm autosave
 

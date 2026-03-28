@@ -58,6 +58,11 @@ describe("publishRanking", () => {
       unbookmarkRanking: async () => {},
       recordView: async () => {},
       recordImpressions: async () => {},
+      searchRankings: async () => ({ items: [], nextCursor: null }),
+      searchUsers: async () => ({ items: [], nextCursor: null }),
+      followUser: async () => {},
+      unfollowUser: async () => {},
+      listFollowingRankings: async () => [],
     };
 
     const result = await publishRanking({

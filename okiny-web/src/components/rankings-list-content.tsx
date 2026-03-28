@@ -1,16 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { ComingSoon } from "@/components/coming-soon";
 import { usePageTransition } from "@/components/page-transition-provider";
+import { RankingCard } from "@/components/ranking-card";
 import { useSessionUser } from "@/hooks/use-session-user";
-import { formatSmartDate } from "@/lib/format-date";
-import { getUserInitial } from "@/lib/user-utils";
-import type { PublishedRanking } from "@/lib/types";
+import type { PublicRankingWithAuthor, PublishedRanking, UserProfile } from "@/lib/types";
 
 type TabId = "myrank" | "recommend" | "following";
 
@@ -47,9 +45,7 @@ function MyRankContent({
   groupedRankings,
   collapsedTagIds,
   toggleTagAccordion,
-  userName,
-  userAvatarUrl,
-  userDisplayUserId,
+  author,
 }: {
   isLoading: boolean;
   errorMessage: string | null;
@@ -57,12 +53,8 @@ function MyRankContent({
   groupedRankings: { tagId: string; tagName: string; items: PublishedRanking[] }[];
   collapsedTagIds: string[];
   toggleTagAccordion: (tagId: string) => void;
-  userName: string | undefined;
-  userAvatarUrl: string | undefined;
-  userDisplayUserId: string | null;
+  author: UserProfile;
 }) {
-  const userInitial = getUserInitial(userName, "??");
-
   if (isLoading) {
     return null;
   }
@@ -153,89 +145,20 @@ function MyRankContent({
                 className={`${isCollapsed ? "hidden" : ""}`}
               >
                 <div className="overflow-hidden rounded-xl bg-card">
-                  {group.items.map((ranking, idx) => (
-                    <Link
-                      key={ranking.id}
-                      href={`/rankings/${ranking.id}`}
-                      className="block transition hover:bg-muted/50"
-                      style={{ borderBottom: idx < group.items.length - 1 ? "1px solid var(--border)" : "none" }}
-                    >
-                      <div className="p-4 flex gap-3">
-                        {userAvatarUrl ? (
-                          <Image
-                            src={userAvatarUrl}
-                            alt={userName ?? ""}
-                            width={40}
-                            height={40}
-                            className="h-10 w-10 shrink-0 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                            {userInitial}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-sm font-bold text-foreground">
-                              {userName ?? "Unknown"}
-                            </span>
-                            {userDisplayUserId ? (
-                              <span className="text-xs text-muted-foreground">
-                                @{userDisplayUserId}
-                              </span>
-                            ) : null}
-                            <span className="text-xs text-muted-foreground">
-                              · {formatSmartDate(ranking.createdAt)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <h3 className="font-semibold text-[15px] text-foreground">
-                              {ranking.title}
-                            </h3>
-                            {ranking.isPublic === false && (
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label="非公開">
-                                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="space-y-0">
-                            {ranking.items.slice(0, 5).map((item, itemIdx) => (
-                              <p
-                                key={`${ranking.id}-item-${itemIdx}`}
-                                className="text-sm leading-relaxed text-muted-foreground"
-                              >
-                                {itemIdx + 1}. {item || "未入力"}
-                              </p>
-                            ))}
-                          </div>
-                          {/* 統計 */}
-                          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                              </svg>
-                              {ranking.viewCount}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="18" y1="20" x2="18" y2="10" />
-                                <line x1="12" y1="20" x2="12" y2="4" />
-                                <line x1="6" y1="20" x2="6" y2="14" />
-                              </svg>
-                              {ranking.impressionCount}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                              </svg>
-                              {ranking.bookmarkCount}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+                  {group.items.map((ranking, idx) => {
+                    const rankingWithAuthor: PublicRankingWithAuthor = {
+                      ...ranking,
+                      author,
+                    };
+                    return (
+                      <RankingCard
+                        key={ranking.id}
+                        ranking={rankingWithAuthor}
+                        showBorder={idx < group.items.length - 1}
+                        showLockIcon
+                      />
+                    );
+                  })}
                 </div>
               </div>
             </section>
@@ -291,9 +214,12 @@ function RankingsListContentInner({ initialRankings, userName: serverUserName, u
           groupedRankings={groupedRankings}
           collapsedTagIds={collapsedTagIds}
           toggleTagAccordion={toggleTagAccordion}
-          userName={displayName}
-          userAvatarUrl={displayAvatarUrl}
-          userDisplayUserId={displayUserId}
+          author={{
+            id: user?.id ?? "",
+            displayName: displayName ?? "Unknown",
+            avatarUrl: displayAvatarUrl ?? null,
+            displayUserId,
+          }}
         />
       )}
 
