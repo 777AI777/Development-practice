@@ -26,7 +26,7 @@ function FollowUsersListContentInner({
     signalReady();
   }, [signalReady]);
 
-  const title = type === "followers" ? "フォロワー" : "フォロー中";
+  const title = type === "followers" ? "フォロワー" : "フォロー";
   const count =
     type === "followers" ? profile.followerCount : profile.followingCount;
 
@@ -55,7 +55,7 @@ function FollowUsersListContentInner({
           <p className="text-sm text-muted-foreground">
             {type === "followers"
               ? "フォロワーはまだいません。"
-              : "フォロー中のユーザーはまだいません。"}
+              : "フォローのユーザーはまだいません。"}
           </p>
         </div>
       ) : (

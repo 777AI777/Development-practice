@@ -79,11 +79,11 @@ export function SearchInitialView({
       {history.length > 0 && (
         <section>
           <div className="flex items-center justify-between px-4">
-            <h3 className="text-xs font-medium text-muted-foreground">検索履歴</h3>
+            <h3 className="text-lg font-medium text-foreground">検索履歴</h3>
             <button
               type="button"
               onClick={handleClearHistory}
-              className="text-xs text-primary hover:underline"
+              className="text-sm text-primary hover:underline"
             >
               すべて消去
             </button>
@@ -94,7 +94,7 @@ export function SearchInitialView({
                 <button
                   type="button"
                   onClick={() => onSearchQuery(query)}
-                  className="text-xs text-muted-foreground transition hover:text-foreground"
+                  className="text-sm text-muted-foreground transition hover:text-foreground"
                 >
                   {query}
                 </button>
@@ -104,7 +104,7 @@ export function SearchInitialView({
                   className="flex h-4 w-4 items-center justify-center text-muted-foreground/50 transition hover:text-muted-foreground"
                   aria-label={`${query}を削除`}
                 >
-                  <span className="text-[10px] leading-none">{"\u2715"}</span>
+                  <span className="text-xs leading-none">{"\u2715"}</span>
                 </button>
               </div>
             ))}
@@ -115,13 +115,13 @@ export function SearchInitialView({
       {viewedUsers.length > 0 && (
         <section>
           <div className="flex items-center justify-between px-4">
-            <h3 className="text-sm font-medium text-foreground">
+            <h3 className="text-lg font-medium text-foreground">
               最近見たユーザー
             </h3>
             <button
               type="button"
               onClick={handleClearViewedUsers}
-              className="text-xs text-primary hover:underline"
+              className="text-sm text-primary hover:underline"
             >
               すべて消去
             </button>
@@ -146,11 +146,11 @@ export function SearchInitialView({
                     className="h-12 w-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
                     {getUserInitial(user.displayName, "?")}
                   </div>
                 )}
-                <span className="w-full truncate text-center text-[10px] text-muted-foreground">
+                <span className="w-full truncate text-center text-xs text-muted-foreground">
                   {user.displayName}
                 </span>
               </Link>
@@ -161,16 +161,16 @@ export function SearchInitialView({
 
       {myTags.length > 0 && (
         <section>
-          <h3 className="px-4 text-sm font-medium text-foreground">
+          <h3 className="px-4 text-lg font-medium text-foreground">
             よく使うタグ
           </h3>
-          <div className="mt-2 flex flex-wrap gap-2 px-4">
+          <div className="mt-2 flex flex-col items-start gap-2 px-4">
             {myTags.map((tag) => (
               <button
                 key={tag.id}
                 type="button"
                 onClick={() => onTagSelect(tag.name)}
-                className="text-xs text-muted-foreground transition hover:text-foreground"
+                className="text-sm text-muted-foreground transition hover:text-foreground"
               >
                 #{tag.name}
               </button>
@@ -181,16 +181,16 @@ export function SearchInitialView({
 
       {popularTags.length > 0 && (
         <section>
-          <h3 className="px-4 text-sm font-medium text-foreground">
+          <h3 className="px-4 text-lg font-medium text-foreground">
             人気のタグ
           </h3>
-          <div className="mt-2 flex flex-wrap gap-2 px-4">
+          <div className="mt-2 flex flex-col items-start gap-2 px-4">
             {popularTags.map((tag) => (
               <button
                 key={tag.id}
                 type="button"
                 onClick={() => onTagSelect(tag.name)}
-                className="text-xs text-muted-foreground transition hover:text-foreground"
+                className="text-sm text-muted-foreground transition hover:text-foreground"
               >
                 #{tag.name}
               </button>

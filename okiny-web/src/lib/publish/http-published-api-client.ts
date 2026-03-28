@@ -315,7 +315,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     if (!response.ok || !body.data) {
       throw new PublishedApiError(
         body.error?.code ?? mapStatusToErrorCode(response.status),
-        body.error?.message ?? "フォロー中ランキングの取得に失敗しました。",
+        body.error?.message ?? "フォローランキングの取得に失敗しました。",
       );
     }
     return body.data;

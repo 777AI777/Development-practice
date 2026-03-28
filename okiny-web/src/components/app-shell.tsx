@@ -3,22 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { usePageTransition } from "@/components/page-transition-provider";
-import { useToast } from "@/components/toast-provider";
-import { useDisplayUserIdCheck } from "@/hooks/use-display-user-id-check";
 import { useMyProfileStats } from "@/hooks/use-my-profile-stats";
 import { useSessionUser } from "@/hooks/use-session-user";
 import {
-  DISPLAY_USER_ID_MAX_LENGTH,
   buildUserProfilePath,
   getUserInitial,
-  normalizeDisplayUserId,
 } from "@/lib/user-utils";
 
 const APP_BRAND = "OKINY";
-const MAX_DISPLAY_NAME_LENGTH = 30;
 
 interface AppShellProps {
   title?: string;
@@ -67,306 +62,15 @@ function SearchIcon() {
   );
 }
 
-function DisplayNameEditor({
-  user,
-  updateDisplayName,
-  onDone,
-}: {
-  user: ShellUser | null;
-  updateDisplayName: (name: string) => Promise<"success" | "invalid" | "server">;
-  onDone: () => void;
-}) {
-  const { pushToast } = useToast();
-  const [displayName, setDisplayName] = useState(user?.name ?? "");
-
-  const isDirty = useMemo(
-    () => displayName.trim() !== (user?.name ?? ""),
-    [displayName, user?.name],
-  );
-  const canSave = displayName.trim().length > 0 && isDirty;
-
-  const save = async () => {
-    if (!canSave) return;
-
-    const status = await updateDisplayName(displayName.trim());
-    if (status === "success") {
-      pushToast({ type: "success", message: "表示名を更新しました。" });
-      onDone();
-      return;
-    }
-
-    pushToast({
-      type: "error",
-      message:
-        status === "invalid"
-          ? "表示名は1〜30文字で入力してください。"
-          : "表示名の更新に失敗しました。",
-    });
-  };
-
-  return (
-    <div className="border-t border-border px-4 py-3">
-      <label
-        htmlFor="sidebar-display-name"
-        className="mb-1 block text-xs font-semibold text-foreground"
-      >
-        表示名
-      </label>
-      <input
-        id="sidebar-display-name"
-        value={displayName}
-        onChange={(e) => setDisplayName(e.target.value)}
-        maxLength={MAX_DISPLAY_NAME_LENGTH}
-        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="表示名を入力"
-      />
-      <p className="mt-1 text-right text-xs text-muted-foreground">
-        {displayName.length}/{MAX_DISPLAY_NAME_LENGTH}
-      </p>
-      <div className="mt-2 flex gap-2">
-        <button
-          type="button"
-          onClick={save}
-          disabled={!canSave}
-          className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
-        >
-          保存
-        </button>
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground"
-        >
-          キャンセル
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function DisplayUserIdEditor({
-  user,
-  updateDisplayUserId,
-  onDone,
-}: {
-  user: ShellUser | null;
-  updateDisplayUserId: (
-    value: string,
-  ) => Promise<"success" | "invalid" | "conflict" | "server">;
-  onDone: () => void;
-}) {
-  const { pushToast } = useToast();
-  const [displayUserId, setDisplayUserId] = useState(user?.displayUserId ?? "");
-
-  const normalizedDisplayUserId = normalizeDisplayUserId(displayUserId);
-  const isDirty = normalizedDisplayUserId !== (user?.displayUserId ?? "");
-
-  // 自分自身の現在のIDと同じ場合はAPIチェックを抑止（空文字を渡して idle にする）
-  const checkValue = isDirty ? normalizedDisplayUserId : "";
-  const { status: availabilityStatus } = useDisplayUserIdCheck(checkValue);
-
-  const canSave =
-    normalizedDisplayUserId.length > 0 &&
-    isDirty &&
-    availabilityStatus === "available";
-
-  const save = async () => {
-    if (!canSave) return;
-
-    const status = await updateDisplayUserId(normalizedDisplayUserId);
-    if (status === "success") {
-      pushToast({ type: "success", message: "ユーザーIDを更新しました。" });
-      onDone();
-      return;
-    }
-
-    if (status === "conflict") {
-      pushToast({
-        type: "error",
-        message: "そのユーザーIDはすでに使われています。",
-      });
-      return;
-    }
-
-    pushToast({
-      type: "error",
-      message:
-        status === "invalid"
-          ? "ユーザーIDは3〜20文字の英小文字・数字・_で入力してください。"
-          : "ユーザーIDの更新に失敗しました。",
-    });
-  };
-
-  return (
-    <div className="border-t border-border px-4 py-3">
-      <label
-        htmlFor="sidebar-display-user-id"
-        className="mb-1 block text-xs font-semibold text-foreground"
-      >
-        ユーザーID
-      </label>
-      <div className="flex items-center rounded-md border border-border bg-background px-2">
-        <span className="text-sm text-muted-foreground">@</span>
-        <input
-          id="sidebar-display-user-id"
-          value={displayUserId}
-          onChange={(e) => setDisplayUserId(e.target.value)}
-          maxLength={DISPLAY_USER_ID_MAX_LENGTH}
-          className="w-full bg-transparent px-1 py-1.5 text-sm text-foreground focus:outline-none"
-          placeholder="okiny_user"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-        />
-      </div>
-      <p className="mt-1 text-xs text-muted-foreground">
-        英小文字・数字・_ を 3〜20文字で設定できます
-      </p>
-      <div className="mt-1 flex items-center justify-between">
-        <div>
-          {availabilityStatus === "checking" && (
-            <span className="text-xs text-muted-foreground">確認中...</span>
-          )}
-          {availabilityStatus === "available" && (
-            <span className="text-xs text-green-600">✓ 利用可能</span>
-          )}
-          {availabilityStatus === "taken" && (
-            <span className="text-xs text-destructive">
-              ✗ このIDは既に使われています
-            </span>
-          )}
-          {availabilityStatus === "error" && (
-            <span className="text-xs text-destructive">確認に失敗しました</span>
-          )}
-        </div>
-        <span className="text-xs text-muted-foreground">
-          {normalizedDisplayUserId.length}/{DISPLAY_USER_ID_MAX_LENGTH}
-        </span>
-      </div>
-      <div className="mt-2 flex gap-2">
-        <button
-          type="button"
-          onClick={save}
-          disabled={!canSave}
-          className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
-        >
-          保存
-        </button>
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground"
-        >
-          キャンセル
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function IntroductionEditor({
-  user,
-  updateIntroduction,
-  onDone,
-}: {
-  user: ShellUser | null;
-  updateIntroduction: (value: string) => Promise<"success" | "invalid" | "server">;
-  onDone: () => void;
-}) {
-  const { pushToast } = useToast();
-  const [introduction, setIntroduction] = useState(user?.introduction ?? "");
-
-  const normalized = introduction.trim();
-  const isDirty = normalized !== (user?.introduction ?? "");
-  const canSave = isDirty && normalized.length <= 200;
-
-  const save = async () => {
-    if (!canSave) return;
-    const status = await updateIntroduction(normalized);
-    if (status === "success") {
-      pushToast({
-        type: "success",
-        message: "自己紹介を保存しました。",
-      });
-      onDone();
-      return;
-    }
-
-    pushToast({
-      type: "error",
-      message:
-        status === "invalid"
-          ? "自己紹介は200文字以内で入力してください。"
-          : "自己紹介の更新に失敗しました。",
-    });
-  };
-
-  return (
-    <div className="border-t border-border px-4 py-3">
-      <label className="mb-1 block text-xs font-semibold text-foreground">
-        自己紹介（200字以内）
-      </label>
-      <textarea
-        value={introduction}
-        onChange={(event) => setIntroduction(event.target.value)}
-        maxLength={200}
-        rows={3}
-        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="例：好きなものや最近ハマっていることなど"
-      />
-      <p className="mt-1 text-xs text-muted-foreground">
-        {introduction.length}/200
-      </p>
-      <div className="mt-2 flex gap-2">
-        <button
-          type="button"
-          onClick={save}
-          disabled={!canSave}
-          className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
-        >
-          保存
-        </button>
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground"
-        >
-          閉じる
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function SettingsAccordion({
   settingsExpanded,
   onToggle,
-  nameEditOpen,
-  onNameEditToggle,
-  userIdEditOpen,
-  onUserIdEditToggle,
-  introductionEditOpen,
-  onIntroductionEditToggle,
-  user,
-  updateDisplayName,
-  updateDisplayUserId,
-  updateIntroduction,
+  profilePath,
   onNavigate,
 }: {
   settingsExpanded: boolean;
   onToggle: () => void;
-  nameEditOpen: boolean;
-  onNameEditToggle: () => void;
-  userIdEditOpen: boolean;
-  onUserIdEditToggle: () => void;
-  introductionEditOpen: boolean;
-  onIntroductionEditToggle: () => void;
-  user: ShellUser | null;
-  updateDisplayName: (name: string) => Promise<"success" | "invalid" | "server">;
-  updateDisplayUserId: (
-    value: string,
-  ) => Promise<"success" | "invalid" | "conflict" | "server">;
-  updateIntroduction: (value: string) => Promise<"success" | "invalid" | "server">;
+  profilePath: string | null;
   onNavigate?: () => void;
 }) {
   return (
@@ -408,53 +112,13 @@ function SettingsAccordion({
 
       {settingsExpanded && (
         <div className="pl-10">
-          <button
-            type="button"
-            onClick={onNameEditToggle}
-            className="w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
+          <Link
+            href={profilePath ?? "#"}
+            onClick={onNavigate}
+            className="block w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
           >
-            表示名を編集
-          </button>
-
-          {nameEditOpen && (
-            <DisplayNameEditor
-              user={user}
-              updateDisplayName={updateDisplayName}
-              onDone={onNameEditToggle}
-            />
-          )}
-
-          <button
-            type="button"
-            onClick={onUserIdEditToggle}
-            className="w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
-          >
-            ユーザーIDを編集
-          </button>
-
-          {userIdEditOpen && (
-            <DisplayUserIdEditor
-              user={user}
-              updateDisplayUserId={updateDisplayUserId}
-              onDone={onUserIdEditToggle}
-            />
-          )}
-
-          <button
-            type="button"
-            onClick={onIntroductionEditToggle}
-            className="w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
-          >
-            自己紹介
-          </button>
-
-          {introductionEditOpen && (
-            <IntroductionEditor
-              user={user}
-              updateIntroduction={updateIntroduction}
-              onDone={onIntroductionEditToggle}
-            />
-          )}
+            プロフィール編集
+          </Link>
 
           {SETTINGS_MENU_ITEMS.map((item) =>
             item.href && !item.disabled ? (
@@ -576,12 +240,12 @@ function UserSummary({
           {profilePath ? (
             <Link href={`${profilePath}/following`} onClick={onNavigate} className="inline-flex items-center gap-1 text-xs transition hover:opacity-70">
               <span className="font-semibold text-foreground">{stats.followingCount}</span>
-              <span className="text-muted-foreground">フォロー中</span>
+              <span className="text-muted-foreground">フォロー</span>
             </Link>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs">
               <span className="font-semibold text-foreground">{stats.followingCount}</span>
-              <span className="text-muted-foreground">フォロー中</span>
+              <span className="text-muted-foreground">フォロー</span>
             </span>
           )}
           {profilePath ? (
@@ -606,18 +270,9 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { startTransitionLoading } = usePageTransition();
-  const {
-    isReady,
-    user,
-    updateDisplayName,
-    updateDisplayUserId,
-    updateIntroduction,
-  } = useSessionUser();
+  const { isReady, user } = useSessionUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
-  const [nameEditOpen, setNameEditOpen] = useState(false);
-  const [userIdEditOpen, setUserIdEditOpen] = useState(false);
-  const [introductionEditOpen, setIntroductionEditOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -655,39 +310,6 @@ export function AppShell({ children }: AppShellProps) {
       router.push(`/search?q=${encodeURIComponent(normalizedQuery)}`);
     }
   }, [pathname, router, searchParams, searchQuery, startTransitionLoading]);
-
-  const handleNameEditToggle = useCallback(() => {
-    setNameEditOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        setUserIdEditOpen(false);
-        setIntroductionEditOpen(false);
-      }
-      return next;
-    });
-  }, []);
-
-  const handleUserIdEditToggle = useCallback(() => {
-    setUserIdEditOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        setNameEditOpen(false);
-        setIntroductionEditOpen(false);
-      }
-      return next;
-    });
-  }, []);
-
-  const handleIntroductionEditToggle = useCallback(() => {
-    setIntroductionEditOpen((prev) => {
-      const next = !prev;
-      if (next) {
-        setNameEditOpen(false);
-        setUserIdEditOpen(false);
-      }
-      return next;
-    });
-  }, []);
 
   const handleSettingsToggle = useCallback(() => {
     setSettingsExpanded((prev) => !prev);
@@ -795,16 +417,7 @@ export function AppShell({ children }: AppShellProps) {
         <SettingsAccordion
           settingsExpanded={settingsExpanded}
           onToggle={handleSettingsToggle}
-          nameEditOpen={nameEditOpen}
-          onNameEditToggle={handleNameEditToggle}
-          userIdEditOpen={userIdEditOpen}
-          onUserIdEditToggle={handleUserIdEditToggle}
-          introductionEditOpen={introductionEditOpen}
-          onIntroductionEditToggle={handleIntroductionEditToggle}
-          user={user}
-          updateDisplayName={updateDisplayName}
-          updateDisplayUserId={updateDisplayUserId}
-          updateIntroduction={updateIntroduction}
+          profilePath={profilePath}
         />
         </nav>
       </aside>
@@ -846,16 +459,7 @@ export function AppShell({ children }: AppShellProps) {
         <SettingsAccordion
           settingsExpanded={settingsExpanded}
           onToggle={handleSettingsToggle}
-          nameEditOpen={nameEditOpen}
-          onNameEditToggle={handleNameEditToggle}
-          userIdEditOpen={userIdEditOpen}
-          onUserIdEditToggle={handleUserIdEditToggle}
-          introductionEditOpen={introductionEditOpen}
-          onIntroductionEditToggle={handleIntroductionEditToggle}
-          user={user}
-          updateDisplayName={updateDisplayName}
-          updateDisplayUserId={updateDisplayUserId}
-          updateIntroduction={updateIntroduction}
+          profilePath={profilePath}
           onNavigate={handleSidebarClose}
         />
         </nav>

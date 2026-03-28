@@ -65,7 +65,7 @@ export function SearchTagsTab({
 
   if (isLoading) {
     return (
-      <p className="py-8 text-center text-xs text-muted-foreground">
+      <p className="py-8 text-center text-sm text-muted-foreground">
         検索中...
       </p>
     );
@@ -86,7 +86,7 @@ export function SearchTagsTab({
   return (
     <div className="space-y-4 pb-4">
       <section>
-        <h3 className="px-4 text-xs font-medium text-muted-foreground">
+        <h3 className="px-4 text-sm font-medium text-muted-foreground">
           検索結果
         </h3>
         <div className="mt-2 flex flex-wrap gap-2 px-4">
@@ -95,7 +95,7 @@ export function SearchTagsTab({
               key={tag.id}
               type="button"
               onClick={() => onTagSelect(tag.name)}
-              className="text-xs text-muted-foreground transition hover:text-foreground"
+              className="text-sm text-muted-foreground transition hover:text-foreground"
             >
               #{tag.name}
             </button>

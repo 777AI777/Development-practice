@@ -15,12 +15,12 @@ export async function generateMetadata({
 
   if (!profile) {
     return {
-      title: "フォロー中",
+      title: "フォロー",
     };
   }
 
   return {
-    title: `${profile.displayName}のフォロー中`,
+    title: `${profile.displayName}のフォロー`,
     description: `${profile.displayName}がフォローしているユーザー一覧`,
   };
 }

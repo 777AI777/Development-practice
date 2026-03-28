@@ -21,7 +21,7 @@ type TabId = "myrank" | "recommend" | "following";
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "myrank", label: "マイランク", icon: "☰" },
   { id: "recommend", label: "おすすめ", icon: "★" },
-  { id: "following", label: "フォロー中", icon: "♥" },
+  { id: "following", label: "フォロー", icon: "♥" },
 ];
 
 function groupRankingsByTag(rankings: PublishedRanking[]) {
@@ -217,7 +217,7 @@ function FollowingContent({
     return (
       <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
         <h2 className="text-2xl font-bold text-foreground">
-          フォロー中の公開ランキングはまだありません
+          フォローの公開ランキングはまだありません
         </h2>
         <p className="mt-3 text-sm text-muted-foreground">
           気になるユーザーをフォローすると、ここに公開ランキングが並びます。
@@ -312,7 +312,7 @@ function RankingsListContentInner({
 
         if (!response.ok || !body.data) {
           throw new Error(
-            body.error?.message ?? "フォロー中ランキングの読み込みに失敗しました。",
+            body.error?.message ?? "フォローランキングの読み込みに失敗しました。",
           );
         }
 
@@ -330,7 +330,7 @@ function RankingsListContentInner({
         setFollowingError(
           error instanceof Error
             ? error.message
-            : "フォロー中ランキングの読み込みに失敗しました。",
+            : "フォローランキングの読み込みに失敗しました。",
         );
       } finally {
         if (!cancelled) {

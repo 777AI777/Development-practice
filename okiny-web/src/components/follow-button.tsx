@@ -94,7 +94,7 @@ export function FollowButton({
       aria-label={isFollowing ? "フォロー解除" : "フォロー"}
       aria-pressed={isFollowing}
     >
-      {isFollowing ? "フォロー中" : "フォローする"}
+      {isFollowing ? "フォロー" : "フォローする"}
     </button>
   );
 }

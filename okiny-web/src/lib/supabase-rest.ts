@@ -1247,7 +1247,7 @@ export async function listFollowers(params: {
 }
 
 /**
- * 指定ユーザーのフォロー中一覧を UserProfile[] で返す。
+ * 指定ユーザーのフォロー一覧を UserProfile[] で返す。
  * follows テーブルから following_id を取得 → getUserProfilesBatch で解決。
  */
 export async function listFollowing(params: {
@@ -1270,7 +1270,7 @@ export async function listFollowing(params: {
 }
 
 /**
- * フォロー中ユーザーの公開ランキング一覧を取得する。
+ * フォローユーザーの公開ランキング一覧を取得する。
  * RPC: list_following_rankings を呼び出し。
  * パターン: listPublicRankingsByTagWithAuthors の RPC 呼び出しと同じ。
  */

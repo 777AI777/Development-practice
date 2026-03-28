@@ -84,7 +84,7 @@ const MOCK_RANKINGS = [
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "myrank", label: "マイランク", icon: "☰" },
   { id: "recommend", label: "おすすめ", icon: "★" },
-  { id: "following", label: "フォロー中", icon: "♥" },
+  { id: "following", label: "フォロー", icon: "♥" },
 ];
 
 function groupByTag(
@@ -240,7 +240,7 @@ export function RankingListScreen({
 
         {activeTab === "following" && (
           <ComingSoon
-            title="フォロー中"
+            title="フォロー"
             description="フォロー機能は現在開発中です"
           />
         )}
