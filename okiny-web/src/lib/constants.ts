@@ -26,11 +26,15 @@ export const SEARCH_HISTORY_KEY = "okiny:search_history";
 
 export const VIEWED_USERS_KEY = "okiny:viewed_users";
 
+export const SEARCH_SUBMIT_EVENT_NAME = "okiny:search-submit";
+
 // --- Search Scroll Restore Keys ---
 
 export const SEARCH_RANKINGS_SCROLL_KEY = "scroll:search-rankings";
 
 export const SEARCH_USERS_SCROLL_KEY = "scroll:search-users";
+
+export const SEARCH_TAGS_SCROLL_KEY = "scroll:search-tags";
 
 // --- Scroll Restore Keys ---
 

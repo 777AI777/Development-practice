@@ -5,6 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { useTags, separateTags } from "@/hooks/use-tags";
+import {
+  SEARCH_RANKINGS_SCROLL_KEY,
+  SEARCH_TAGS_SCROLL_KEY,
+  SEARCH_USERS_SCROLL_KEY,
+} from "@/lib/constants";
+import { normalizeSearchQuery } from "@/lib/search-query";
 import { addSearchHistory } from "@/lib/search-history";
 import { SearchTabs } from "@/components/search/search-tabs";
 import { SearchInitialView } from "@/components/search/search-initial-view";
@@ -14,10 +20,23 @@ import { SearchUsersTab } from "@/components/search/search-users-tab";
 import { SearchTagsTab } from "@/components/search/search-tags-tab";
 import type { SearchTab } from "@/lib/types";
 
+function getSearchScrollKey(tab: SearchTab): string {
+  switch (tab) {
+    case "accounts":
+      return SEARCH_USERS_SCROLL_KEY;
+    case "tags":
+      return SEARCH_TAGS_SCROLL_KEY;
+    case "rankings":
+    default:
+      return SEARCH_RANKINGS_SCROLL_KEY;
+  }
+}
+
 function SearchPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isReady: isUserReady } = useSessionUser();
+  const skipNextPersistRef = useRef(false);
 
   const q = searchParams.get("q") ?? "";
   const tabParam = searchParams.get("tab") as SearchTab | null;
@@ -28,6 +47,13 @@ function SearchPageContent() {
 
   const { tags, fetchTags, isLoading: isTagsLoading } = useTags();
   const { myTags, popularTags } = separateTags(tags);
+
+  const persistActiveTabScroll = useCallback(() => {
+    sessionStorage.setItem(
+      getSearchScrollKey(activeTab),
+      String(window.scrollY),
+    );
+  }, [activeTab]);
 
   useEffect(() => {
     fetchTags();
@@ -43,13 +69,50 @@ function SearchPageContent() {
 
   const handleTabChange = useCallback(
     (tab: SearchTab) => {
+      persistActiveTabScroll();
+      skipNextPersistRef.current = true;
+
       const params = new URLSearchParams();
       if (q) params.set("q", q);
       params.set("tab", tab);
-      router.replace(`/search?${params.toString()}`);
+      router.replace(`/search?${params.toString()}`, { scroll: false });
     },
-    [q, router],
+    [persistActiveTabScroll, q, router],
   );
+
+  useEffect(() => {
+    return () => {
+      if (skipNextPersistRef.current) {
+        skipNextPersistRef.current = false;
+        return;
+      }
+      persistActiveTabScroll();
+    };
+  }, [persistActiveTabScroll]);
+
+  useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+
+      const anchor = target.closest("a[href]");
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+
+      const href = anchor.getAttribute("href");
+      if (
+        href?.startsWith("/rankings/") ||
+        href?.startsWith("/users/")
+      ) {
+        persistActiveTabScroll();
+        skipNextPersistRef.current = true;
+      }
+    };
+
+    document.addEventListener("click", handleDocumentClick, true);
+    return () => {
+      document.removeEventListener("click", handleDocumentClick, true);
+    };
+  }, [persistActiveTabScroll]);
 
   const handleSearchQuery = useCallback(
     (query: string) => {
@@ -66,7 +129,7 @@ function SearchPageContent() {
   );
 
   // タグクリック経由の場合、URLには「#映画」が入るが、API検索には「映画」を渡す
-  const searchQuery = q.replace(/^[#＃]/, "");
+  const searchQuery = normalizeSearchQuery(q);
   const hasQuery = q.trim().length > 0;
 
   return (

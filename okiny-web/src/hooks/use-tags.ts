@@ -11,6 +11,7 @@ interface UseTagsReturn {
   isSearchInitialized: boolean;
   fetchTags: () => Promise<void>;
   search: (query: string) => void;
+  invalidateSearchCache: (query: string) => void;
   clearSearch: () => void;
 }
 
@@ -27,6 +28,12 @@ const BOOTSTRAP_CACHE_TTL_MS = 5 * 60 * 1000; // 5 分
  * コンポーネント再マウント（ページ遷移→戻る）でも保持される。
  */
 const tagSearchCache = new Map<string, TagItem[]>();
+
+export function invalidateTagSearchCache(query: string): void {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return;
+  tagSearchCache.delete(trimmedQuery);
+}
 
 export function useTags(): UseTagsReturn {
   const [tags, setTags] = useState<TagItem[]>(() => bootstrapCache?.data ?? []);
@@ -151,6 +158,10 @@ export function useTags(): UseTagsReturn {
     }, 300);
   }, []);
 
+  const invalidateSearchCache = useCallback((query: string) => {
+    invalidateTagSearchCache(query);
+  }, []);
+
   const clearSearch = useCallback(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -170,6 +181,7 @@ export function useTags(): UseTagsReturn {
     isSearchInitialized,
     fetchTags,
     search,
+    invalidateSearchCache,
     clearSearch,
   };
 }

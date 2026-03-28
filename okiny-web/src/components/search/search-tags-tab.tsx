@@ -1,7 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { usePageTransition } from "@/components/page-transition-provider";
+import {
+  SEARCH_SUBMIT_EVENT_NAME,
+  SEARCH_TAGS_SCROLL_KEY,
+} from "@/lib/constants";
 import { useTags } from "@/hooks/use-tags";
 
 interface SearchTagsTabProps {
@@ -15,14 +19,23 @@ export function SearchTagsTab({
   isActive,
   onTagSelect,
 }: SearchTagsTabProps) {
-  const { searchResults, isLoading, isSearchInitialized, search, clearSearch } = useTags();
+  const {
+    searchResults,
+    isLoading,
+    isSearchInitialized,
+    search,
+    invalidateSearchCache,
+    clearSearch,
+  } = useTags();
   const normalizedQuery = query.trim();
   const { startTransitionLoading, signalReady } = usePageTransition();
   const transitionActiveRef = useRef(false);
+  const scrollRestoredRef = useRef(false);
 
   // --- タブ切替で search() が再発火しないよう ref で管理 ---
   const isActiveRef = useRef(isActive);
   const pendingQueryRef = useRef<string | null>(null);
+  const lastRequestedQueryRef = useRef("");
 
   useEffect(() => {
     isActiveRef.current = isActive;
@@ -50,11 +63,40 @@ export function SearchTagsTab({
     if (!normalizedQuery) {
       clearSearch();
       pendingQueryRef.current = null;
+      lastRequestedQueryRef.current = "";
       return;
     }
 
+    if (lastRequestedQueryRef.current === normalizedQuery) {
+      return;
+    }
+
+    lastRequestedQueryRef.current = normalizedQuery;
     searchIfActive(normalizedQuery);
   }, [clearSearch, normalizedQuery, searchIfActive]);
+
+  useEffect(() => {
+    const handleSearchSubmit = (event: Event) => {
+      const submittedQuery =
+        (
+          event as CustomEvent<{ query?: string }>
+        ).detail?.query?.trim() ?? "";
+
+      if (!submittedQuery || submittedQuery !== normalizedQuery) {
+        return;
+      }
+
+      lastRequestedQueryRef.current = "";
+      clearSearch();
+      invalidateSearchCache(submittedQuery);
+      searchIfActive(submittedQuery);
+    };
+
+    window.addEventListener(SEARCH_SUBMIT_EVENT_NAME, handleSearchSubmit);
+    return () => {
+      window.removeEventListener(SEARCH_SUBMIT_EVENT_NAME, handleSearchSubmit);
+    };
+  }, [clearSearch, invalidateSearchCache, normalizedQuery, searchIfActive]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -83,6 +125,42 @@ export function SearchTagsTab({
       }
     }
   }, [isActive, normalizedQuery, isSearchInitialized, isLoading, signalReady]);
+
+  useEffect(() => {
+    if (!isActive || searchResults.length === 0) return;
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const handleScroll = () => {
+      if (timeoutId) return;
+      timeoutId = setTimeout(() => {
+        sessionStorage.setItem(SEARCH_TAGS_SCROLL_KEY, String(window.scrollY));
+        timeoutId = null;
+      }, 200);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+      scrollRestoredRef.current = false;
+    };
+  }, [isActive, searchResults.length]);
+
+  useLayoutEffect(() => {
+    if (!isActive || !isSearchInitialized || isLoading || searchResults.length === 0) {
+      return;
+    }
+    if (scrollRestoredRef.current) return;
+
+    scrollRestoredRef.current = true;
+    const saved = sessionStorage.getItem(SEARCH_TAGS_SCROLL_KEY);
+    if (saved !== null) {
+      const scrollY = Number(saved);
+      if (Number.isFinite(scrollY)) {
+        window.scrollTo(0, scrollY);
+      }
+    }
+  }, [isActive, isLoading, isSearchInitialized, searchResults.length]);
 
   if (!isActive) {
     return null;

@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { UserCard } from "@/components/user-card";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useSearch } from "@/hooks/use-search";
 import {
+  SEARCH_SUBMIT_EVENT_NAME,
   SEARCH_LIMIT,
   SEARCH_USERS_SCROLL_KEY,
 } from "@/lib/constants";
@@ -49,6 +50,7 @@ export function SearchUsersTab({
     isInitialized,
     loadMore,
     reset,
+    invalidateCache,
   } = useSearch<UserSearchResult>({
     fetcher: fetchUsers,
     namespace: "users",
@@ -59,6 +61,7 @@ export function SearchUsersTab({
   // --- タブ切替で search() が再発火しないよう ref で管理 ---
   const isActiveRef = useRef(isActive);
   const pendingQueryRef = useRef<string | null>(null);
+  const lastRequestedQueryRef = useRef("");
 
   useEffect(() => {
     isActiveRef.current = isActive;
@@ -86,11 +89,40 @@ export function SearchUsersTab({
     if (!normalizedQuery) {
       reset();
       pendingQueryRef.current = null;
+      lastRequestedQueryRef.current = "";
       return;
     }
 
+    if (lastRequestedQueryRef.current === normalizedQuery) {
+      return;
+    }
+
+    lastRequestedQueryRef.current = normalizedQuery;
     searchIfActive(normalizedQuery);
   }, [normalizedQuery, reset, searchIfActive]);
+
+  useEffect(() => {
+    const handleSearchSubmit = (event: Event) => {
+      const submittedQuery =
+        (
+          event as CustomEvent<{ query?: string }>
+        ).detail?.query?.trim() ?? "";
+
+      if (!submittedQuery || submittedQuery !== normalizedQuery) {
+        return;
+      }
+
+      lastRequestedQueryRef.current = "";
+      reset();
+      invalidateCache(submittedQuery);
+      searchIfActive(submittedQuery);
+    };
+
+    window.addEventListener(SEARCH_SUBMIT_EVENT_NAME, handleSearchSubmit);
+    return () => {
+      window.removeEventListener(SEARCH_SUBMIT_EVENT_NAME, handleSearchSubmit);
+    };
+  }, [invalidateCache, normalizedQuery, reset, searchIfActive]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -125,23 +157,21 @@ export function SearchUsersTab({
     return () => {
       window.removeEventListener("scroll", handleScroll);
       if (timeoutId) clearTimeout(timeoutId);
+      scrollRestoredRef.current = false;
     };
   }, [isActive, items.length]);
 
   // データ復元後にスクロール位置を復元
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isActive || !isInitialized || isLoading || items.length === 0) return;
     if (scrollRestoredRef.current) return;
 
     scrollRestoredRef.current = true;
     const saved = sessionStorage.getItem(SEARCH_USERS_SCROLL_KEY);
     if (saved !== null) {
-      sessionStorage.removeItem(SEARCH_USERS_SCROLL_KEY);
       const scrollY = Number(saved);
       if (Number.isFinite(scrollY)) {
-        requestAnimationFrame(() => {
-          window.scrollTo(0, scrollY);
-        });
+        window.scrollTo(0, scrollY);
       }
     }
   }, [isActive, isInitialized, isLoading, items.length]);

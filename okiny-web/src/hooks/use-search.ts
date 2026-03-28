@@ -28,6 +28,7 @@ interface UseSearchReturn<TItem> {
   isInitialized: boolean;
   loadMore: () => void;
   reset: () => void;
+  invalidateCache: (query: string) => void;
   refresh: () => Promise<void>;
 }
 
@@ -42,6 +43,12 @@ const searchCache = new Map<string, { items: unknown[]; nextCursor: string | nul
 
 function buildCacheKey(namespace: string, query: string): string {
   return `${namespace}:${query}`;
+}
+
+export function invalidateSearchCacheEntry(namespace: string, query: string): void {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return;
+  searchCache.delete(buildCacheKey(namespace, trimmedQuery));
 }
 
 export function useSearch<TItem>({
@@ -88,6 +95,13 @@ export function useSearch<TItem>({
   const removeCache = useCallback(
     (query: string) => {
       searchCache.delete(buildCacheKey(namespace, query));
+    },
+    [namespace],
+  );
+
+  const invalidateCache = useCallback(
+    (query: string) => {
+      invalidateSearchCacheEntry(namespace, query);
     },
     [namespace],
   );
@@ -274,6 +288,7 @@ export function useSearch<TItem>({
     isInitialized,
     loadMore,
     reset,
+    invalidateCache,
     refresh,
   };
 }
