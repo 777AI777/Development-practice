@@ -12,7 +12,7 @@ import {
   buildUserProfilePath,
   getUserInitial,
 } from "@/lib/user-utils";
-import { clearFollowingFeedCache } from "@/lib/feed-cache";
+import { clearListCache } from "@/lib/list-cache";
 
 const APP_BRAND = "OKINY";
 
@@ -327,7 +327,7 @@ export function AppShell({ children }: AppShellProps) {
           <Link
             href="/rankings"
             onClick={() => {
-              clearFollowingFeedCache();
+              clearListCache({ cacheKey: "okiny:following-feed-cache" });
             }}
             className="shrink-0 text-lg font-bold text-primary"
           >

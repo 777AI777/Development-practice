@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { UserCard } from "@/components/user-card";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useSearch } from "@/hooks/use-search";
-import { SEARCH_LIMIT } from "@/lib/constants";
+import {
+  SEARCH_LIMIT,
+  SEARCH_USERS_CACHE_KEY,
+  SEARCH_USERS_SCROLL_KEY,
+  SEARCH_CACHE_TTL_MS,
+} from "@/lib/constants";
 import type { UserSearchResult } from "@/lib/types";
 
 interface SearchUsersTabProps {
@@ -46,7 +51,11 @@ export function SearchUsersTab({
     isInitialized,
     loadMore,
     reset,
-  } = useSearch<UserSearchResult>({ fetcher: fetchUsers });
+  } = useSearch<UserSearchResult>({
+    fetcher: fetchUsers,
+    cacheKey: SEARCH_USERS_CACHE_KEY,
+    cacheTtlMs: SEARCH_CACHE_TTL_MS,
+  });
   const normalizedQuery = query.trim();
   const { signalReady } = usePageTransition();
 
@@ -73,6 +82,34 @@ export function SearchUsersTab({
       signalReady();
     }
   }, [isActive, normalizedQuery, isInitialized, isLoading, signalReady]);
+
+  // --- スクロール復元 ---
+  const scrollRestoredRef = useRef(false);
+
+  useEffect(() => {
+    if (!isActive || !isInitialized || isLoading || items.length === 0) return;
+    if (scrollRestoredRef.current) return;
+
+    scrollRestoredRef.current = true;
+    const saved = sessionStorage.getItem(SEARCH_USERS_SCROLL_KEY);
+    if (saved !== null) {
+      const scrollY = Number(saved);
+      sessionStorage.removeItem(SEARCH_USERS_SCROLL_KEY);
+      if (Number.isFinite(scrollY)) {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
+      }
+    }
+  }, [isActive, isInitialized, isLoading, items.length]);
+
+  // アンマウント時にスクロール位置を保存
+  useEffect(() => {
+    if (!isActive) return;
+    return () => {
+      sessionStorage.setItem(SEARCH_USERS_SCROLL_KEY, String(window.scrollY));
+    };
+  }, [isActive]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,

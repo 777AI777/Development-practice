@@ -26,6 +26,34 @@ export const SEARCH_HISTORY_KEY = "okiny:search_history";
 
 export const VIEWED_USERS_KEY = "okiny:viewed_users";
 
+// --- Search Cache Constants ---
+
+export const SEARCH_RANKINGS_CACHE_KEY = "okiny:search-rankings";
+
+export const SEARCH_RANKINGS_SCROLL_KEY = "scroll:search-rankings";
+
+export const SEARCH_USERS_CACHE_KEY = "okiny:search-users";
+
+export const SEARCH_USERS_SCROLL_KEY = "scroll:search-users";
+
+export const SEARCH_CACHE_TTL_MS = 30 * 60 * 1000; // 30分
+
+// --- Scroll Restore Keys ---
+
+export const SCROLL_KEY_FOLLOW_USERS = "scroll:follow-users";
+
+export const SCROLL_KEY_RANKINGS_LIST = "scroll:rankings-list";
+
+export const SCROLL_KEY_BOOKMARKS = "scroll:bookmarks";
+
+// --- MyRank Cache Constants ---
+
+export const MYRANK_CACHE_KEY = "okiny:myrank";
+
+// --- Bookmarks Cache Constants ---
+
+export const BOOKMARKS_CACHE_KEY = "okiny:bookmarks";
+
 // --- Following Feed Constants ---
 
 export const FOLLOWING_FEED_LIMIT = 10;

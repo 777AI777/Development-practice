@@ -1,18 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { BookmarkButton } from "@/components/bookmark-button";
 import { EmptyStateMessage } from "@/components/empty-state-message";
 import { usePageTransition } from "@/components/page-transition-provider";
+import { useListCache } from "@/hooks/use-list-cache";
+import type { PageResult } from "@/hooks/use-list-cache";
+import { BOOKMARKS_CACHE_KEY, SCROLL_KEY_BOOKMARKS } from "@/lib/constants";
+import { clearListCache } from "@/lib/list-cache";
 import { formatSmartDate } from "@/lib/format-date";
 import type { PublishedRanking } from "@/lib/types";
 
-interface BookmarksContentProps {
-  initialRankings: PublishedRanking[];
+async function fetchBookmarks(
+  cursor: string | null,
+  signal: AbortSignal,
+): Promise<PageResult<PublishedRanking>> {
+  const res = await fetch("/api/v1/bookmarks", { signal });
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    throw new Error(
+      (json as { error?: { message?: string } } | null)?.error?.message ??
+        "ブックマークの取得に失敗しました",
+    );
+  }
+  const json = await res.json();
+  return { items: json.data, nextCursor: null };
 }
 
 function EmptyBookmarksState() {
@@ -28,17 +44,62 @@ function EmptyBookmarksState() {
   );
 }
 
-function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
+function BookmarksContentInner() {
   const { signalReady } = usePageTransition();
-  const [rankings, setRankings] = useState(initialRankings);
+
+  const {
+    items: bookmarkedRankings,
+    isLoading,
+    error,
+    hasFetched,
+    refresh,
+  } = useListCache<PublishedRanking>({
+    cache: { cacheKey: BOOKMARKS_CACHE_KEY },
+    fetcher: fetchBookmarks,
+    enabled: true,
+    scrollRestoreKey: SCROLL_KEY_BOOKMARKS,
+  });
+
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const rankings = useMemo(
+    () => bookmarkedRankings.filter((r) => !hiddenIds.has(r.id)),
+    [bookmarkedRankings, hiddenIds],
+  );
+
+  // 再フェッチ後に hiddenIds をリセット
+  useEffect(() => {
+    setHiddenIds(new Set());
+  }, [bookmarkedRankings]);
 
   useEffect(() => {
-    signalReady();
-  }, [signalReady]);
+    if (!isLoading) {
+      signalReady();
+    }
+  }, [isLoading, signalReady]);
 
-  useEffect(() => {
-    setRankings(initialRankings);
-  }, [initialRankings]);
+  if (error) {
+    return (
+      <AppShell>
+        <div className="mb-4 flex items-center gap-2">
+          <BackButton />
+          <h1 className="text-lg font-bold text-foreground">ブックマーク</h1>
+        </div>
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
+          <p className="text-base font-bold text-destructive">
+            読み込みに失敗しました。
+          </p>
+          <p className="mt-1 text-sm text-destructive/80">{error}</p>
+          <button
+            type="button"
+            onClick={refresh}
+            className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-destructive/30 bg-card px-4 text-sm font-semibold text-destructive"
+          >
+            再読み込み
+          </button>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -47,7 +108,7 @@ function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
         <h1 className="text-lg font-bold text-foreground">ブックマーク</h1>
       </div>
 
-      {rankings.length === 0 ? (
+      {hasFetched && !isLoading && rankings.length === 0 ? (
         <EmptyBookmarksState />
       ) : (
         <div className="overflow-hidden rounded-xl bg-card">
@@ -111,9 +172,8 @@ function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
                     className="-my-1 -ml-1"
                     onChange={(nextIsBookmarked) => {
                       if (nextIsBookmarked) return;
-                      setRankings((current) =>
-                        current.filter((currentRanking) => currentRanking.id !== ranking.id),
-                      );
+                      setHiddenIds((prev) => new Set([...prev, ranking.id]));
+                      clearListCache({ cacheKey: BOOKMARKS_CACHE_KEY });
                     }}
                   />
                 </div>
@@ -128,10 +188,10 @@ function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
   );
 }
 
-export function BookmarksContent(props: BookmarksContentProps) {
+export function BookmarksContent() {
   return (
     <Suspense fallback={null}>
-      <BookmarksContentInner {...props} />
+      <BookmarksContentInner />
     </Suspense>
   );
 }
