@@ -11,6 +11,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user, isReady } = useSessionUser();
   const [isCheckingOnboarded, setIsCheckingOnboarded] = useState(true);
+  const [profileOnly, setProfileOnly] = useState(false);
 
   useEffect(() => {
     if (!isReady || !user) return;
@@ -20,8 +21,17 @@ export default function OnboardingPage() {
       const { data } = await supabase.auth.getUser();
 
       if (data.user?.user_metadata?.onboarded === true) {
-        router.replace("/rankings");
-        return;
+        const hasDisplayUserId =
+          typeof data.user.user_metadata.display_user_id === "string" &&
+          data.user.user_metadata.display_user_id.length > 0;
+
+        if (hasDisplayUserId) {
+          router.replace("/rankings");
+          return;
+        }
+
+        // 既存ユーザー: プロフィール設定のみ
+        setProfileOnly(true);
       }
 
       setIsCheckingOnboarded(false);
@@ -47,7 +57,7 @@ export default function OnboardingPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <OnboardingWizard />
+        <OnboardingWizard profileOnly={profileOnly} />
       </div>
     </div>
   );

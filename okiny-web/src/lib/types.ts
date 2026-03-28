@@ -36,6 +36,7 @@ export interface PublishedRanking extends RankingInput {
   createdAt: string;
   updatedAt: string;
   viewCount: number;
+  impressionCount: number;
   bookmarkCount: number;
   isBookmarked: boolean;
 }
@@ -55,6 +56,7 @@ export interface ToastMessage {
   type: ToastType;
   message: string;
   persistent?: boolean;
+  action?: { label: string; href: string };
 }
 
 export interface TagItem {
@@ -83,6 +85,7 @@ export interface SupabaseRankingRow {
   created_at: string;
   updated_at: string;
   view_count: number;
+  impression_count: number;
   bookmark_count: number;
   ranking_items?: Array<{
     rank: number;

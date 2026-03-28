@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { shouldRedirectToOnboarding } from "@/lib/onboarding-utils";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { buildContentSecurityPolicy } from "@/lib/security-headers";
 
@@ -12,6 +13,8 @@ import { buildContentSecurityPolicy } from "@/lib/security-headers";
  * PREFIX_PUBLIC_PATHS: 前方一致で認証除外（サブパスを含む）
  */
 const EXACT_PUBLIC_PATHS = ["/login", "/api/auth/callback", "/terms", "/privacy"] as const;
+// WARNING: /api/v1/users 配下の新規エンドポイントはmiddlewareの認証をスキップするため、
+// 認証が必要なエンドポイントは route handler 内で getAuthenticatedUserId() を使うこと
 const PREFIX_PUBLIC_PATHS = ["/api/og", "/api/v1/users", "/share", "/users"] as const;
 
 async function hashString(input: string): Promise<string> {
@@ -176,7 +179,21 @@ export async function updateSession(request: NextRequest, nonce: string) {
 
   if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = user.user_metadata?.onboarded === true ? "/rankings" : "/onboarding";
+    url.pathname = shouldRedirectToOnboarding(user.user_metadata as Record<string, unknown>) ? "/onboarding" : "/rankings";
+    return setCspHeaders(NextResponse.redirect(url), nonce);
+  }
+
+  // 認証済みユーザーで display_user_id 未設定なら /onboarding にリダイレクト
+  // ただし /onboarding 自体、公開パス、APIパスは除外（リダイレクトループ防止）
+  if (
+    user &&
+    pathname !== "/onboarding" &&
+    !isPublicPath &&
+    !pathname.startsWith("/api/") &&
+    shouldRedirectToOnboarding(user.user_metadata as Record<string, unknown>)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/onboarding";
     return setCspHeaders(NextResponse.redirect(url), nonce);
   }
 

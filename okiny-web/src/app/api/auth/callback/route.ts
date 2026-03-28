@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { shouldRedirectToOnboarding } from "@/lib/onboarding-utils";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const url = request.nextUrl.clone();
-  url.pathname = user?.user_metadata?.onboarded === true ? "/rankings" : "/onboarding";
+  url.pathname = shouldRedirectToOnboarding(user?.user_metadata as Record<string, unknown> | undefined) ? "/onboarding" : "/rankings";
   url.search = "";
   return NextResponse.redirect(url);
 }

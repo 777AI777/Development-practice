@@ -12,6 +12,7 @@ import { autosaveRepository } from "@/lib/autosave/client-repository";
 import { publishedApiClient } from "@/lib/publish/client";
 import { PublishedApiError } from "@/lib/publish/http-published-api-client";
 import { useSessionUser } from "@/hooks/use-session-user";
+import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { PublishedRanking, RankingInput, RankingItems } from "@/lib/types";
 
 function toRankingItems(items: string[]): RankingItems {
@@ -109,6 +110,10 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
       pushToast({ type: "success", message: "ランキングを更新しました。" });
       router.replace(`/rankings/${rankingId}`);
     } catch (error: unknown) {
+      if (error instanceof PublishedApiError && error.code === "UNAUTHORIZED") {
+        pushToast(buildSessionExpiredToast());
+        return;
+      }
       const message =
         error instanceof PublishedApiError
           ? error.message

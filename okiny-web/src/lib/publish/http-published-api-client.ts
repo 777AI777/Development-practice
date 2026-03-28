@@ -53,6 +53,7 @@ export interface PublishedApiClient {
   bookmarkRanking(rankingId: string): Promise<void>;
   unbookmarkRanking(rankingId: string): Promise<void>;
   recordView(rankingId: string): Promise<void>;
+  recordImpressions(rankingIds: string[]): Promise<void>;
 }
 
 export class HttpPublishedApiClient implements PublishedApiClient {
@@ -221,5 +222,15 @@ export class HttpPublishedApiClient implements PublishedApiClient {
       return;
     }
     // サイレントに失敗（ログはサーバー側で出力済み）
+  }
+
+  async recordImpressions(rankingIds: string[]): Promise<void> {
+    if (rankingIds.length === 0) return;
+    await fetch("/api/v1/rankings/impressions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rankingIds }),
+    });
+    // インプレッション記録は失敗してもユーザー体験に影響しないため、エラーを握りつぶす
   }
 }

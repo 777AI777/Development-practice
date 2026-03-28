@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { BookmarkButton } from "@/components/bookmark-button";
@@ -13,6 +14,7 @@ import { useTags, separateTags, getRecommendedTags } from "@/hooks/use-tags";
 import { TAG_QUERY_LIMITS } from "@/lib/constants";
 import { formatSmartDate } from "@/lib/format-date";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
+import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { PublicRankingWithAuthor, TagItem } from "@/lib/types";
 import { buildUserProfilePath, getUserInitial } from "@/lib/user-utils";
 
@@ -36,18 +38,29 @@ function SearchPageContent() {
   const { signalReady } = usePageTransition();
   const { tags, searchResults, isLoading: isTagsLoading, fetchTags, search, clearSearch } = useTags();
 
-  // Restore selectedTag from URL searchParams on mount
-  const initialTag = useMemo<TagItem | null>(() => {
-    const tagId = searchParams.get("tagId");
-    const tagName = searchParams.get("tagName");
-    if (tagId && tagName) {
-      return { id: tagId, name: tagName, readings: [], usageCount: 0, myUsageCount: 0, createdAt: "" };
-    }
-    return null;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally empty — only restore on mount
+  const [selectedTag, setSelectedTag] = useState<TagItem | null>(null);
 
-  const [selectedTag, setSelectedTag] = useState<TagItem | null>(initialTag);
+  // Sync selectedTag from URL searchParams (mount + browser back/forward)
+  const urlTagId = searchParams.get("tagId");
+  const urlTagName = searchParams.get("tagName");
+  const prevUrlTagIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Only react when urlTagId actually changes (avoids loops with handleTagSelect)
+    if (urlTagId === prevUrlTagIdRef.current) return;
+    prevUrlTagIdRef.current = urlTagId;
+
+    if (urlTagId && urlTagName) {
+      setSelectedTag((prev) => {
+        // Avoid unnecessary state update if already selected
+        if (prev?.id === urlTagId) return prev;
+        return { id: urlTagId, name: urlTagName, readings: [], usageCount: 0, myUsageCount: 0, createdAt: "" };
+      });
+    } else {
+      setSelectedTag(null);
+    }
+  }, [urlTagId, urlTagName]);
+
   const [isRankingsLoading, setIsRankingsLoading] = useState(false);
   const [results, setResults] = useState<PublicRankingWithAuthor[]>([]);
   const [rankingsError, setRankingsError] = useState<string | null>(null);
@@ -68,22 +81,31 @@ function SearchPageContent() {
   }, [hasStartedLoading, isTagsLoading, selectedTag, signalReady]);
 
   // React to q changes from header search
+  const prevQRef = useRef(q);
   useEffect(() => {
+    const qChanged = q !== prevQRef.current;
+    prevQRef.current = q;
+
     if (q) {
       search(q);
     } else {
       clearSearch();
     }
-    setSelectedTag(null);
-    setResults([]);
-    // Clear tag params from URL when search query changes
-    const currentTagId = searchParams.get("tagId");
-    if (currentTagId) {
-      const nextParams = new URLSearchParams(searchParams.toString());
-      nextParams.delete("tagId");
-      nextParams.delete("tagName");
-      const qs = nextParams.toString();
-      router.replace(qs ? `/search?${qs}` : "/search");
+
+    // Only clear selectedTag when the user actively changed the search query,
+    // NOT when returning via browser back (which may carry both q and tagId).
+    if (qChanged) {
+      const currentTagId = searchParams.get("tagId");
+      if (currentTagId) {
+        // User typed a new query while a tag was selected — clear tag params
+        const nextParams = new URLSearchParams(searchParams.toString());
+        nextParams.delete("tagId");
+        nextParams.delete("tagName");
+        const qs = nextParams.toString();
+        router.replace(qs ? `/search?${qs}` : "/search");
+      }
+      setSelectedTag(null);
+      setResults([]);
     }
   }, [q, search, clearSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -121,6 +143,11 @@ function SearchPageContent() {
       })
       .catch((error: unknown) => {
         if (canceled) return;
+        if (error instanceof PublishedApiError && error.code === "UNAUTHORIZED") {
+          pushToast(buildSessionExpiredToast());
+          setRankingsError("セッションが切れました。");
+          return;
+        }
         const message =
           error instanceof PublishedApiError ? error.message : "ランキングの取得に失敗しました";
         setRankingsError(message);
@@ -167,6 +194,9 @@ function SearchPageContent() {
     const nextTag = isDeselect ? null : tag;
     setSelectedTag(nextTag);
 
+    // Keep ref in sync so the URL-sync useEffect won't re-trigger
+    prevUrlTagIdRef.current = nextTag?.id ?? null;
+
     if (nextTag) {
       updateSearchParams({ tagId: nextTag.id, tagName: nextTag.name });
     } else {
@@ -178,6 +208,7 @@ function SearchPageContent() {
   const handleBack = () => {
     if (selectedTag) {
       setSelectedTag(null);
+      prevUrlTagIdRef.current = null;
       updateSearchParams({ tagId: null, tagName: null });
     } else if (q) {
       router.push("/search");
@@ -417,6 +448,15 @@ function SelectedTagView({
 }) {
   const router = useRouter();
 
+  // インプレッション記録（fire-and-forget）
+  const impressionSentRef = useRef(false);
+  useEffect(() => {
+    if (isLoading || results.length === 0 || impressionSentRef.current) return;
+    impressionSentRef.current = true;
+    const ids = results.map((r) => r.id);
+    apiClient.recordImpressions(ids).catch(() => {});
+  }, [isLoading, results]);
+
   if (isLoading) {
     return <p className="text-xs text-muted-foreground">読み込み中...</p>;
   }
@@ -472,7 +512,7 @@ function SelectedTagView({
             className="block transition hover:bg-muted/50"
             style={{ borderBottom: idx < results.length - 1 ? "1px solid var(--border)" : "none" }}
           >
-            <div className="p-4 flex gap-3">
+            <div className="p-4 flex items-start gap-3">
               <button
                 type="button"
                 onClick={(e) => handleAvatarClick(e, ranking.author)}
@@ -480,9 +520,11 @@ function SelectedTagView({
                 aria-label={`${ranking.author.displayName}のプロフィール`}
               >
                 {ranking.author.avatarUrl ? (
-                  <img
+                  <Image
                     src={ranking.author.avatarUrl}
                     alt={ranking.author.displayName}
+                    width={40}
+                    height={40}
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 ) : (
@@ -518,7 +560,7 @@ function SelectedTagView({
                     </p>
                   ))}
                 </div>
-                {/* インプレッション */}
+                {/* 統計 */}
                 <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -526,6 +568,14 @@ function SelectedTagView({
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                     {ranking.viewCount}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10" />
+                      <line x1="12" y1="20" x2="12" y2="4" />
+                      <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    {ranking.impressionCount}
                   </span>
                   <BookmarkButton
                     rankingId={ranking.id}

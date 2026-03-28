@@ -19,6 +19,7 @@ export const DEMO_RANKING: PublishedRanking = {
   createdAt: "2026-02-20T00:00:00.000Z",
   updatedAt: "2026-02-20T00:00:00.000Z",
   viewCount: 0,
+  impressionCount: 0,
   bookmarkCount: 0,
   isBookmarked: false,
 };

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthResult =
-  | { ok: true; userId: string; accessToken: string; userName: string | null }
+  | { ok: true; userId: string; accessToken: string; userName: string | null; userAvatarUrl: string | null }
   | { ok: false; reason: "unauthorized" | "server_error" };
 
 export function authErrorResponse(
@@ -90,6 +90,9 @@ export async function getAuthenticatedUserId(): Promise<AuthResult> {
       (typeof userMetadata?.name === "string" && userMetadata.name) ||
       (typeof userMetadata?.full_name === "string" &&
         userMetadata.full_name) ||
+      null,
+    userAvatarUrl:
+      (typeof userMetadata?.avatar_url === "string" && userMetadata.avatar_url) ||
       null,
   };
 }

@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useToast } from "@/components/toast-provider";
+import { useDisplayUserIdCheck } from "@/hooks/use-display-user-id-check";
 import { useSessionUser } from "@/hooks/use-session-user";
 import {
   DISPLAY_USER_ID_MAX_LENGTH,
@@ -32,6 +34,7 @@ interface SidebarMenuItemConfig {
 interface ShellUser {
   name?: string;
   email?: string;
+  avatarUrl?: string;
   displayUserId?: string | null;
 }
 
@@ -154,7 +157,15 @@ function DisplayUserIdEditor({
 
   const normalizedDisplayUserId = normalizeDisplayUserId(displayUserId);
   const isDirty = normalizedDisplayUserId !== (user?.displayUserId ?? "");
-  const canSave = normalizedDisplayUserId.length > 0 && isDirty;
+
+  // 自分自身の現在のIDと同じ場合はAPIチェックを抑止（空文字を渡して idle にする）
+  const checkValue = isDirty ? normalizedDisplayUserId : "";
+  const { status: availabilityStatus } = useDisplayUserIdCheck(checkValue);
+
+  const canSave =
+    normalizedDisplayUserId.length > 0 &&
+    isDirty &&
+    availabilityStatus === "available";
 
   const save = async () => {
     if (!canSave) return;
@@ -208,9 +219,27 @@ function DisplayUserIdEditor({
       <p className="mt-1 text-xs text-muted-foreground">
         英小文字・数字・_ を 3〜20文字で設定できます
       </p>
-      <p className="mt-1 text-right text-xs text-muted-foreground">
-        {normalizedDisplayUserId.length}/{DISPLAY_USER_ID_MAX_LENGTH}
-      </p>
+      <div className="mt-1 flex items-center justify-between">
+        <div>
+          {availabilityStatus === "checking" && (
+            <span className="text-xs text-muted-foreground">確認中...</span>
+          )}
+          {availabilityStatus === "available" && (
+            <span className="text-xs text-green-600">✓ 利用可能</span>
+          )}
+          {availabilityStatus === "taken" && (
+            <span className="text-xs text-destructive">
+              ✗ このIDは既に使われています
+            </span>
+          )}
+          {availabilityStatus === "error" && (
+            <span className="text-xs text-destructive">確認に失敗しました</span>
+          )}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {normalizedDisplayUserId.length}/{DISPLAY_USER_ID_MAX_LENGTH}
+        </span>
+      </div>
       <div className="mt-2 flex gap-2">
         <button
           type="button"
@@ -383,9 +412,19 @@ function SettingsAccordion({
 function UserSummary({ user, userInitial }: { user: ShellUser | null; userInitial: string }) {
   return (
     <div className="flex items-center gap-3 border-b border-border px-4 py-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-        {userInitial}
-      </div>
+      {user?.avatarUrl ? (
+        <Image
+          src={user.avatarUrl}
+          alt={user.name ?? ""}
+          width={40}
+          height={40}
+          className="h-10 w-10 shrink-0 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+          {userInitial}
+        </div>
+      )}
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-foreground">
           {user?.name ?? "Unknown"}
@@ -530,10 +569,20 @@ export function AppShell({ children }: AppShellProps) {
           <button
             type="button"
             onClick={handleSidebarToggle}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground min-[1040px]:hidden"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground min-[1040px]:hidden overflow-hidden"
             aria-label="メニュー"
           >
-            {userInitial}
+            {user?.avatarUrl ? (
+              <Image
+                src={user.avatarUrl}
+                alt=""
+                width={32}
+                height={32}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              userInitial
+            )}
           </button>
         </div>
       </header>

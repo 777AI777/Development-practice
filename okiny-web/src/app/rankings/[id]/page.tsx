@@ -110,10 +110,8 @@ export default async function RankingDetailPage({
     notFound();
   }
 
-  // 他ユーザーのランキングの場合、著者プロフィールを取得
-  if (!isOwner) {
-    authorProfile = await getUserProfile(ranking.userId);
-  }
+  // 著者プロフィールを取得（自分・他ユーザー問わず）
+  authorProfile = await getUserProfile(ranking.userId);
 
   return (
     <RankingDetailContent

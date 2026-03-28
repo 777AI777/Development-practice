@@ -9,6 +9,7 @@ import { useToast } from "@/components/toast-provider";
 import { DEMO_RANKING_ID } from "@/lib/demo-ranking";
 import { publishedApiClient } from "@/lib/publish/client";
 import { PublishedApiError } from "@/lib/publish/http-published-api-client";
+import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { PublishedRanking } from "@/lib/types";
 
 interface DeleteRankingContentProps {
@@ -41,6 +42,10 @@ export function DeleteRankingContent({ ranking }: DeleteRankingContentProps) {
       pushToast({ type: "success", message: "ランキングを削除しました。" });
       router.push("/rankings");
     } catch (error: unknown) {
+      if (error instanceof PublishedApiError && error.code === "UNAUTHORIZED") {
+        pushToast(buildSessionExpiredToast());
+        return;
+      }
       const message =
         error instanceof PublishedApiError
           ? error.message
