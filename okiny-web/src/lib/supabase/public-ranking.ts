@@ -148,6 +148,7 @@ export async function listPublicRankingsByUser(
   items: readonly string[];
   createdAt: string;
   viewCount: number;
+  impressionCount: number;
   bookmarkCount: number;
 }>> {
   const env = readServiceRoleEnv();
@@ -162,7 +163,7 @@ export async function listPublicRankingsByUser(
 
   const query = new URLSearchParams({
     select:
-      "id,user_id,title,tag_id,is_public,created_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+      "id,user_id,title,tag_id,is_public,created_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     user_id: `eq.${profile.id}`,
     is_public: "eq.true",
     order: "created_at.desc",
@@ -190,6 +191,7 @@ export async function listPublicRankingsByUser(
     type PublicRankingListRow = SupabasePublicRankingRow & {
       readonly created_at: string;
       readonly view_count: number;
+      readonly impression_count: number;
       readonly bookmark_count: number;
     };
 
@@ -204,6 +206,7 @@ export async function listPublicRankingsByUser(
         items: extractSortedItemTexts(row.ranking_items),
         createdAt: row.created_at,
         viewCount: row.view_count ?? 0,
+        impressionCount: row.impression_count ?? 0,
         bookmarkCount: row.bookmark_count ?? 0,
       }));
   } catch {

@@ -22,8 +22,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { autosaveRepository } from "@/lib/autosave/client-repository";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { TagCombobox } from "@/components/tag-combobox";
+import { useToast } from "@/components/toast-provider";
 import { isFormEmpty } from "@/lib/drafts/is-form-empty";
-import { HttpPublishedApiClient } from "@/lib/publish/http-published-api-client";
+import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
+import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { RankingInput, RankingItems } from "@/lib/types";
 
 const apiClient = new HttpPublishedApiClient();
@@ -131,6 +133,7 @@ export function RankingForm({
   autosaveConfig,
   isDraftMode,
 }: RankingFormProps) {
+  const { pushToast } = useToast();
   const [form, setForm] = useState<RankingInput>(
     initialValue
       ? { ...initialValue, isPublic: initialValue.isPublic ?? true }
@@ -285,6 +288,10 @@ export function RankingForm({
           const createdTag = await apiClient.createTag(newTagName.trim());
           resolvedTagId = createdTag.id;
         } catch (error: unknown) {
+          if (error instanceof PublishedApiError && error.code === "UNAUTHORIZED") {
+            pushToast(buildSessionExpiredToast());
+            return;
+          }
           const message =
             error instanceof Error
               ? error.message

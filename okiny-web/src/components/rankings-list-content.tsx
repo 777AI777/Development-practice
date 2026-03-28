@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -47,6 +48,7 @@ function MyRankContent({
   collapsedTagIds,
   toggleTagAccordion,
   userName,
+  userAvatarUrl,
   userDisplayUserId,
 }: {
   isLoading: boolean;
@@ -56,6 +58,7 @@ function MyRankContent({
   collapsedTagIds: string[];
   toggleTagAccordion: (tagId: string) => void;
   userName: string | undefined;
+  userAvatarUrl: string | undefined;
   userDisplayUserId: string | null;
 }) {
   const userInitial = getUserInitial(userName, "??");
@@ -158,9 +161,19 @@ function MyRankContent({
                       style={{ borderBottom: idx < group.items.length - 1 ? "1px solid var(--border)" : "none" }}
                     >
                       <div className="p-4 flex gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                          {userInitial}
-                        </div>
+                        {userAvatarUrl ? (
+                          <Image
+                            src={userAvatarUrl}
+                            alt={userName ?? ""}
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                            {userInitial}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-bold text-foreground">
@@ -195,7 +208,7 @@ function MyRankContent({
                               </p>
                             ))}
                           </div>
-                          {/* インプレッション */}
+                          {/* 統計 */}
                           <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -203,6 +216,14 @@ function MyRankContent({
                                 <circle cx="12" cy="12" r="3" />
                               </svg>
                               {ranking.viewCount}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10" />
+                                <line x1="12" y1="20" x2="12" y2="4" />
+                                <line x1="6" y1="20" x2="6" y2="14" />
+                              </svg>
+                              {ranking.impressionCount}
                             </span>
                             <span className="flex items-center gap-1">
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -228,13 +249,15 @@ function MyRankContent({
 interface RankingsListContentProps {
   initialRankings: PublishedRanking[];
   userName?: string;
+  userAvatarUrl?: string;
 }
 
-function RankingsListContentInner({ initialRankings, userName: serverUserName }: RankingsListContentProps) {
+function RankingsListContentInner({ initialRankings, userName: serverUserName, userAvatarUrl: serverAvatarUrl }: RankingsListContentProps) {
   const { user } = useSessionUser();
   const { signalReady } = usePageTransition();
 
   const displayName = user?.name ?? serverUserName;
+  const displayAvatarUrl = user?.avatarUrl ?? serverAvatarUrl;
   const displayUserId = user?.displayUserId ?? null;
 
   const [rankings, setRankings] = useState<PublishedRanking[]>(initialRankings);
@@ -269,6 +292,7 @@ function RankingsListContentInner({ initialRankings, userName: serverUserName }:
           collapsedTagIds={collapsedTagIds}
           toggleTagAccordion={toggleTagAccordion}
           userName={displayName}
+          userAvatarUrl={displayAvatarUrl}
           userDisplayUserId={displayUserId}
         />
       )}

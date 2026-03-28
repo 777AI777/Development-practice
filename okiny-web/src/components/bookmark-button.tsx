@@ -2,6 +2,9 @@
 
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 
+import { useToast } from "@/components/toast-provider";
+import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
+
 interface BookmarkButtonProps {
   rankingId: string;
   initialIsBookmarked: boolean;
@@ -55,6 +58,7 @@ export function BookmarkButton({
   compact = false,
   onChange,
 }: BookmarkButtonProps) {
+  const { pushToast } = useToast();
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
   const [count, setCount] = useState(bookmarkCount);
   const [isPending, setIsPending] = useState(false);
@@ -92,6 +96,14 @@ export function BookmarkButton({
         if (!response.ok) {
           setIsBookmarked(prevBookmarked);
           setCount(prevCount);
+          if (response.status === 401) {
+            pushToast(buildSessionExpiredToast());
+          } else {
+            pushToast({
+              type: "error",
+              message: "ブックマークに失敗しました。",
+            });
+          }
           return;
         }
 
@@ -99,11 +111,15 @@ export function BookmarkButton({
       } catch {
         setIsBookmarked(prevBookmarked);
         setCount(prevCount);
+        pushToast({
+          type: "error",
+          message: "ブックマークに失敗しました。",
+        });
       } finally {
         setIsPending(false);
       }
     },
-    [count, isBookmarked, isPending, onChange, rankingId],
+    [count, isBookmarked, isPending, onChange, pushToast, rankingId],
   );
 
   return (

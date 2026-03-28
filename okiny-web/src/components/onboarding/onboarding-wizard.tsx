@@ -6,17 +6,24 @@ import type { RankingItems } from "@/lib/types"
 import { publishedApiClient } from "@/lib/publish/client"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/components/toast-provider"
+import { useSessionUser } from "@/hooks/use-session-user"
 import { trackEvent } from "@/lib/analytics"
 import { StepIndicator } from "./step-indicator"
+import { ProfileStep } from "./profile-step"
 import { TagStep } from "./tag-step"
 import { TitleStep } from "./title-step"
 import { ItemsStep } from "./items-step"
 
-type WizardStep = 1 | 2 | 3
+type WizardStep = 1 | 2 | 3 | 4
 
-export function OnboardingWizard() {
+interface OnboardingWizardProps {
+  profileOnly?: boolean
+}
+
+export function OnboardingWizard({ profileOnly = false }: OnboardingWizardProps) {
   const router = useRouter()
   const { pushToast } = useToast()
+  const { updateDisplayName, updateDisplayUserId } = useSessionUser()
 
   // Step state
   const [currentStep, setCurrentStep] = useState<WizardStep>(1)
@@ -30,6 +37,7 @@ export function OnboardingWizard() {
 
   // UI control
   const [isPublishing, setIsPublishing] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -46,17 +54,59 @@ export function OnboardingWizard() {
         trackEvent("onboarding_step", { step: 3 })
         return 3
       }
+      if (prev === 3) {
+        trackEvent("onboarding_step", { step: 4 })
+        return 4
+      }
       return prev
     })
   }, [])
 
   const handleBack = useCallback(() => {
     setCurrentStep((prev) => {
+      if (prev === 4) return 3
       if (prev === 3) return 2
       if (prev === 2) return 1
       return prev
     })
   }, [])
+
+  const handleProfileComplete = useCallback(
+    async (displayName: string, displayUserId: string) => {
+      setIsSubmitting(true)
+      setErrorMessage(null)
+      try {
+        // displayUserId を先に保存（conflict 検出を先行させ、displayName の不要な変更を防ぐ）
+        const idResult = await updateDisplayUserId(displayUserId)
+        if (idResult === "conflict") {
+          setErrorMessage("このユーザーIDは既に使われています")
+          return
+        }
+        if (idResult !== "success") {
+          setErrorMessage("ユーザーIDの保存に失敗しました")
+          return
+        }
+        const nameResult = await updateDisplayName(displayName)
+        if (nameResult !== "success") {
+          setErrorMessage("ユーザーネームの保存に失敗しました")
+          return
+        }
+
+        if (profileOnly) {
+          const supabase = createClient()
+          await supabase.auth.refreshSession()
+          router.push("/rankings")
+        } else {
+          handleNext()
+        }
+      } catch {
+        setErrorMessage("保存に失敗しました")
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [updateDisplayName, updateDisplayUserId, profileOnly, router, handleNext]
+  )
 
   const handleTagSelect = useCallback(
     (tagId: string, tagName: string) => {
@@ -134,9 +184,25 @@ export function OnboardingWizard() {
 
   return (
     <>
-      <StepIndicator currentStep={currentStep} />
+      <StepIndicator
+        currentStep={currentStep}
+        totalSteps={profileOnly ? 1 : 4}
+      />
 
       {currentStep === 1 && (
+        <ProfileStep
+          onComplete={handleProfileComplete}
+          isSubmitting={isSubmitting}
+        />
+      )}
+
+      {errorMessage && currentStep === 1 && (
+        <p className="mt-2 text-center text-sm text-destructive">
+          {errorMessage}
+        </p>
+      )}
+
+      {currentStep === 2 && (
         <TagStep
           selectedTagId={selectedTagId}
           selectedTagDisplayName={selectedTagDisplayName}
@@ -148,7 +214,7 @@ export function OnboardingWizard() {
         />
       )}
 
-      {currentStep === 2 && (
+      {currentStep === 3 && (
         <TitleStep
           title={title}
           selectedTagDisplayName={selectedTagDisplayName}
@@ -158,7 +224,7 @@ export function OnboardingWizard() {
         />
       )}
 
-      {currentStep === 3 && (
+      {currentStep === 4 && (
         <ItemsStep
           title={title}
           items={items}

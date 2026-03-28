@@ -3,6 +3,7 @@ import {
   HttpPublishedApiClient,
   PublishedApiError,
 } from "@/lib/publish/http-published-api-client";
+import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { PublishedRanking, RankingInput, ToastMessage } from "@/lib/types";
 
 export type PublishRankingResult =
@@ -11,6 +12,9 @@ export type PublishRankingResult =
 
 function buildErrorToast(error: unknown): ToastMessage {
   if (error instanceof PublishedApiError) {
+    if (error.code === "UNAUTHORIZED") {
+      return buildSessionExpiredToast();
+    }
     return {
       type: "error",
       message: error.message,

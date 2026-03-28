@@ -43,6 +43,7 @@ describe("publishRanking", () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         viewCount: 0,
+        impressionCount: 0,
         bookmarkCount: 0,
         isBookmarked: false,
       }),
@@ -56,6 +57,7 @@ describe("publishRanking", () => {
       bookmarkRanking: async () => {},
       unbookmarkRanking: async () => {},
       recordView: async () => {},
+      recordImpressions: async () => {},
     };
 
     const result = await publishRanking({

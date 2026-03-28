@@ -1,17 +1,20 @@
 "use client";
 
 interface StepIndicatorProps {
-  currentStep: 1 | 2 | 3;
+  currentStep: 1 | 2 | 3 | 4;
+  totalSteps?: 1 | 2 | 3 | 4;
 }
 
-const STEP_LABELS = ["タグ選択", "タイトル", "ランキング入力"] as const;
+const STEP_LABELS = ["プロフィール", "タグ選択", "タイトル", "ランキング入力"] as const;
 
-export function StepIndicator({ currentStep }: StepIndicatorProps) {
+export function StepIndicator({ currentStep, totalSteps = 4 }: StepIndicatorProps) {
+  const labels = STEP_LABELS.slice(0, totalSteps);
+
   return (
     <div className="flex items-center justify-center">
       <div className="flex items-start gap-0">
-        {STEP_LABELS.map((label, index) => {
-          const step = (index + 1) as 1 | 2 | 3;
+        {labels.map((label, index) => {
+          const step = (index + 1) as 1 | 2 | 3 | 4;
           const isCompleted = step < currentStep;
           const isCurrent = step === currentStep;
           const isActive = isCompleted || isCurrent;
@@ -32,7 +35,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
                   {label}
                 </span>
               </div>
-              {step < 3 && (
+              {step < totalSteps && (
                 <div
                   className={`mt-4 h-0.5 w-10 shrink-0 ${
                     isCompleted ? "bg-primary" : "bg-border"

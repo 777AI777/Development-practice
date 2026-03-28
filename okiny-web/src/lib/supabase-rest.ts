@@ -8,7 +8,7 @@ import {
   POPULAR_TAGS_CACHE_REVALIDATE_SECONDS,
   RANKING_ITEMS_PREVIEW_LIMIT,
 } from "@/lib/constants";
-import { toUserProfileLookup } from "@/lib/user-utils";
+import { isValidDisplayUserId, normalizeDisplayUserId, toUserProfileLookup } from "@/lib/user-utils";
 
 interface SupabaseEnv {
   url: string;
@@ -180,6 +180,7 @@ export function mapRankingRow(row: SupabaseRankingRow) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     viewCount: row.view_count ?? 0,
+    impressionCount: row.impression_count ?? 0,
     bookmarkCount: row.bookmark_count ?? 0,
     isBookmarked: false,
   };
@@ -275,6 +276,7 @@ function mapPublicRankingWithAuthorRow(row: {
   created_at: string;
   updated_at: string;
   view_count: number;
+  impression_count: number;
   bookmark_count: number;
   ranking_items: Array<{ rank: number; item_text: string }> | null;
   author_display_name: string | null;
@@ -291,6 +293,7 @@ function mapPublicRankingWithAuthorRow(row: {
     created_at: row.created_at,
     updated_at: row.updated_at,
     view_count: row.view_count,
+    impression_count: row.impression_count,
     bookmark_count: row.bookmark_count,
     ranking_items: row.ranking_items ?? [],
     tags: row.tag_name ? { name: row.tag_name } : undefined,
@@ -315,7 +318,7 @@ export async function listRankingsByUser(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     user_id: `eq.${params.userId}`,
     order: "updated_at.desc",
   });
@@ -340,7 +343,7 @@ export async function getRankingById(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow> | null> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     id: `eq.${params.rankingId}`,
     user_id: `eq.${params.userId}`,
     limit: "1",
@@ -609,7 +612,7 @@ export async function getPublicRankingById(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow> | null> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     id: `eq.${params.rankingId}`,
     is_public: "eq.true",
     limit: "1",
@@ -656,6 +659,50 @@ export async function incrementViewCount(params: {
   await callRpc<unknown>("increment_view_count", {
     p_ranking_id: params.rankingId,
   }, params.accessToken);
+}
+
+/**
+ * ランキングの impression_count をバッチで +1 する（RPC: increment_impression_count）。
+ * 一覧表示時にまとめて呼び出す。空配列の場合は何もしない。
+ */
+export async function incrementImpressionCount(params: {
+  rankingIds: string[];
+  accessToken: string;
+}): Promise<void> {
+  if (params.rankingIds.length === 0) return;
+  await callRpc<unknown>("increment_impression_count", {
+    p_ranking_ids: params.rankingIds,
+  }, params.accessToken);
+}
+
+/**
+ * display_user_id の利用可能性を確認する（一意性チェック）。
+ * service_role_key を使って user_profiles VIEW を参照する。
+ * @returns true: 利用可能（未使用）, false: 既に使用中
+ */
+export async function checkDisplayUserIdAvailability(
+  displayUserId: string,
+): Promise<boolean> {
+  const normalizedValue = normalizeDisplayUserId(displayUserId);
+
+  if (!isValidDisplayUserId(normalizedValue)) {
+    throw new Error("Invalid display_user_id format");
+  }
+
+  const query = new URLSearchParams({
+    select: "id",
+    display_user_id: `eq.${normalizedValue}`,
+    limit: "1",
+  });
+
+  const response = await requestSupabaseWithServiceRole(
+    `user_profiles?${query.toString()}`,
+    { revalidateSeconds: 0 },
+  );
+  await ensureResponseOk(response);
+
+  const rows = (await response.json()) as Array<{ id: string }>;
+  return rows.length === 0;
 }
 
 /**
@@ -718,7 +765,7 @@ export async function listPublicRankingsByTag(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     is_public: "eq.true",
     user_id: `neq.${params.viewerUserId}`,
     tag_id: `eq.${params.tagId}`,
@@ -773,6 +820,7 @@ export async function listPublicRankingsByTagWithAuthors(params: {
       created_at: string;
       updated_at: string;
       view_count: number;
+      impression_count: number;
       bookmark_count: number;
       ranking_items: Array<{ rank: number; item_text: string }> | null;
       author_display_name: string | null;
@@ -781,7 +829,9 @@ export async function listPublicRankingsByTagWithAuthors(params: {
       is_bookmarked: boolean;
     }>;
 
-    return rows.map(mapPublicRankingWithAuthorRow);
+    return rows
+      .filter((row) => row.user_id !== params.viewerUserId)
+      .map(mapPublicRankingWithAuthorRow);
   } catch (error) {
     if (!(error instanceof PublicRankingsByTagRpcUnavailableError)) {
       throw error;
@@ -820,42 +870,14 @@ export async function getUserProfilesBatch(
 ): Promise<UserProfile[]> {
   if (userIds.length === 0) return [];
   const uniqueUserIds = [...new Set(userIds)];
-  const env = readSupabaseServiceRoleEnv();
 
-  const query = new URLSearchParams({
-    select: "id,display_name,avatar_url,display_user_id",
-  });
-  query.set("id", `in.${toPostgrestInList(uniqueUserIds)}`);
-
-  const response = await fetch(
-    `${env.url}/rest/v1/user_profiles?${query.toString()}`,
-    {
-      method: "GET",
-      headers: {
-        apikey: env.serviceRoleKey,
-        Authorization: `Bearer ${env.serviceRoleKey}`,
-      },
-      cache: "no-store",
-    },
+  const results = await Promise.all(
+    uniqueUserIds.map((id) => getUserProfile(id)),
   );
 
-  if (!response.ok) {
-    const detail = await response.text();
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(`[getUserProfilesBatch] failed: ${response.status} ${response.statusText}`);
-      console.warn("[getUserProfilesBatch] detail:", detail);
-    }
-    return [];
-  }
-
-  const rows = (await response.json()) as Array<{
-    id: string;
-    display_name: string;
-    avatar_url: string | null;
-    display_user_id: string | null;
-  }>;
-
-  return rows.map(mapUserProfileRow);
+  return results.filter(
+    (profile): profile is UserProfile => profile !== null,
+  );
 }
 
 /**
@@ -867,7 +889,7 @@ export async function listPublicRankingsByUser(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
     user_id: `eq.${params.userId}`,
     is_public: "eq.true",
     order: "updated_at.desc",
@@ -935,7 +957,7 @@ export async function listBookmarkedRankings(params: {
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   // bookmarks テーブルから rankings を JOIN して取得
   const query = new URLSearchParams({
-    select: "ranking_id,rankings(id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,bookmark_count,ranking_items(rank,item_text),tags(name))",
+    select: "ranking_id,rankings(id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name))",
     user_id: `eq.${params.userId}`,
     order: "created_at.desc",
   });

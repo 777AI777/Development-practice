@@ -16,7 +16,7 @@ interface RankingDetailContentProps {
   ranking: PublishedRanking;
   /** オーナーかどうか（編集・削除メニューの表示制御） */
   isOwner: boolean;
-  /** 他ユーザーのランキング閲覧時の著者プロフィール */
+  /** 著者プロフィール */
   authorProfile?: UserProfile;
 }
 
@@ -224,8 +224,8 @@ export function RankingDetailContent({
           </div>
         </div>
 
-        {/* 著者情報（他ユーザーのランキング閲覧時） */}
-        {!isOwner && authorProfile && (
+        {/* 著者情報 */}
+        {authorProfile && (
           <Link
             href={buildUserProfilePath(authorProfile)}
             className="flex items-center gap-2 transition hover:opacity-80"
@@ -281,6 +281,25 @@ export function RankingDetailContent({
               <circle cx="12" cy="12" r="3" />
             </svg>
             {ranking.viewCount}
+          </span>
+          {/* インプレッション数 */}
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            {ranking.impressionCount}
           </span>
           {/* ブックマーク数 */}
           {isOwner ? (

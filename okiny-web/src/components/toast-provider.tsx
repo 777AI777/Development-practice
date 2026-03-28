@@ -112,7 +112,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             )}`}
           >
             <div className="flex items-start justify-between gap-2">
-              <p>{toast.message}</p>
+              <div>
+                <p>{toast.message}</p>
+                {toast.action && (
+                  <a
+                    href={toast.action.href}
+                    className="mt-1 inline-block text-xs text-white/90 underline hover:text-white"
+                  >
+                    {toast.action.label}
+                  </a>
+                )}
+              </div>
               <button
                 type="button"
                 className="rounded px-2 py-0.5 text-xs font-medium text-white/90 hover:bg-white/15"
