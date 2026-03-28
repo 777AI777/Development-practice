@@ -1,13 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RankingCard } from "@/components/ranking-card";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { useSearch } from "@/hooks/use-search";
-import { SEARCH_LIMIT } from "@/lib/constants";
+import {
+  SEARCH_SUBMIT_EVENT_NAME,
+  SEARCH_LIMIT,
+  SEARCH_RANKINGS_SCROLL_KEY,
+} from "@/lib/constants";
 import type { PublicRankingWithAuthor } from "@/lib/types";
 import { buildUserProfilePath } from "@/lib/user-utils";
 
@@ -51,20 +55,79 @@ export function SearchRankingsTab({
     loadMore,
     reset,
     refresh,
-  } = useSearch<PublicRankingWithAuthor>({ fetcher: fetchRankings });
+    invalidateCache,
+  } = useSearch<PublicRankingWithAuthor>({
+    fetcher: fetchRankings,
+    namespace: "rankings",
+  });
   const normalizedQuery = query.trim();
   const { signalReady } = usePageTransition();
+
+  // --- タブ切替で search() が再発火しないよう ref で管理 ---
+  const isActiveRef = useRef(isActive);
+  const pendingQueryRef = useRef<string | null>(null);
+  const lastRequestedQueryRef = useRef("");
+
+  useEffect(() => {
+    isActiveRef.current = isActive;
+
+    // タブがアクティブになったとき、保留中のクエリがあれば実行
+    if (isActive && pendingQueryRef.current !== null) {
+      const pending = pendingQueryRef.current;
+      pendingQueryRef.current = null;
+      search(pending);
+    }
+  }, [isActive, search]);
+
+  const searchIfActive = useCallback(
+    (q: string) => {
+      if (isActiveRef.current) {
+        search(q);
+      } else {
+        pendingQueryRef.current = q;
+      }
+    },
+    [search],
+  );
 
   useEffect(() => {
     if (!normalizedQuery) {
       reset();
+      pendingQueryRef.current = null;
+      lastRequestedQueryRef.current = "";
       return;
     }
 
-    if (isActive) {
-      search(normalizedQuery);
+    if (lastRequestedQueryRef.current === normalizedQuery) {
+      return;
     }
-  }, [isActive, normalizedQuery, reset, search]);
+
+    lastRequestedQueryRef.current = normalizedQuery;
+    searchIfActive(normalizedQuery);
+  }, [normalizedQuery, reset, searchIfActive]);
+
+  useEffect(() => {
+    const handleSearchSubmit = (event: Event) => {
+      const submittedQuery =
+        (
+          event as CustomEvent<{ query?: string }>
+        ).detail?.query?.trim() ?? "";
+
+      if (!submittedQuery || submittedQuery !== normalizedQuery) {
+        return;
+      }
+
+      lastRequestedQueryRef.current = "";
+      reset();
+      invalidateCache(submittedQuery);
+      searchIfActive(submittedQuery);
+    };
+
+    window.addEventListener(SEARCH_SUBMIT_EVENT_NAME, handleSearchSubmit);
+    return () => {
+      window.removeEventListener(SEARCH_SUBMIT_EVENT_NAME, handleSearchSubmit);
+    };
+  }, [invalidateCache, normalizedQuery, reset, searchIfActive]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -78,6 +141,45 @@ export function SearchRankingsTab({
       signalReady();
     }
   }, [isActive, normalizedQuery, isInitialized, isLoading, signalReady]);
+
+  // --- スクロール復元 ---
+  const scrollRestoredRef = useRef(false);
+
+  // scrollイベントで常時保存（throttle 200ms）
+  useEffect(() => {
+    if (!isActive || items.length === 0) return;
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const handleScroll = () => {
+      if (timeoutId) return;
+      timeoutId = setTimeout(() => {
+        sessionStorage.setItem(SEARCH_RANKINGS_SCROLL_KEY, String(window.scrollY));
+        timeoutId = null;
+      }, 200);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+      scrollRestoredRef.current = false;
+    };
+  }, [isActive, items.length]);
+
+  // データ復元後にスクロール位置を復元
+  useLayoutEffect(() => {
+    if (!isActive || !isInitialized || isLoading || items.length === 0) return;
+    if (scrollRestoredRef.current) return;
+
+    scrollRestoredRef.current = true;
+    const saved = sessionStorage.getItem(SEARCH_RANKINGS_SCROLL_KEY);
+    if (saved !== null) {
+      const scrollY = Number(saved);
+      if (Number.isFinite(scrollY)) {
+        window.scrollTo(0, scrollY);
+      }
+    }
+  }, [isActive, isInitialized, isLoading, items.length]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: loadMore,

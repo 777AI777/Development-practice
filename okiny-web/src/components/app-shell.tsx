@@ -7,12 +7,13 @@ import { useCallback, useEffect, useState } from "react";
 
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useMyProfileStats } from "@/hooks/use-my-profile-stats";
+import { invalidateSearchCacheEntry } from "@/hooks/use-search";
 import { useSessionUser } from "@/hooks/use-session-user";
-import {
-  buildUserProfilePath,
-  getUserInitial,
-} from "@/lib/user-utils";
-import { clearFollowingFeedCache } from "@/lib/feed-cache";
+import { invalidateTagSearchCache } from "@/hooks/use-tags";
+import { SEARCH_SUBMIT_EVENT_NAME } from "@/lib/constants";
+import { normalizeSearchQuery } from "@/lib/search-query";
+import { buildUserProfilePath, getUserInitial } from "@/lib/user-utils";
+import { clearListCache } from "@/lib/list-cache";
 
 const APP_BRAND = "OKINY";
 
@@ -298,17 +299,31 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   const handleSearchSubmit = useCallback(() => {
-    const normalizedQuery = searchQuery.trim();
+    const rawQuery = searchQuery.trim();
+    const normalizedQuery = normalizeSearchQuery(rawQuery);
     const currentQuery = searchParams.get("q") ?? "";
     const currentTab = searchParams.get("tab");
 
-    if (!normalizedQuery) {
+    if (!rawQuery) {
       if (pathname !== "/search" || currentQuery !== "" || currentTab !== null) {
         startTransitionLoading();
       }
       router.push("/search");
     } else {
-      router.push(`/search?q=${encodeURIComponent(normalizedQuery)}`);
+      invalidateSearchCacheEntry("rankings", normalizedQuery);
+      invalidateSearchCacheEntry("users", normalizedQuery);
+      invalidateTagSearchCache(normalizedQuery);
+      window.dispatchEvent(
+        new CustomEvent(SEARCH_SUBMIT_EVENT_NAME, {
+          detail: { query: normalizedQuery },
+        }),
+      );
+
+      const params = new URLSearchParams({ q: rawQuery });
+      if (pathname === "/search" && currentTab) {
+        params.set("tab", currentTab);
+      }
+      router.push(`/search?${params.toString()}`);
     }
   }, [pathname, router, searchParams, searchQuery, startTransitionLoading]);
 
@@ -327,7 +342,7 @@ export function AppShell({ children }: AppShellProps) {
           <Link
             href="/rankings"
             onClick={() => {
-              clearFollowingFeedCache();
+              clearListCache({ cacheKey: "okiny:following-feed-cache" });
             }}
             className="shrink-0 text-lg font-bold text-primary"
           >

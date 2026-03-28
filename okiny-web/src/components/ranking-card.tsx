@@ -95,6 +95,7 @@ export interface RankingCardProps {
   showLockIcon?: boolean;
   showTagBadge?: boolean;
   showBookmark?: boolean;
+  onBookmarkChange?: (nextIsBookmarked: boolean, nextCount: number) => void;
   onAvatarClick?: (
     event: React.MouseEvent<HTMLButtonElement>,
     author: PublicRankingWithAuthor["author"],
@@ -158,13 +159,22 @@ export function RankingCard({
   showLockIcon = false,
   showTagBadge = false,
   showBookmark = false,
+  onBookmarkChange,
   onAvatarClick,
   onTagClick,
 }: RankingCardProps) {
+  const author = ranking.author ?? {
+    id: ranking.userId,
+    displayName: "ユーザー",
+    avatarUrl: null,
+    displayUserId: null,
+    introduction: null,
+  };
+
   const avatar: AvatarInfo = {
-    displayName: ranking.author.displayName,
-    avatarUrl: ranking.author.avatarUrl,
-    displayUserId: ranking.author.displayUserId,
+    displayName: author.displayName,
+    avatarUrl: author.avatarUrl,
+    displayUserId: author.displayUserId,
   };
 
   return (
@@ -179,7 +189,7 @@ export function RankingCard({
         <AvatarImage
           avatar={avatar}
           onAvatarClick={onAvatarClick}
-          author={ranking.author}
+          author={author}
         />
 
         <div className="min-w-0 flex-1 space-y-1">
@@ -252,6 +262,7 @@ export function RankingCard({
                 bookmarkCount={ranking.bookmarkCount}
                 compact
                 className="-my-1 -ml-1"
+                onChange={onBookmarkChange}
               />
             ) : (
               <span className="flex items-center gap-1">

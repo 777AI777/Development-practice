@@ -11,6 +11,7 @@ import { FollowButton } from "@/components/follow-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { invalidateMyProfileStats } from "@/hooks/use-my-profile-stats";
+import { SCROLL_KEY_FOLLOW_USERS } from "@/lib/constants";
 import type { UserProfile, UserProfileWithCounts } from "@/lib/types";
 import { buildUserProfilePath, getUserInitial } from "@/lib/user-utils";
 
@@ -129,6 +130,24 @@ function FollowUsersListContentInner({
     signalReady();
   }, [signalReady]);
 
+  // マウント時: スクロール位置を復元
+  useEffect(() => {
+    const savedY = sessionStorage.getItem(SCROLL_KEY_FOLLOW_USERS);
+    if (savedY) {
+      sessionStorage.removeItem(SCROLL_KEY_FOLLOW_USERS);
+      requestAnimationFrame(() => {
+        window.scrollTo(0, Number(savedY));
+      });
+    }
+  }, []);
+
+  // アンマウント時: スクロール位置を保存
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem(SCROLL_KEY_FOLLOW_USERS, String(window.scrollY));
+    };
+  }, []);
+
   useEffect(() => {
     setLocalFollowingUserIds(new Set(followingUserIds));
   }, [followingUserIds]);
@@ -141,9 +160,9 @@ function FollowUsersListContentInner({
       const newPath = tab === "followers"
         ? `${basePath}/followers`
         : `${basePath}/following`;
-      window.history.replaceState(null, "", newPath);
+      router.replace(newPath, { scroll: false });
     },
-    [profile],
+    [profile, router],
   );
 
   const handleRemoveFollowerClick = useCallback(

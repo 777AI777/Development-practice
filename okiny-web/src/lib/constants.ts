@@ -26,6 +26,32 @@ export const SEARCH_HISTORY_KEY = "okiny:search_history";
 
 export const VIEWED_USERS_KEY = "okiny:viewed_users";
 
+export const SEARCH_SUBMIT_EVENT_NAME = "okiny:search-submit";
+
+// --- Search Scroll Restore Keys ---
+
+export const SEARCH_RANKINGS_SCROLL_KEY = "scroll:search-rankings";
+
+export const SEARCH_USERS_SCROLL_KEY = "scroll:search-users";
+
+export const SEARCH_TAGS_SCROLL_KEY = "scroll:search-tags";
+
+// --- Scroll Restore Keys ---
+
+export const SCROLL_KEY_FOLLOW_USERS = "scroll:follow-users";
+
+export const SCROLL_KEY_RANKINGS_LIST = "scroll:rankings-list";
+
+export const SCROLL_KEY_BOOKMARKS = "scroll:bookmarks";
+
+// --- MyRank Cache Constants ---
+
+export const MYRANK_CACHE_KEY = "okiny:myrank";
+
+// --- Bookmarks Cache Constants ---
+
+export const BOOKMARKS_CACHE_KEY = "okiny:bookmarks:v2";
+
 // --- Following Feed Constants ---
 
 export const FOLLOWING_FEED_LIMIT = 10;

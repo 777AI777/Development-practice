@@ -12,6 +12,11 @@ interface UseSearchOptions<TItem> {
   ) => Promise<{ items: TItem[]; nextCursor: string | null }>;
   debounceMs?: number;
   minQueryLength?: number;
+  /**
+   * キャッシュの名前空間。同じ `useSearch` でも fetcher が異なる場合（rankings / users 等）に
+   * キャッシュ衝突を防ぐ。デフォルト: "default"
+   */
+  namespace?: string;
 }
 
 interface UseSearchReturn<TItem> {
@@ -23,13 +28,34 @@ interface UseSearchReturn<TItem> {
   isInitialized: boolean;
   loadMore: () => void;
   reset: () => void;
+  invalidateCache: (query: string) => void;
   refresh: () => Promise<void>;
+}
+
+/**
+ * モジュールスコープのインメモリキャッシュ。
+ * コンポーネント再マウント（ページ遷移→戻る）でも保持される。
+ * タブ/ウィンドウを閉じたら消える（sessionStorageと同等のライフサイクル）。
+ *
+ * キー形式: `${namespace}:${query}`
+ */
+const searchCache = new Map<string, { items: unknown[]; nextCursor: string | null }>();
+
+function buildCacheKey(namespace: string, query: string): string {
+  return `${namespace}:${query}`;
+}
+
+export function invalidateSearchCacheEntry(namespace: string, query: string): void {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return;
+  searchCache.delete(buildCacheKey(namespace, trimmedQuery));
 }
 
 export function useSearch<TItem>({
   fetcher,
   debounceMs = SEARCH_DEBOUNCE_MS,
   minQueryLength = 1,
+  namespace = "default",
 }: UseSearchOptions<TItem>): {
   search: (query: string) => void;
 } & UseSearchReturn<TItem> {
@@ -47,8 +73,37 @@ export function useSearch<TItem>({
   const cursorRef = useRef<string | null>(null);
   const queryRef = useRef("");
   const transitionActiveRef = useRef(false);
-  const cacheRef = useRef<Map<string, { items: TItem[]; nextCursor: string | null }>>(
-    new Map(),
+  /** マウント直後の初回検索かどうか。true=キャッシュ復元、false=フレッシュフェッチ */
+  const isMountSearchRef = useRef(true);
+
+  const getCache = useCallback(
+    (query: string): { items: TItem[]; nextCursor: string | null } | null => {
+      const entry = searchCache.get(buildCacheKey(namespace, query));
+      if (!entry) return null;
+      return { items: entry.items as TItem[], nextCursor: entry.nextCursor };
+    },
+    [namespace],
+  );
+
+  const putCache = useCallback(
+    (query: string, entry: { items: TItem[]; nextCursor: string | null }) => {
+      searchCache.set(buildCacheKey(namespace, query), entry);
+    },
+    [namespace],
+  );
+
+  const removeCache = useCallback(
+    (query: string) => {
+      searchCache.delete(buildCacheKey(namespace, query));
+    },
+    [namespace],
+  );
+
+  const invalidateCache = useCallback(
+    (query: string) => {
+      invalidateSearchCacheEntry(namespace, query);
+    },
+    [namespace],
   );
 
   useEffect(() => {
@@ -82,13 +137,13 @@ export function useSearch<TItem>({
             mergedItems = [...prev, ...result.items];
             return mergedItems;
           });
-          cacheRef.current.set(query, {
+          putCache(query, {
             items: mergedItems,
             nextCursor: result.nextCursor,
           });
         } else {
           setItems(result.items);
-          cacheRef.current.set(query, {
+          putCache(query, {
             items: result.items,
             nextCursor: result.nextCursor,
           });
@@ -120,7 +175,7 @@ export function useSearch<TItem>({
         setIsInitialized(true);
       }
     },
-    [fetcher, signalReady],
+    [fetcher, putCache, signalReady],
   );
 
   const search = useCallback(
@@ -151,16 +206,23 @@ export function useSearch<TItem>({
         return;
       }
 
-      const cached = cacheRef.current.get(trimmedQuery);
-      if (cached) {
-        setItems(cached.items);
-        setIsLoading(false);
-        setIsLoadingMore(false);
-        setHasMore(cached.nextCursor !== null);
-        setError(null);
-        cursorRef.current = cached.nextCursor;
-        setIsInitialized(true);
-        return;
+      if (isMountSearchRef.current) {
+        // マウント直後の初回: キャッシュから復元（戻るナビゲーション用）
+        isMountSearchRef.current = false;
+        const cached = getCache(trimmedQuery);
+        if (cached) {
+          setItems(cached.items);
+          setIsLoading(false);
+          setIsLoadingMore(false);
+          setHasMore(cached.nextCursor !== null);
+          setError(null);
+          cursorRef.current = cached.nextCursor;
+          setIsInitialized(true);
+          return;
+        }
+      } else {
+        // 2回目以降（能動的検索）: キャッシュを削除してフレッシュフェッチ
+        removeCache(trimmedQuery);
       }
 
       setItems([]);
@@ -177,7 +239,7 @@ export function useSearch<TItem>({
         fetchPage(trimmedQuery, null, false);
       }, debounceMs);
     },
-    [debounceMs, fetchPage, minQueryLength, signalReady, startTransitionLoading],
+    [debounceMs, fetchPage, getCache, minQueryLength, removeCache, signalReady, startTransitionLoading],
   );
 
   const loadMore = useCallback(() => {
@@ -211,10 +273,10 @@ export function useSearch<TItem>({
     if (!currentQuery || currentQuery.length < minQueryLength) return;
 
     // キャッシュを削除して最初から再取得
-    cacheRef.current.delete(currentQuery);
+    removeCache(currentQuery);
     cursorRef.current = null;
     await fetchPage(currentQuery, null, false);
-  }, [fetchPage, minQueryLength]);
+  }, [fetchPage, minQueryLength, removeCache]);
 
   return {
     search,
@@ -226,6 +288,7 @@ export function useSearch<TItem>({
     isInitialized,
     loadMore,
     reset,
+    invalidateCache,
     refresh,
   };
 }

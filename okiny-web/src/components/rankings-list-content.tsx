@@ -10,7 +10,10 @@ import { EmptyStateMessage } from "@/components/empty-state-message";
 import { FollowingContent } from "@/components/following-content";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { RankingCard } from "@/components/ranking-card";
+import { useListCache } from "@/hooks/use-list-cache";
+import type { PageResult } from "@/hooks/use-list-cache";
 import { useSessionUser } from "@/hooks/use-session-user";
+import { MYRANK_CACHE_KEY } from "@/lib/constants";
 import type { PublishedRanking, UserProfile } from "@/lib/types";
 import { buildUserProfilePath } from "@/lib/user-utils";
 
@@ -52,6 +55,22 @@ function groupRankingsByTag(rankings: PublishedRanking[]) {
     .sort((a, b) => a.tagName.localeCompare(b.tagName, "ja"));
 }
 
+async function fetchMyRankings(
+  cursor: string | null,
+  signal: AbortSignal,
+): Promise<PageResult<PublishedRanking>> {
+  const res = await fetch("/api/v1/rankings", { signal });
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    throw new Error(
+      (json as { error?: { message?: string } } | null)?.error?.message ??
+        "ランキングの取得に失敗しました",
+    );
+  }
+  const json = (await res.json()) as { data: PublishedRanking[] };
+  return { items: json.data, nextCursor: null };
+}
+
 function ErrorCard({
   message,
   onRetry,
@@ -83,6 +102,7 @@ function MyRankContent({
   errorMessage,
   collapsedTagIds,
   onToggleTag,
+  onRetry,
   author,
   onAvatarClick,
   onTagClick,
@@ -91,6 +111,7 @@ function MyRankContent({
   errorMessage: string | null;
   collapsedTagIds: string[];
   onToggleTag: (tagId: string) => void;
+  onRetry?: () => void;
   author: UserProfile;
   onAvatarClick: (author: UserProfile) => void;
   onTagClick: (tagName: string) => void;
@@ -98,10 +119,10 @@ function MyRankContent({
   const groupedRankings = useMemo(() => groupRankingsByTag(rankings), [rankings]);
 
   if (errorMessage) {
-    return <ErrorCard message={errorMessage} />;
+    return <ErrorCard message={errorMessage} onRetry={onRetry} />;
   }
 
-  if (rankings.length === 0) {
+  if (rankings.length === 0 && !errorMessage) {
     return (
       <EmptyStateMessage
         title="ランキングがまだありません。"
@@ -189,13 +210,11 @@ function MyRankContent({
 }
 
 interface RankingsListContentProps {
-  initialRankings: PublishedRanking[];
   userName?: string;
   userAvatarUrl?: string;
 }
 
 function RankingsListContentInner({
-  initialRankings,
   userName: serverUserName,
   userAvatarUrl: serverAvatarUrl,
 }: RankingsListContentProps) {
@@ -208,8 +227,19 @@ function RankingsListContentInner({
   const displayAvatarUrl = user?.avatarUrl ?? serverAvatarUrl ?? null;
   const displayUserId = user?.displayUserId ?? null;
 
-  const [rankings] = useState<PublishedRanking[]>(initialRankings);
-  const [errorMessage] = useState<string | null>(null);
+  const {
+    items: rankings,
+    isLoading: isRankingsLoading,
+    error: rankingsError,
+    hasFetched: rankingsHasFetched,
+    refresh: refreshRankings,
+  } = useListCache<PublishedRanking>({
+    cache: { cacheKey: MYRANK_CACHE_KEY },
+    fetcher: fetchMyRankings,
+    enabled: true,
+    scrollRestoreKey: "scroll:rankings-list",
+  });
+
   const [collapsedTagIds, setCollapsedTagIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>(() =>
     parseTabParam(searchParams.get("tab")),
@@ -227,8 +257,10 @@ function RankingsListContentInner({
   }, []);
 
   useEffect(() => {
-    signalReady();
-  }, [signalReady]);
+    if (!isRankingsLoading) {
+      signalReady();
+    }
+  }, [isRankingsLoading, signalReady]);
 
   const author: UserProfile = {
     id: user?.id ?? rankings[0]?.userId ?? "",
@@ -241,25 +273,37 @@ function RankingsListContentInner({
   return (
     <AppShell>
       <div className={activeTab !== "myrank" ? "hidden" : undefined}>
-        <MyRankContent
-          rankings={rankings}
-          errorMessage={errorMessage}
-          collapsedTagIds={collapsedTagIds}
-          onToggleTag={(tagId) => {
-            setCollapsedTagIds((current) =>
-              current.includes(tagId)
-                ? current.filter((id) => id !== tagId)
-                : [...current, tagId],
-            );
-          }}
-          author={author}
-          onAvatarClick={(clickedAuthor) => {
-            router.push(buildUserProfilePath(clickedAuthor));
-          }}
-          onTagClick={(tagName) => {
-            router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
-          }}
-        />
+        {isRankingsLoading && !rankingsHasFetched ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-24 animate-pulse rounded-xl bg-muted"
+              />
+            ))}
+          </div>
+        ) : (
+          <MyRankContent
+            rankings={rankings}
+            errorMessage={rankingsError}
+            collapsedTagIds={collapsedTagIds}
+            onToggleTag={(tagId) => {
+              setCollapsedTagIds((current) =>
+                current.includes(tagId)
+                  ? current.filter((id) => id !== tagId)
+                  : [...current, tagId],
+              );
+            }}
+            onRetry={refreshRankings}
+            author={author}
+            onAvatarClick={(clickedAuthor) => {
+              router.push(buildUserProfilePath(clickedAuthor));
+            }}
+            onTagClick={(tagName) => {
+              router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
+            }}
+          />
+        )}
       </div>
 
       <div className={activeTab !== "recommend" ? "hidden" : undefined}>

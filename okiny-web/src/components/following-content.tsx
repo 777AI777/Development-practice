@@ -7,10 +7,44 @@ import { EmptyStateMessage } from "@/components/empty-state-message";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RankingCard } from "@/components/ranking-card";
-import { useFollowingFeed } from "@/hooks/use-following-feed";
-import { useScrollRestore } from "@/hooks/use-scroll-restore";
-import { touchFollowingFeedCache } from "@/lib/feed-cache";
-import type { UserProfile } from "@/lib/types";
+import { useListCache } from "@/hooks/use-list-cache";
+import type { PageResult } from "@/hooks/use-list-cache";
+import { FOLLOWING_FEED_LIMIT } from "@/lib/constants";
+import type { PublicRankingWithAuthor, UserProfile } from "@/lib/types";
+
+async function fetchFollowingFeedPage(
+  cursor: string | null,
+  signal: AbortSignal,
+): Promise<PageResult<PublicRankingWithAuthor>> {
+  const params = new URLSearchParams({
+    limit: String(FOLLOWING_FEED_LIMIT),
+  });
+  if (cursor) {
+    params.set("cursor", cursor);
+  }
+
+  const res = await fetch(`/api/v1/rankings/following?${params}`, {
+    signal,
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(
+      (body as { error?: { message?: string } }).error?.message ??
+        "フォローランキングの読み込みに失敗しました。",
+    );
+  }
+
+  const json = (await res.json()) as {
+    data: {
+      items: PublicRankingWithAuthor[];
+      nextCursor: string | null;
+    };
+  };
+
+  return { items: json.data.items, nextCursor: json.data.nextCursor };
+}
 
 interface FollowingContentProps {
   enabled: boolean;
@@ -24,24 +58,20 @@ export function FollowingContent({
   onTagClick,
 }: FollowingContentProps) {
   const {
-    rankings,
+    items: rankings,
     isLoading,
     isLoadingMore,
     hasMore,
     error,
     hasFetched,
-    retry,
+    refresh,
     sentinelRef,
-    restoredFromCache,
-  } = useFollowingFeed({ enabled });
-
-  useScrollRestore({ key: "scroll:following", enabled: restoredFromCache });
-
-  useEffect(() => {
-    if (enabled && restoredFromCache) {
-      touchFollowingFeedCache();
-    }
-  }, [enabled, restoredFromCache]);
+  } = useListCache<PublicRankingWithAuthor>({
+    cache: { cacheKey: "okiny:following-feed-cache" },
+    fetcher: fetchFollowingFeedPage,
+    enabled,
+    scrollRestoreKey: "scroll:following",
+  });
 
   const { startTransitionLoading, signalReady } = usePageTransition();
 
@@ -62,7 +92,7 @@ export function FollowingContent({
         <p className="mt-1 text-sm text-destructive/80">{error}</p>
         <button
           type="button"
-          onClick={retry}
+          onClick={refresh}
           className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-destructive/30 bg-card px-4 text-sm font-semibold text-destructive"
         >
           再読み込み
@@ -88,7 +118,7 @@ export function FollowingContent({
   }
 
   return (
-    <PullToRefresh onRefresh={retry}>
+    <PullToRefresh onRefresh={refresh}>
       <div className="overflow-hidden rounded-xl bg-card">
         {rankings.map((ranking, index) => (
           <RankingCard
