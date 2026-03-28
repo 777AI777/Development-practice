@@ -23,6 +23,7 @@ interface UseSearchReturn<TItem> {
   isInitialized: boolean;
   loadMore: () => void;
   reset: () => void;
+  refresh: () => Promise<void>;
 }
 
 export function useSearch<TItem>({
@@ -204,6 +205,17 @@ export function useSearch<TItem>({
     setIsInitialized(false);
   }, []);
 
+  /** 現在のクエリでキャッシュをクリアして再フェッチする */
+  const refresh = useCallback(async () => {
+    const currentQuery = queryRef.current;
+    if (!currentQuery || currentQuery.length < minQueryLength) return;
+
+    // キャッシュを削除して最初から再取得
+    cacheRef.current.delete(currentQuery);
+    cursorRef.current = null;
+    await fetchPage(currentQuery, null, false);
+  }, [fetchPage, minQueryLength]);
+
   return {
     search,
     items,
@@ -214,5 +226,6 @@ export function useSearch<TItem>({
     isInitialized,
     loadMore,
     reset,
+    refresh,
   };
 }

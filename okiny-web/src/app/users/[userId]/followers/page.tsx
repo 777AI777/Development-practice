@@ -45,6 +45,7 @@ export default async function UserFollowersPage({
       initialTab="followers"
       isOwnProfile={data.isOwnProfile}
       followingUserIds={data.followingUserIds}
+      currentUserId={data.currentUserId}
     />
   );
 }

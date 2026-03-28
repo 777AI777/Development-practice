@@ -12,6 +12,7 @@ import {
   buildUserProfilePath,
   getUserInitial,
 } from "@/lib/user-utils";
+import { clearFollowingFeedCache } from "@/lib/feed-cache";
 
 const APP_BRAND = "OKINY";
 
@@ -325,6 +326,9 @@ export function AppShell({ children }: AppShellProps) {
         <div className="flex w-full items-center justify-between gap-3">
           <Link
             href="/rankings"
+            onClick={() => {
+              clearFollowingFeedCache();
+            }}
             className="shrink-0 text-lg font-bold text-primary"
           >
             {APP_BRAND}

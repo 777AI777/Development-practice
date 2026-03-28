@@ -5,10 +5,12 @@ import {
   getAuthenticatedUserId,
   authErrorResponse,
 } from "@/lib/supabase/auth-guard";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { listFollowingRankings } from "@/lib/supabase-rest";
 import { decodeSearchCursor } from "@/lib/search-mappers";
+import { FOLLOWING_FEED_LIMIT } from "@/lib/constants";
 
-const FOLLOWING_DEFAULT_LIMIT = 20;
+const FOLLOWING_RATE_LIMIT = 30;
 
 const queryParamsSchema = z.object({
   limit: z.coerce
@@ -17,7 +19,7 @@ const queryParamsSchema = z.object({
     .min(1)
     .max(50)
     .optional()
-    .default(FOLLOWING_DEFAULT_LIMIT),
+    .default(FOLLOWING_FEED_LIMIT),
   cursor: z.string().optional(),
 });
 
@@ -30,6 +32,30 @@ export async function GET(request: NextRequest) {
   const auth = await getAuthenticatedUserId();
   if (!auth.ok) {
     return authErrorResponse(auth);
+  }
+
+  const rateLimitResult = await checkRateLimit(
+    `following:${auth.userId}`,
+    FOLLOWING_RATE_LIMIT,
+  );
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "RATE_LIMIT_EXCEEDED",
+          message:
+            "リクエスト数が上限を超えました。しばらく待ってから再度お試しください。",
+        },
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": String(rateLimitResult.limit),
+          "X-RateLimit-Remaining": String(rateLimitResult.remaining),
+          "X-RateLimit-Reset": String(rateLimitResult.reset),
+        },
+      },
+    );
   }
 
   const url = new URL(request.url);

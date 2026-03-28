@@ -54,7 +54,7 @@ AS $$
   WHERE f.follower_id = p_viewer_user_id
     AND (p_cursor_created_at IS NULL OR (r.created_at, r.id) < (p_cursor_created_at, p_cursor_id))
   ORDER BY r.created_at DESC, r.id DESC
-  LIMIT p_limit + 1
+  LIMIT LEAST(p_limit, 50) + 1
 $$;
 
 -- ③ GRANT（新シグネチャに合わせて再設定）

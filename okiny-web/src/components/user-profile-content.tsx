@@ -529,38 +529,11 @@ function UserProfileContentInner({
       {/* AppShellのpx-4, py-6を打ち消してフルブリードの白背景にする */}
       <div className="-mx-4 -mt-6 min-h-screen bg-card">
         <div className="mb-2 px-4 pt-4">
-          <BackButton label="戻る" />
+          <BackButton />
         </div>
 
         <section className="border-b border-border px-4 pb-5 pt-2">
-          {isOwnProfile && !editingProfile ? (
-            <div ref={menuRef} className="relative flex justify-end">
-              <button
-                type="button"
-                onClick={() => setMenuOpen((prev) => !prev)}
-                className="rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                aria-label="メニュー"
-              >
-                <MoreVerticalIcon />
-              </button>
-              {menuOpen ? (
-                <div className="absolute right-0 top-8 z-10 min-w-[160px] rounded-lg border border-border bg-card py-1 shadow-md">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setEditingProfile(true);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
-                  >
-                    プロフィール編集
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-4">
               {profile.avatarUrl ? (
                 <Image
@@ -588,12 +561,41 @@ function UserProfileContentInner({
               </div>
             </div>
 
+            {isOwnProfile && !editingProfile ? (
+              <div ref={menuRef} className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  aria-label="メニュー"
+                >
+                  <MoreVerticalIcon />
+                </button>
+                {menuOpen ? (
+                  <div className="absolute right-0 top-8 z-10 min-w-[160px] rounded-lg border border-border bg-card py-1 shadow-md">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setEditingProfile(true);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
+                    >
+                      プロフィール編集
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             {!isOwnProfile ? (
-              <FollowButton
-                userId={profile.id}
-                initialIsFollowing={isFollowing}
-                onChange={handleFollowChange}
-              />
+              <div className="shrink-0">
+                <FollowButton
+                  userId={profile.id}
+                  initialIsFollowing={isFollowing}
+                  onChange={handleFollowChange}
+                />
+              </div>
             ) : null}
           </div>
 

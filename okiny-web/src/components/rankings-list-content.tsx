@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { ComingSoon } from "@/components/coming-soon";
@@ -15,6 +15,15 @@ import type { PublishedRanking, UserProfile } from "@/lib/types";
 import { buildUserProfilePath } from "@/lib/user-utils";
 
 type TabId = "myrank" | "recommend" | "following";
+
+const VALID_TAB_IDS: ReadonlySet<string> = new Set<TabId>(["myrank", "recommend", "following"]);
+
+function parseTabParam(value: string | null): TabId {
+  if (value !== null && VALID_TAB_IDS.has(value)) {
+    return value as TabId;
+  }
+  return "myrank";
+}
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: "myrank", label: "マイランク", icon: "☰" },
@@ -191,6 +200,7 @@ function RankingsListContentInner({
   userAvatarUrl: serverAvatarUrl,
 }: RankingsListContentProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useSessionUser();
   const { signalReady } = usePageTransition();
 
@@ -201,7 +211,20 @@ function RankingsListContentInner({
   const [rankings] = useState<PublishedRanking[]>(initialRankings);
   const [errorMessage] = useState<string | null>(null);
   const [collapsedTagIds, setCollapsedTagIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<TabId>("myrank");
+  const [activeTab, setActiveTab] = useState<TabId>(() =>
+    parseTabParam(searchParams.get("tab")),
+  );
+
+  const switchTab = useCallback((tabId: TabId) => {
+    setActiveTab(tabId);
+    const url = new URL(window.location.href);
+    if (tabId === "myrank") {
+      url.searchParams.delete("tab");
+    } else {
+      url.searchParams.set("tab", tabId);
+    }
+    window.history.replaceState(null, "", url.toString());
+  }, []);
 
   useEffect(() => {
     signalReady();
@@ -217,7 +240,7 @@ function RankingsListContentInner({
 
   return (
     <AppShell>
-      {activeTab === "myrank" ? (
+      <div className={activeTab !== "myrank" ? "hidden" : undefined}>
         <MyRankContent
           rankings={rankings}
           errorMessage={errorMessage}
@@ -237,17 +260,18 @@ function RankingsListContentInner({
             router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
           }}
         />
-      ) : null}
+      </div>
 
-      {activeTab === "recommend" ? (
+      <div className={activeTab !== "recommend" ? "hidden" : undefined}>
         <ComingSoon
           title="おすすめ"
           description="おすすめランキングは現在準備中です。"
         />
-      ) : null}
+      </div>
 
-      {activeTab === "following" ? (
+      <div className={activeTab !== "following" ? "hidden" : undefined}>
         <FollowingContent
+          enabled={activeTab === "following"}
           onAvatarClick={(clickedAuthor) => {
             router.push(buildUserProfilePath(clickedAuthor));
           }}
@@ -255,7 +279,7 @@ function RankingsListContentInner({
             router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
           }}
         />
-      ) : null}
+      </div>
 
       <nav className="fixed bottom-0 left-1/2 z-40 flex h-[60px] w-full max-w-[480px] -translate-x-1/2 rounded-t-lg border-x border-t border-border bg-card">
         {TABS.map((tab) => {
@@ -265,7 +289,7 @@ function RankingsListContentInner({
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => switchTab(tab.id)}
               className="relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 bg-transparent transition"
               style={{
                 color: isActive ? "var(--primary)" : "var(--muted-foreground)",
