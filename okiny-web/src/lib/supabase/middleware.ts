@@ -2,19 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { shouldRedirectToOnboarding } from "@/lib/onboarding-utils";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, RATE_LIMIT_AUTHENTICATED, RATE_LIMIT_UNAUTHENTICATED } from "@/lib/rate-limit";
 import { buildContentSecurityPolicy } from "@/lib/security-headers";
 
-/**
- * 認証不要なパス。新しいパブリックパスを追加する場合はここに追記すること。
- * 全API（/api/v1/...）はデフォルトで認証必須。
- *
- * EXACT_PUBLIC_PATHS: 完全一致で認証除外
- * PREFIX_PUBLIC_PATHS: 前方一致で認証除外（サブパスを含む）
- */
 const EXACT_PUBLIC_PATHS = ["/login", "/api/auth/callback", "/terms", "/privacy"] as const;
-// WARNING: /api/v1/users 配下の新規エンドポイントはmiddlewareの認証をスキップするため、
-// 認証が必要なエンドポイントは route handler 内で getAuthenticatedUserId() を使うこと
+// /api/v1/users 配下は公開 API を含むため、詳細な認証は各 route handler 側で行う。
 const PREFIX_PUBLIC_PATHS = ["/api/og", "/api/v1/users", "/share", "/users"] as const;
 
 async function hashString(input: string): Promise<string> {
@@ -26,12 +18,6 @@ async function hashString(input: string): Promise<string> {
     .slice(0, 32);
 }
 
-/**
- * Supabase の auth cookie からユーザー識別子を簡易抽出する。
- * cookie名は `sb-<project-ref>-auth-token` パターン。
- * getUser() は呼ばず、cookie の有無のみで判定する。
- * cookie値はSHA-256ハッシュ化してキー空間汚染を防ぐ。
- */
 async function extractRateLimitIdentifier(request: NextRequest): Promise<string> {
   const authCookie = request.cookies
     .getAll()
@@ -57,10 +43,7 @@ function setRateLimitHeaders(
   return response;
 }
 
-function setCspHeaders(
-  response: NextResponse,
-  nonce: string,
-): NextResponse {
+function setCspHeaders(response: NextResponse, nonce: string): NextResponse {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
   try {
@@ -77,18 +60,16 @@ function setCspHeaders(
 }
 
 export async function updateSession(request: NextRequest, nonce: string) {
-  // リクエストヘッダーにnonceを設定（Server Componentからheaders()で読み取るため）
   request.headers.set("x-nonce", nonce);
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // リクエストヘッダーにCSPを設定（Next.jsが内部スクリプトにnonceを自動付与するため）
   if (supabaseUrl) {
     try {
       const csp = buildContentSecurityPolicy(supabaseUrl, nonce);
       request.headers.set("content-security-policy", csp);
     } catch {
-      // CSP構築失敗時はフォールバック（レスポンス側のsetCspHeadersでも設定される）
+      // Response 側でフォールバックを設定する。
     }
   }
 
@@ -97,35 +78,62 @@ export async function updateSession(request: NextRequest, nonce: string) {
     return setCspHeaders(new NextResponse("Internal Server Error", { status: 500 }), nonce);
   }
 
-  // --- レート制限チェック（認証前、APIルートのみ） ---
   const { pathname } = request.nextUrl;
   let rateLimitInfo: { limit: number; remaining: number; reset: number } | null = null;
 
   if (pathname.startsWith("/api/")) {
     const identifier = await extractRateLimitIdentifier(request);
-    const rateLimitResult = await checkRateLimit(identifier);
 
-    if (rateLimitResult && !rateLimitResult.success) {
-      return setCspHeaders(NextResponse.json(
-        { error: { code: "RATE_LIMIT_EXCEEDED", message: "リクエスト数が上限を超えました。しばらく待ってから再試行してください。" } },
-        {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": String(rateLimitResult.limit),
-            "X-RateLimit-Remaining": String(rateLimitResult.remaining),
-            "X-RateLimit-Reset": String(rateLimitResult.reset),
+    try {
+      const maxRequests = identifier.startsWith("cookie:")
+        ? RATE_LIMIT_AUTHENTICATED
+        : RATE_LIMIT_UNAUTHENTICATED;
+      const rateLimitResult = await checkRateLimit(identifier, maxRequests);
+
+      if (!rateLimitResult.success) {
+        return setCspHeaders(
+          NextResponse.json(
+            {
+              error: {
+                code: "RATE_LIMIT_EXCEEDED",
+                message: "リクエスト数が上限を超えました。しばらく待ってから再度お試しください。",
+              },
+            },
+            {
+              status: 429,
+              headers: {
+                "X-RateLimit-Limit": String(rateLimitResult.limit),
+                "X-RateLimit-Remaining": String(rateLimitResult.remaining),
+                "X-RateLimit-Reset": String(rateLimitResult.reset),
+              },
+            },
+          ),
+          nonce,
+        );
+      }
+
+      rateLimitInfo = {
+        limit: rateLimitResult.limit,
+        remaining: rateLimitResult.remaining,
+        reset: rateLimitResult.reset,
+      };
+    } catch (error) {
+      console.error("[middleware] Rate limit check failed:", error);
+      return setCspHeaders(
+        NextResponse.json(
+          {
+            error: {
+              code: "SERVER",
+              message: "一時的にアクセス制御を確認できませんでした。しばらくしてからもう一度お試しください。",
+            },
           },
-        },
-      ), nonce);
-    }
-
-    // rateLimitResult が null の場合はスキップ（env未設定 or Upstash障害）
-    if (rateLimitResult) {
-      rateLimitInfo = { limit: rateLimitResult.limit, remaining: rateLimitResult.remaining, reset: rateLimitResult.reset };
+          { status: 500 },
+        ),
+        nonce,
+      );
     }
   }
 
-  // --- Supabase セッション更新 ---
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -145,16 +153,9 @@ export async function updateSession(request: NextRequest, nonce: string) {
     },
   });
 
-  // getSession() は cookie デコードのみ（HTTP通信なし）。
-  // JWT 署名検証は Server Component の auth-guard に委任する。
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  // session.user は cookie の JWT payload をデコードした結果であり、
-  // サーバーサイドでの署名検証は行われていない。
-  // ルーティング判定にのみ使用し、データアクセスの認証は auth-guard で行う。
-  const user = session?.user ?? null;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const isPublicPath =
     EXACT_PUBLIC_PATHS.some((p) => pathname === p) ||
@@ -166,12 +167,14 @@ export async function updateSession(request: NextRequest, nonce: string) {
         { error: { code: "UNAUTHORIZED", message: "認証が必要です。" } },
         { status: 401 },
       );
-      // 401でもレート制限ヘッダーを付与
+
       if (rateLimitInfo) {
         setRateLimitHeaders(response, rateLimitInfo);
       }
+
       return setCspHeaders(response, nonce);
     }
+
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return setCspHeaders(NextResponse.redirect(url), nonce);
@@ -179,12 +182,12 @@ export async function updateSession(request: NextRequest, nonce: string) {
 
   if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
-    url.pathname = shouldRedirectToOnboarding(user.user_metadata as Record<string, unknown>) ? "/onboarding" : "/rankings";
+    url.pathname = shouldRedirectToOnboarding(user.user_metadata as Record<string, unknown>)
+      ? "/onboarding"
+      : "/rankings";
     return setCspHeaders(NextResponse.redirect(url), nonce);
   }
 
-  // 認証済みユーザーで display_user_id 未設定なら /onboarding にリダイレクト
-  // ただし /onboarding 自体、公開パス、APIパスは除外（リダイレクトループ防止）
   if (
     user &&
     pathname !== "/onboarding" &&
@@ -197,7 +200,6 @@ export async function updateSession(request: NextRequest, nonce: string) {
     return setCspHeaders(NextResponse.redirect(url), nonce);
   }
 
-  // 成功レスポンスにレート制限ヘッダーを付与
   if (rateLimitInfo) {
     setRateLimitHeaders(supabaseResponse, rateLimitInfo);
   }

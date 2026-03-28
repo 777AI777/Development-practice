@@ -125,7 +125,7 @@ function renderTagBadge(tagName: string, fontFamily: string) {
         fontFamily,
       }}
     >
-      {tagName}
+      #{tagName}
     </div>
   );
 }

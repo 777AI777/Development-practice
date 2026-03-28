@@ -1,4 +1,4 @@
-import type { AppErrorCode, PublishedRanking, PublicRankingWithAuthor, RankingInput, TagItem } from "@/lib/types";
+import type { AppErrorCode, PublicRankingWithAuthor, PublishedRanking, RankingInput, SearchPage, TagItem, UserSearchResult } from "@/lib/types";
 
 interface ApiResponse<T> {
   data?: T;
@@ -54,6 +54,11 @@ export interface PublishedApiClient {
   unbookmarkRanking(rankingId: string): Promise<void>;
   recordView(rankingId: string): Promise<void>;
   recordImpressions(rankingIds: string[]): Promise<void>;
+  searchRankings(query: string, cursor?: string | null): Promise<SearchPage<PublicRankingWithAuthor>>;
+  searchUsers(query: string, cursor?: string | null): Promise<SearchPage<UserSearchResult>>;
+  followUser(userId: string): Promise<void>;
+  unfollowUser(userId: string): Promise<void>;
+  listFollowingRankings(): Promise<PublicRankingWithAuthor[]>;
 }
 
 export class HttpPublishedApiClient implements PublishedApiClient {
@@ -232,5 +237,87 @@ export class HttpPublishedApiClient implements PublishedApiClient {
       body: JSON.stringify({ rankingIds }),
     });
     // インプレッション記録は失敗してもユーザー体験に影響しないため、エラーを握りつぶす
+  }
+
+  async searchRankings(
+    query: string,
+    cursor?: string | null,
+  ): Promise<SearchPage<PublicRankingWithAuthor>> {
+    const params = new URLSearchParams({ q: query });
+    if (cursor) params.set("cursor", cursor);
+    const res = await fetch(`/api/v1/search/rankings?${params}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new PublishedApiError(
+        mapStatusToErrorCode(res.status),
+        body?.error?.message ?? "検索に失敗しました",
+      );
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async searchUsers(
+    query: string,
+    cursor?: string | null,
+  ): Promise<SearchPage<UserSearchResult>> {
+    const params = new URLSearchParams({ q: query });
+    if (cursor) params.set("cursor", cursor);
+    const res = await fetch(`/api/v1/search/users?${params}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new PublishedApiError(
+        mapStatusToErrorCode(res.status),
+        body?.error?.message ?? "検索に失敗しました",
+      );
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async followUser(userId: string): Promise<void> {
+    const response = await fetch(`/api/v1/users/${userId}/follow`, {
+      method: "POST",
+    });
+    if (response.status === 204) {
+      return;
+    }
+    const body = await parseJson<unknown>(response);
+    throw new PublishedApiError(
+      body.error?.code ?? mapStatusToErrorCode(response.status),
+      body.error?.message ?? "フォローに失敗しました。",
+    );
+  }
+
+  async unfollowUser(userId: string): Promise<void> {
+    const response = await fetch(`/api/v1/users/${userId}/follow`, {
+      method: "DELETE",
+    });
+    if (response.status === 204) {
+      return;
+    }
+    const body = await parseJson<unknown>(response);
+    throw new PublishedApiError(
+      body.error?.code ?? mapStatusToErrorCode(response.status),
+      body.error?.message ?? "フォロー解除に失敗しました。",
+    );
+  }
+
+  async listFollowingRankings(): Promise<PublicRankingWithAuthor[]> {
+    const response = await fetch("/api/v1/rankings/following", {
+      cache: "no-store",
+    });
+    const body = await parseJson<PublicRankingWithAuthor[]>(response);
+    if (!response.ok || !body.data) {
+      throw new PublishedApiError(
+        body.error?.code ?? mapStatusToErrorCode(response.status),
+        body.error?.message ?? "フォロー中ランキングの取得に失敗しました。",
+      );
+    }
+    return body.data;
   }
 }

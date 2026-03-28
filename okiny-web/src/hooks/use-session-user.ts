@@ -39,6 +39,7 @@ interface UseSessionUserResult {
   updateDisplayUserId: (
     displayUserId: string,
   ) => Promise<"success" | "invalid" | "conflict" | "server">;
+  updateIntroduction: (introduction: string) => Promise<"success" | "invalid" | "server">;
 }
 
 function safeString(value: unknown): string | undefined {
@@ -70,6 +71,7 @@ function toAuthUser(supabaseUser: {
     email: supabaseUser.email ?? "",
     avatarUrl: safeString(meta.avatar_url),
     displayUserId: safeString(meta.display_user_id) ?? null,
+    introduction: safeString(meta.introduction) ?? null,
   };
 }
 
@@ -206,5 +208,39 @@ export function useSessionUser(): UseSessionUserResult {
     }
   };
 
-  return { isReady, user, signOut, updateDisplayName, updateDisplayUserId };
+  const updateIntroduction = async (
+    introduction: string,
+  ): Promise<"success" | "invalid" | "server"> => {
+    const normalized = introduction.trim();
+    if (normalized.length > 200) {
+      return "invalid";
+    }
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.updateUser({
+        data: { introduction: normalized || null },
+      });
+      if (error) {
+        return "server";
+      }
+      if (data.user) {
+        const updatedUser = toAuthUser(data.user);
+        updateCache(updatedUser, true);
+        setUser(updatedUser);
+      }
+      return "success";
+    } catch {
+      return "server";
+    }
+  };
+
+  return {
+    isReady,
+    user,
+    signOut,
+    updateDisplayName,
+    updateDisplayUserId,
+    updateIntroduction,
+  };
 }

@@ -46,6 +46,12 @@ export interface UserProfile {
   displayName: string;
   avatarUrl: string | null;
   displayUserId: string | null;
+  introduction: string | null;
+}
+
+export interface UserProfileWithCounts extends UserProfile {
+  followerCount: number;
+  followingCount: number;
 }
 
 export interface PublicRankingWithAuthor extends PublishedRanking {
@@ -92,4 +98,44 @@ export interface SupabaseRankingRow {
     item_text: string;
   }>;
   tags?: { name: string };
+}
+
+// --- Search Types ---
+
+export type SearchTab = "rankings" | "accounts" | "tags";
+
+export interface SearchCursor {
+  createdAt: string;
+  id: string;
+}
+
+export interface UserSearchCursor {
+  displayName: string;
+  id: string;
+}
+
+export interface UserSearchResult {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+  displayUserId: string | null;
+  publicRankingCount: number;
+}
+
+export interface SearchPage<TItem> {
+  items: TItem[];
+  nextCursor: string | null; // Base64エンコードされたcursor文字列。null=最終ページ
+}
+
+export interface SearchHistoryEntry {
+  query: string;
+  timestamp: number;
+}
+
+export interface ViewedUserEntry {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  displayUserId: string | null;
+  viewedAt: number;
 }

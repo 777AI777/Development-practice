@@ -5,14 +5,16 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useDisplayUserIdCheck } from "@/hooks/use-display-user-id-check";
+import { useMyProfileStats } from "@/hooks/use-my-profile-stats";
 import { useSessionUser } from "@/hooks/use-session-user";
 import {
   DISPLAY_USER_ID_MAX_LENGTH,
+  buildUserProfilePath,
   getUserInitial,
   normalizeDisplayUserId,
-  parseDisplayUserIdSearchQuery,
 } from "@/lib/user-utils";
 
 const APP_BRAND = "OKINY";
@@ -36,6 +38,7 @@ interface ShellUser {
   email?: string;
   avatarUrl?: string;
   displayUserId?: string | null;
+  introduction?: string | null;
 }
 
 const SETTINGS_MENU_ITEMS: SidebarMenuItemConfig[] = [
@@ -261,6 +264,80 @@ function DisplayUserIdEditor({
   );
 }
 
+function IntroductionEditor({
+  user,
+  updateIntroduction,
+  onDone,
+}: {
+  user: ShellUser | null;
+  updateIntroduction: (value: string) => Promise<"success" | "invalid" | "server">;
+  onDone: () => void;
+}) {
+  const { pushToast } = useToast();
+  const [introduction, setIntroduction] = useState(user?.introduction ?? "");
+
+  const normalized = introduction.trim();
+  const isDirty = normalized !== (user?.introduction ?? "");
+  const canSave = isDirty && normalized.length <= 200;
+
+  const save = async () => {
+    if (!canSave) return;
+    const status = await updateIntroduction(normalized);
+    if (status === "success") {
+      pushToast({
+        type: "success",
+        message: "自己紹介を保存しました。",
+      });
+      onDone();
+      return;
+    }
+
+    pushToast({
+      type: "error",
+      message:
+        status === "invalid"
+          ? "自己紹介は200文字以内で入力してください。"
+          : "自己紹介の更新に失敗しました。",
+    });
+  };
+
+  return (
+    <div className="border-t border-border px-4 py-3">
+      <label className="mb-1 block text-xs font-semibold text-foreground">
+        自己紹介（200字以内）
+      </label>
+      <textarea
+        value={introduction}
+        onChange={(event) => setIntroduction(event.target.value)}
+        maxLength={200}
+        rows={3}
+        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        placeholder="例：好きなものや最近ハマっていることなど"
+      />
+      <p className="mt-1 text-xs text-muted-foreground">
+        {introduction.length}/200
+      </p>
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          onClick={save}
+          disabled={!canSave}
+          className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          保存
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground"
+        >
+          閉じる
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SettingsAccordion({
   settingsExpanded,
   onToggle,
@@ -268,9 +345,12 @@ function SettingsAccordion({
   onNameEditToggle,
   userIdEditOpen,
   onUserIdEditToggle,
+  introductionEditOpen,
+  onIntroductionEditToggle,
   user,
   updateDisplayName,
   updateDisplayUserId,
+  updateIntroduction,
   onNavigate,
 }: {
   settingsExpanded: boolean;
@@ -279,11 +359,14 @@ function SettingsAccordion({
   onNameEditToggle: () => void;
   userIdEditOpen: boolean;
   onUserIdEditToggle: () => void;
+  introductionEditOpen: boolean;
+  onIntroductionEditToggle: () => void;
   user: ShellUser | null;
   updateDisplayName: (name: string) => Promise<"success" | "invalid" | "server">;
   updateDisplayUserId: (
     value: string,
   ) => Promise<"success" | "invalid" | "conflict" | "server">;
+  updateIntroduction: (value: string) => Promise<"success" | "invalid" | "server">;
   onNavigate?: () => void;
 }) {
   return (
@@ -357,6 +440,22 @@ function SettingsAccordion({
             />
           )}
 
+          <button
+            type="button"
+            onClick={onIntroductionEditToggle}
+            className="w-full cursor-pointer bg-transparent px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
+          >
+            自己紹介
+          </button>
+
+          {introductionEditOpen && (
+            <IntroductionEditor
+              user={user}
+              updateIntroduction={updateIntroduction}
+              onDone={onIntroductionEditToggle}
+            />
+          )}
+
           {SETTINGS_MENU_ITEMS.map((item) =>
             item.href && !item.disabled ? (
               <Link
@@ -409,36 +508,95 @@ function SettingsAccordion({
   );
 }
 
-function UserSummary({ user, userInitial }: { user: ShellUser | null; userInitial: string }) {
+function UserSummary({
+  user,
+  userInitial,
+  profilePath,
+  stats,
+  onNavigate,
+}: {
+  user: ShellUser | null;
+  userInitial: string;
+  profilePath: string | null;
+  stats: { publicRankingCount: number; followingCount: number; followerCount: number } | null;
+  onNavigate?: () => void;
+}) {
+  const avatarContent = user?.avatarUrl ? (
+    <Image
+      src={user.avatarUrl}
+      alt={user.name ?? ""}
+      width={40}
+      height={40}
+      className="h-10 w-10 shrink-0 rounded-full object-cover"
+    />
+  ) : (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+      {userInitial}
+    </div>
+  );
+
   return (
-    <div className="flex items-center gap-3 border-b border-border px-4 py-4">
-      {user?.avatarUrl ? (
-        <Image
-          src={user.avatarUrl}
-          alt={user.name ?? ""}
-          width={40}
-          height={40}
-          className="h-10 w-10 shrink-0 rounded-full object-cover"
-        />
-      ) : (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-          {userInitial}
-        </div>
-      )}
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-foreground">
-          {user?.name ?? "Unknown"}
-        </p>
-        {user?.displayUserId ? (
-          <p className="truncate text-xs text-muted-foreground">
-            @{user.displayUserId}
-          </p>
+    <div className="border-b border-border px-4 py-4">
+      <div className="flex items-center gap-3">
+        {profilePath ? (
+          <Link href={profilePath} onClick={onNavigate} className="shrink-0 transition hover:opacity-80">
+            {avatarContent}
+          </Link>
         ) : (
-          <p className="truncate text-xs text-muted-foreground">
-            ユーザーID未設定
-          </p>
+          avatarContent
         )}
+        <div className="min-w-0">
+          {profilePath ? (
+            <Link href={profilePath} onClick={onNavigate} className="block truncate text-sm font-semibold text-foreground transition hover:opacity-80">
+              {user?.name ?? "Unknown"}
+            </Link>
+          ) : (
+            <p className="truncate text-sm font-semibold text-foreground">
+              {user?.name ?? "Unknown"}
+            </p>
+          )}
+          {user?.displayUserId ? (
+            <p className="truncate text-xs text-muted-foreground">
+              @{user.displayUserId}
+            </p>
+          ) : (
+            <p className="truncate text-xs text-muted-foreground">
+              ユーザーID未設定
+            </p>
+          )}
+        </div>
       </div>
+
+      {stats ? (
+        <div className="mt-3 flex items-center gap-4">
+          <span className="inline-flex items-center gap-1 text-xs">
+            <span className="font-semibold text-foreground">{stats.publicRankingCount}</span>
+            <span className="text-muted-foreground">ランキング</span>
+          </span>
+          {profilePath ? (
+            <Link href={`${profilePath}/following`} onClick={onNavigate} className="inline-flex items-center gap-1 text-xs transition hover:opacity-70">
+              <span className="font-semibold text-foreground">{stats.followingCount}</span>
+              <span className="text-muted-foreground">フォロー中</span>
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs">
+              <span className="font-semibold text-foreground">{stats.followingCount}</span>
+              <span className="text-muted-foreground">フォロー中</span>
+            </span>
+          )}
+          {profilePath ? (
+            <Link href={`${profilePath}/followers`} onClick={onNavigate} className="inline-flex items-center gap-1 text-xs transition hover:opacity-70">
+              <span className="font-semibold text-foreground">{stats.followerCount}</span>
+              <span className="text-muted-foreground">フォロワー</span>
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs">
+              <span className="font-semibold text-foreground">{stats.followerCount}</span>
+              <span className="text-muted-foreground">フォロワー</span>
+            </span>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -447,11 +605,19 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isReady, user, updateDisplayName, updateDisplayUserId } = useSessionUser();
+  const { startTransitionLoading } = usePageTransition();
+  const {
+    isReady,
+    user,
+    updateDisplayName,
+    updateDisplayUserId,
+    updateIntroduction,
+  } = useSessionUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
   const [nameEditOpen, setNameEditOpen] = useState(false);
   const [userIdEditOpen, setUserIdEditOpen] = useState(false);
+  const [introductionEditOpen, setIntroductionEditOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -476,24 +642,26 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   const handleSearchSubmit = useCallback(() => {
-    const profileSearchId = parseDisplayUserIdSearchQuery(searchQuery);
-    if (profileSearchId) {
-      router.push(`/users/${profileSearchId}`);
-      return;
-    }
+    const normalizedQuery = searchQuery.trim();
+    const currentQuery = searchParams.get("q") ?? "";
+    const currentTab = searchParams.get("tab");
 
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
+    if (!normalizedQuery) {
+      if (pathname !== "/search" || currentQuery !== "" || currentTab !== null) {
+        startTransitionLoading();
+      }
       router.push("/search");
+    } else {
+      router.push(`/search?q=${encodeURIComponent(normalizedQuery)}`);
     }
-  }, [router, searchQuery]);
+  }, [pathname, router, searchParams, searchQuery, startTransitionLoading]);
 
   const handleNameEditToggle = useCallback(() => {
     setNameEditOpen((prev) => {
       const next = !prev;
       if (next) {
         setUserIdEditOpen(false);
+        setIntroductionEditOpen(false);
       }
       return next;
     });
@@ -504,6 +672,18 @@ export function AppShell({ children }: AppShellProps) {
       const next = !prev;
       if (next) {
         setNameEditOpen(false);
+        setIntroductionEditOpen(false);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleIntroductionEditToggle = useCallback(() => {
+    setIntroductionEditOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setNameEditOpen(false);
+        setUserIdEditOpen(false);
       }
       return next;
     });
@@ -514,6 +694,8 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   const userInitial = getUserInitial(user?.name);
+  const { stats: myStats } = useMyProfileStats(user?.id);
+  const profilePath = user ? buildUserProfilePath(user) : null;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -546,6 +728,9 @@ export function AppShell({ children }: AppShellProps) {
                   onClick={() => {
                     setSearchQuery("");
                     if (pathname === "/search") {
+                      if ((searchParams.get("q") ?? "") !== "" || searchParams.get("tab") !== null) {
+                        startTransitionLoading();
+                      }
                       router.push("/search");
                     }
                   }}
@@ -604,20 +789,23 @@ export function AppShell({ children }: AppShellProps) {
           <span className="text-base font-bold text-foreground">メニュー</span>
         </div>
 
-        <UserSummary user={user} userInitial={userInitial} />
+        <UserSummary user={user} userInitial={userInitial} profilePath={profilePath} stats={myStats} />
 
         <nav className="flex-1 overflow-y-auto py-2">
-          <SettingsAccordion
-            settingsExpanded={settingsExpanded}
-            onToggle={handleSettingsToggle}
-            nameEditOpen={nameEditOpen}
-            onNameEditToggle={handleNameEditToggle}
-            userIdEditOpen={userIdEditOpen}
-            onUserIdEditToggle={handleUserIdEditToggle}
-            user={user}
-            updateDisplayName={updateDisplayName}
-            updateDisplayUserId={updateDisplayUserId}
-          />
+        <SettingsAccordion
+          settingsExpanded={settingsExpanded}
+          onToggle={handleSettingsToggle}
+          nameEditOpen={nameEditOpen}
+          onNameEditToggle={handleNameEditToggle}
+          userIdEditOpen={userIdEditOpen}
+          onUserIdEditToggle={handleUserIdEditToggle}
+          introductionEditOpen={introductionEditOpen}
+          onIntroductionEditToggle={handleIntroductionEditToggle}
+          user={user}
+          updateDisplayName={updateDisplayName}
+          updateDisplayUserId={updateDisplayUserId}
+          updateIntroduction={updateIntroduction}
+        />
         </nav>
       </aside>
 
@@ -652,21 +840,24 @@ export function AppShell({ children }: AppShellProps) {
           </button>
         </div>
 
-        <UserSummary user={user} userInitial={userInitial} />
+        <UserSummary user={user} userInitial={userInitial} profilePath={profilePath} stats={myStats} onNavigate={handleSidebarClose} />
 
         <nav className="flex-1 overflow-y-auto py-2">
-          <SettingsAccordion
-            settingsExpanded={settingsExpanded}
-            onToggle={handleSettingsToggle}
-            nameEditOpen={nameEditOpen}
-            onNameEditToggle={handleNameEditToggle}
-            userIdEditOpen={userIdEditOpen}
-            onUserIdEditToggle={handleUserIdEditToggle}
-            user={user}
-            updateDisplayName={updateDisplayName}
-            updateDisplayUserId={updateDisplayUserId}
-            onNavigate={handleSidebarClose}
-          />
+        <SettingsAccordion
+          settingsExpanded={settingsExpanded}
+          onToggle={handleSettingsToggle}
+          nameEditOpen={nameEditOpen}
+          onNameEditToggle={handleNameEditToggle}
+          userIdEditOpen={userIdEditOpen}
+          onUserIdEditToggle={handleUserIdEditToggle}
+          introductionEditOpen={introductionEditOpen}
+          onIntroductionEditToggle={handleIntroductionEditToggle}
+          user={user}
+          updateDisplayName={updateDisplayName}
+          updateDisplayUserId={updateDisplayUserId}
+          updateIntroduction={updateIntroduction}
+          onNavigate={handleSidebarClose}
+        />
         </nav>
       </aside>
     </div>

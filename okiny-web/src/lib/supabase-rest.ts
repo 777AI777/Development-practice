@@ -3,7 +3,10 @@
   SupabaseRankingRow,
   SupabaseTagRow,
   UserProfile,
+  UserProfileWithCounts,
+  UserSearchResult,
 } from "@/lib/types";
+import { mapSearchRankingRow, mapSearchUserRow, encodeCursor } from "./search-mappers";
 import {
   POPULAR_TAGS_CACHE_REVALIDATE_SECONDS,
   RANKING_ITEMS_PREVIEW_LIMIT,
@@ -250,12 +253,14 @@ function mapUserProfileRow(row: {
   display_name: string;
   avatar_url: string | null;
   display_user_id: string | null;
+  introduction?: string | null;
 }): UserProfile {
   return {
     id: row.id,
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     displayUserId: row.display_user_id,
+    introduction: row.introduction ?? null,
   };
 }
 
@@ -307,6 +312,7 @@ function mapPublicRankingWithAuthorRow(row: {
       displayName: row.author_display_name ?? "ユーザー",
       avatarUrl: row.author_avatar_url,
       displayUserId: row.author_display_user_id,
+      introduction: null,
     },
   };
 }
@@ -720,7 +726,7 @@ export async function getUserProfile(
 
   const env = readSupabaseServiceRoleEnv();
   const query = new URLSearchParams({
-    select: "id,display_name,avatar_url,display_user_id",
+    select: "id,display_name,avatar_url,display_user_id,introduction",
     limit: "1",
   });
   query.set(lookup.column, `eq.${lookup.value}`);
@@ -857,6 +863,7 @@ export async function listPublicRankingsByTagWithAuthors(params: {
         displayName: "ユーザー",
         avatarUrl: null,
         displayUserId: null,
+        introduction: null,
       },
     }));
   }
@@ -984,4 +991,327 @@ export async function listBookmarkedRankings(params: {
     }));
 }
 
+/**
+ * 公開ランキングを全文検索する（cursor方式ページネーション）
+ */
+export async function searchRankings(params: {
+  query: string;
+  viewerUserId: string;
+  accessToken: string;
+  limit: number;
+  cursor?: { createdAt: string; id: string } | null;
+}): Promise<{
+  items: PublicRankingWithAuthor[];
+  nextCursor: string | null;
+}> {
+  const rpcParams: Record<string, unknown> = {
+    p_query: params.query,
+    p_viewer_id: params.viewerUserId,
+    p_limit: params.limit,
+  };
+  if (params.cursor) {
+    rpcParams.p_cursor_created_at = params.cursor.createdAt;
+    rpcParams.p_cursor_id = params.cursor.id;
+  }
 
+  const rows = await callRpc<Array<{
+    id: string;
+    user_id: string;
+    title: string;
+    tag_id: string;
+    tag_name: string | null;
+    is_public: boolean;
+    created_at: string;
+    updated_at: string;
+    view_count: number;
+    impression_count: number;
+    bookmark_count: number;
+    ranking_items: Array<{ rank: number; item_text: string }> | null;
+    author_display_name: string | null;
+    author_avatar_url: string | null;
+    author_display_user_id: string | null;
+    is_bookmarked: boolean;
+  }>>("search_rankings", rpcParams, params.accessToken);
+
+  const items = (rows ?? []).map(mapSearchRankingRow);
+
+  const lastItem = items[items.length - 1];
+  const nextCursor =
+    items.length === params.limit && lastItem
+      ? encodeCursor({ createdAt: lastItem.createdAt, id: lastItem.id })
+      : null;
+
+  return { items, nextCursor };
+}
+
+/**
+ * ユーザーを検索する（cursor方式ページネーション）
+ */
+export async function searchUsers(params: {
+  query: string;
+  accessToken: string;
+  limit: number;
+  cursor?: { displayName: string; id: string } | null;
+}): Promise<{
+  items: UserSearchResult[];
+  nextCursor: string | null;
+}> {
+  const rpcParams: Record<string, unknown> = {
+    p_query: params.query,
+    p_limit: params.limit,
+  };
+  if (params.cursor) {
+    rpcParams.p_cursor_display_name = params.cursor.displayName;
+    rpcParams.p_cursor_id = params.cursor.id;
+  }
+
+  const rows = await callRpc<Array<{
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    display_user_id: string | null;
+    public_ranking_count: number;
+  }>>("search_users", rpcParams, params.accessToken);
+
+  const items = (rows ?? []).map(mapSearchUserRow);
+
+  const lastItem = items[items.length - 1];
+  const nextCursor =
+    items.length === params.limit && lastItem
+      ? encodeCursor({ displayName: lastItem.displayName, id: lastItem.id })
+      : null;
+
+  return { items, nextCursor };
+}
+
+// ---------------------------------------------------------------------------
+// フォロー機能
+// ---------------------------------------------------------------------------
+
+function mapUserProfileRowWithCounts(row: {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  display_user_id: string | null;
+  follower_count: number;
+  following_count: number;
+  introduction?: string | null;
+}): UserProfileWithCounts {
+  return {
+    id: row.id,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+    displayUserId: row.display_user_id,
+    introduction: row.introduction ?? null,
+    followerCount: row.follower_count ?? 0,
+    followingCount: row.following_count ?? 0,
+  };
+}
+
+/**
+ * follower_count / following_count 付きでユーザープロフィールを取得する。
+ * user_profiles VIEW が LEFT JOIN user_stats している前提。
+ */
+export async function getUserProfileWithCounts(
+  userIdentifier: string,
+): Promise<UserProfileWithCounts | null> {
+  const lookup = toUserProfileLookup(userIdentifier);
+
+  if (!lookup) {
+    return null;
+  }
+
+  const query = new URLSearchParams({
+    select: "id,display_name,avatar_url,display_user_id,introduction,follower_count,following_count",
+    limit: "1",
+  });
+  query.set(lookup.column, `eq.${lookup.value}`);
+
+  const response = await requestSupabaseWithServiceRole(
+    `user_profiles?${query.toString()}`,
+    { revalidateSeconds: 0 },
+  );
+
+  if (!response.ok) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error(`[getUserProfileWithCounts] failed: ${response.status} ${response.statusText}`);
+    }
+    return null;
+  }
+
+  const rows = (await response.json()) as Array<{
+    id: string;
+    display_name: string;
+    avatar_url: string | null;
+    display_user_id: string | null;
+    follower_count: number;
+    following_count: number;
+  }>;
+
+  const row = rows[0];
+  return row ? mapUserProfileRowWithCounts(row) : null;
+}
+
+/**
+ * フォローを追加する（冪等 — 409 Conflict は握りつぶす）。
+ * パターン: addBookmark と同じ。
+ */
+export async function addFollow(params: {
+  followerId: string;
+  followingId: string;
+  accessToken: string;
+}): Promise<void> {
+  const response = await requestSupabase("follows", {
+    method: "POST",
+    accessToken: params.accessToken,
+    prefer: "return=minimal",
+    body: [{ follower_id: params.followerId, following_id: params.followingId }],
+  });
+  // 409 Conflict（既にフォロー済み）は正常として扱う
+  if (response.status === 409) {
+    return;
+  }
+  await ensureResponseOk(response);
+}
+
+/**
+ * フォローを解除する（冪等）。
+ * パターン: removeBookmark と同じ。
+ */
+export async function removeFollow(params: {
+  followerId: string;
+  followingId: string;
+  accessToken: string;
+}): Promise<void> {
+  const query = new URLSearchParams({
+    follower_id: `eq.${params.followerId}`,
+    following_id: `eq.${params.followingId}`,
+  });
+  const response = await requestSupabase(`follows?${query.toString()}`, {
+    method: "DELETE",
+    accessToken: params.accessToken,
+  });
+  await ensureResponseOk(response);
+}
+
+/**
+ * 指定ユーザーIDリストのうちフォロー済みのIDを Set で返す。
+ * パターン: getBookmarkedRankingIds と同じ。
+ */
+export async function getFollowingUserIds(params: {
+  followerId: string;
+  targetUserIds: readonly string[];
+  accessToken: string;
+}): Promise<Set<string>> {
+  if (params.targetUserIds.length === 0) {
+    return new Set();
+  }
+
+  const query = new URLSearchParams({
+    select: "following_id",
+    follower_id: `eq.${params.followerId}`,
+  });
+  query.set("following_id", `in.${toPostgrestInList(params.targetUserIds)}`);
+
+  const response = await requestSupabase(`follows?${query.toString()}`, {
+    method: "GET",
+    accessToken: params.accessToken,
+  });
+  await ensureResponseOk(response);
+
+  const rows = (await response.json()) as Array<{ following_id: string }>;
+  return new Set(rows.map((row) => row.following_id));
+}
+
+/**
+ * 指定ユーザーのフォロワー一覧を UserProfile[] で返す。
+ * follows テーブルから follower_id を取得 → getUserProfilesBatch で解決。
+ */
+export async function listFollowers(params: {
+  userId: string;
+}): Promise<UserProfile[]> {
+  const query = new URLSearchParams({
+    select: "follower_id",
+    following_id: `eq.${params.userId}`,
+    order: "created_at.desc",
+  });
+
+  const response = await requestSupabaseWithServiceRole(
+    `follows?${query.toString()}`,
+  );
+  await ensureResponseOk(response);
+
+  const rows = (await response.json()) as Array<{ follower_id: string }>;
+  const userIds = rows.map((row) => row.follower_id);
+  return getUserProfilesBatch(userIds);
+}
+
+/**
+ * 指定ユーザーのフォロー中一覧を UserProfile[] で返す。
+ * follows テーブルから following_id を取得 → getUserProfilesBatch で解決。
+ */
+export async function listFollowing(params: {
+  userId: string;
+}): Promise<UserProfile[]> {
+  const query = new URLSearchParams({
+    select: "following_id",
+    follower_id: `eq.${params.userId}`,
+    order: "created_at.desc",
+  });
+
+  const response = await requestSupabaseWithServiceRole(
+    `follows?${query.toString()}`,
+  );
+  await ensureResponseOk(response);
+
+  const rows = (await response.json()) as Array<{ following_id: string }>;
+  const userIds = rows.map((row) => row.following_id);
+  return getUserProfilesBatch(userIds);
+}
+
+/**
+ * フォロー中ユーザーの公開ランキング一覧を取得する。
+ * RPC: list_following_rankings を呼び出し。
+ * パターン: listPublicRankingsByTagWithAuthors の RPC 呼び出しと同じ。
+ */
+export async function listFollowingRankings(params: {
+  viewerUserId: string;
+  accessToken: string;
+}): Promise<PublicRankingWithAuthor[]> {
+  const response = await requestSupabase("rpc/list_following_rankings", {
+    method: "POST",
+    accessToken: params.accessToken,
+    body: {
+      p_viewer_user_id: params.viewerUserId,
+    },
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[listFollowingRankings] failed:", detail);
+    }
+    throw new Error(`list_following_rankings failed (${response.status})`);
+  }
+
+  const rows = (await response.json()) as Array<{
+    id: string;
+    user_id: string;
+    title: string;
+    tag_id: string;
+    tag_name: string | null;
+    is_public: boolean;
+    created_at: string;
+    updated_at: string;
+    view_count: number;
+    impression_count: number;
+    bookmark_count: number;
+    ranking_items: Array<{ rank: number; item_text: string }> | null;
+    author_display_name: string | null;
+    author_avatar_url: string | null;
+    author_display_user_id: string | null;
+    is_bookmarked: boolean;
+  }>;
+
+  return rows.map(mapPublicRankingWithAuthorRow);
+}

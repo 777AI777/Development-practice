@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getUserProfile, listPublicRankingsByUser } from "@/lib/supabase-rest";
+import { listPublicRankingsByUser } from "@/lib/supabase-rest";
+import { getUserProfileWithFallback } from "@/lib/user-profile-with-fallback";
 import { isValidUserProfileIdentifier } from "@/lib/user-utils";
 
 const paramsSchema = z.object({
@@ -42,7 +43,7 @@ export async function GET(
       );
     }
 
-    const profile = await getUserProfile(userId);
+    const profile = await getUserProfileWithFallback(userId);
     if (!profile) {
       return NextResponse.json(
         { error: { code: "NOT_FOUND", message: "User not found." } },

@@ -4,7 +4,7 @@ interface TagLike {
 }
 
 export function normalizeTagName(name: string): string {
-  return name.trim().normalize("NFKC");
+  return name.replace(/^[#＃]+/, "").trim().normalize("NFKC");
 }
 
 export function getTagLabelFromList(
