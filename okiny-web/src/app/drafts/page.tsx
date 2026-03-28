@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
@@ -103,13 +104,7 @@ export default function DraftsPage() {
       <div className="space-y-4">
         {/* Header: back + title */}
         <div className="flex items-center gap-2">
-          <Link
-            href="/rankings/new"
-            className="flex h-8 w-8 items-center justify-center text-lg font-bold text-foreground"
-            aria-label="戻る"
-          >
-            {"\u2190"}
-          </Link>
+          <BackButton href="/rankings/new" />
           <h1 className="text-xl font-bold text-foreground">下書き一覧</h1>
         </div>
 

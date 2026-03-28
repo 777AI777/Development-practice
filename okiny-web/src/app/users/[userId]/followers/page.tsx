@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { FollowUsersListContent } from "@/components/follow-users-list-content";
-import { listFollowers } from "@/lib/supabase-rest";
+import { getFollowPageData } from "@/lib/follow-page-data";
 import { getUserProfileWithFallback } from "@/lib/user-profile-with-fallback";
 
 export async function generateMetadata({
@@ -31,19 +31,20 @@ export default async function UserFollowersPage({
   params: Promise<{ userId: string }>;
 }) {
   const { userId } = await params;
-  const profile = await getUserProfileWithFallback(userId);
+  const data = await getFollowPageData(userId);
 
-  if (!profile) {
+  if (!data) {
     notFound();
   }
 
-  const users = await listFollowers({ userId: profile.id }).catch(() => []);
-
   return (
     <FollowUsersListContent
-      profile={profile}
-      users={users}
-      type="followers"
+      profile={data.profile}
+      followers={data.followers}
+      following={data.following}
+      initialTab="followers"
+      isOwnProfile={data.isOwnProfile}
+      followingUserIds={data.followingUserIds}
     />
   );
 }

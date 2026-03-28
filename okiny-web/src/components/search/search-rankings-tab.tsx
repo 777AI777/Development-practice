@@ -89,7 +89,7 @@ export function SearchRankingsTab({
 
   if (isLoading) {
     return (
-      <p className="py-8 text-center text-xs text-muted-foreground">
+      <p className="py-8 text-center text-sm text-muted-foreground">
         検索中...
       </p>
     );
@@ -98,11 +98,11 @@ export function SearchRankingsTab({
   if (error) {
     return (
       <div className="mx-4 my-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center">
-        <p className="text-xs text-destructive">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
         <button
           type="button"
           onClick={() => search(normalizedQuery)}
-          className="mt-2 text-xs text-primary hover:underline"
+          className="mt-2 text-sm text-primary hover:underline"
         >
           再試行
         </button>
@@ -142,7 +142,7 @@ export function SearchRankingsTab({
       {hasMore && (
         <div ref={sentinelRef} className="py-4 text-center">
           {isLoadingMore && (
-            <p className="text-xs text-muted-foreground">読み込み中...</p>
+            <p className="text-sm text-muted-foreground">読み込み中...</p>
           )}
         </div>
       )}

@@ -22,7 +22,7 @@ const querySchema = z.object({
 /**
  * GET /api/v1/users/:userId/follow-list?type=followers|following
  *
- * 指定ユーザーのフォロワー一覧またはフォロー中一覧を取得する（認証必須）。
+ * 指定ユーザーのフォロワー一覧またはフォロー一覧を取得する（認証必須）。
  */
 export async function GET(
   request: Request,

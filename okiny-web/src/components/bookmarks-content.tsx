@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { BookmarkButton } from "@/components/bookmark-button";
+import { EmptyStateMessage } from "@/components/empty-state-message";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { formatSmartDate } from "@/lib/format-date";
 import type { PublishedRanking } from "@/lib/types";
@@ -14,57 +15,20 @@ interface BookmarksContentProps {
   initialRankings: PublishedRanking[];
 }
 
-function BackArrowIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 12H5" />
-      <path d="m12 19-7-7 7-7" />
-    </svg>
-  );
-}
-
 function EmptyBookmarksState() {
   return (
-    <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="mx-auto text-muted-foreground"
-      >
-        <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-      </svg>
-      <p className="mt-4 text-sm text-muted-foreground">
-        ブックマークはまだありません
-      </p>
+    <EmptyStateMessage title="ブックマークはまだありません。">
       <Link
         href="/rankings"
-        className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground hover:opacity-90"
+        className="text-sm font-medium text-primary transition hover:underline"
       >
-        ランキング一覧へ
+        ランキング一覧を見る
       </Link>
-    </div>
+    </EmptyStateMessage>
   );
 }
 
 function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
-  const router = useRouter();
   const { signalReady } = usePageTransition();
   const [rankings, setRankings] = useState(initialRankings);
 
@@ -79,14 +43,7 @@ function BookmarksContentInner({ initialRankings }: BookmarksContentProps) {
   return (
     <AppShell>
       <div className="mb-4 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center justify-center rounded-lg bg-transparent p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label="戻る"
-        >
-          <BackArrowIcon />
-        </button>
+        <BackButton />
         <h1 className="text-lg font-bold text-foreground">ブックマーク</h1>
       </div>
 

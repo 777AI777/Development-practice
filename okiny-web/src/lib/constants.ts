@@ -25,3 +25,7 @@ export const VIEWED_USERS_MAX = 10;
 export const SEARCH_HISTORY_KEY = "okiny:search_history";
 
 export const VIEWED_USERS_KEY = "okiny:viewed_users";
+
+// --- Following Feed Constants ---
+
+export const FOLLOWING_FEED_LIMIT = 20;

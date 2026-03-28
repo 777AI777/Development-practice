@@ -13,6 +13,20 @@ import {
 
 const SUPPRESS_TRANSITION_PATHS = new Set(["/login", "/settings/logout"]);
 const SAFETY_TIMEOUT_MS = 10_000;
+
+// ---------------------------------------------------------------------------
+// replaceState による pathname 変更を検知するフラグ
+// history.replaceState はページ遷移を伴わないため、ローディングバーを出さない
+// ---------------------------------------------------------------------------
+let _replaceStateTriggered = false;
+
+if (typeof window !== "undefined") {
+  const originalReplaceState = history.replaceState.bind(history);
+  history.replaceState = function (...args: Parameters<typeof history.replaceState>) {
+    _replaceStateTriggered = true;
+    return originalReplaceState(...args);
+  };
+}
 const INTERACTIVE_CLICK_SELECTOR = [
   "button",
   "input",
@@ -111,7 +125,17 @@ export function PageTransitionProvider({
   const commitTransition = useCallback(() => {
     const frozen = frozenRef.current;
     const content = contentRef.current;
-    if (!frozen || !content) return;
+
+    // refsが未初期化でもローディング状態は必ずクリア
+    if (!frozen || !content) {
+      isTransitioningRef.current = false;
+      setIsLoading(false);
+      if (safetyTimerRef.current !== null) {
+        window.clearTimeout(safetyTimerRef.current);
+        safetyTimerRef.current = null;
+      }
+      return;
+    }
 
     const doSwitch = () => {
       frozen.style.display = "none";
@@ -205,22 +229,62 @@ export function PageTransitionProvider({
   }, [commitTransition]);
 
   // --------------------------------------------------
-  // pathname変更検知 → 遷移開始（フォールバック）
-  // リンククリック検知で既に遷移開始済みの場合はスキップ
+  // pathname変更検知
+  // - 遷移中ならcommitTransitionで確実にローディング終了
+  // - 遷移中でなければフォールバックとして遷移開始
   // --------------------------------------------------
   useLayoutEffect(() => {
     if (prevPathnameRef.current === pathname) return;
     prevPathnameRef.current = pathname;
 
-    if (SUPPRESS_TRANSITION_PATHS.has(pathname)) {
-      requestAnimationFrame(() => {
-        captureSnapshot();
-      });
+    // replaceState による pathname 変更はページ遷移ではないのでスキップ
+    // （例: タブ切替で window.history.replaceState を使う場合）
+    if (_replaceStateTriggered) {
+      _replaceStateTriggered = false;
+      // 遷移中であればクリーンアップ
+      if (isTransitioningRef.current) {
+        if (safetyTimerRef.current !== null) {
+          window.clearTimeout(safetyTimerRef.current);
+          safetyTimerRef.current = null;
+        }
+        resolveTransitionRef.current = null;
+        commitTransition();
+      } else {
+        requestAnimationFrame(() => {
+          captureSnapshot();
+        });
+      }
       return;
     }
 
-    // リンククリック検知で既に遷移開始済みの場合はスキップ
-    if (isTransitioningRef.current) return;
+    if (SUPPRESS_TRANSITION_PATHS.has(pathname)) {
+      // 遷移中であればクリーンアップしてからスナップショット取得
+      if (isTransitioningRef.current) {
+        if (safetyTimerRef.current !== null) {
+          window.clearTimeout(safetyTimerRef.current);
+          safetyTimerRef.current = null;
+        }
+        resolveTransitionRef.current = null;
+        commitTransition();
+      } else {
+        requestAnimationFrame(() => {
+          captureSnapshot();
+        });
+      }
+      return;
+    }
+
+    // pathname が変わった = 新ページのレンダリング開始済み
+    // 遷移中であればここでローディングを終了する（signalReady依存を排除）
+    if (isTransitioningRef.current) {
+      if (safetyTimerRef.current !== null) {
+        window.clearTimeout(safetyTimerRef.current);
+        safetyTimerRef.current = null;
+      }
+      resolveTransitionRef.current = null;
+      commitTransition();
+      return;
+    }
 
     const frozen = frozenRef.current;
     const content = contentRef.current;
@@ -251,7 +315,7 @@ export function PageTransitionProvider({
 
     // --- 遷移開始（router.push / ブラウザ戻る・進むのフォールバック） ---
     startTransitionLoading();
-  }, [pathname, captureSnapshot, startTransitionLoading]);
+  }, [pathname, captureSnapshot, commitTransition, startTransitionLoading]);
 
   // --------------------------------------------------
   // リンククリック検知 → 遷移開始

@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useSessionUser } from "@/hooks/use-session-user";
 
@@ -165,21 +165,6 @@ function PrivacyContent() {
         </section>
       </div>
     </>
-  );
-}
-
-function BackButton() {
-  const router = useRouter();
-
-  return (
-    <button
-      type="button"
-      onClick={() => router.back()}
-      className="flex h-8 w-8 shrink-0 items-center justify-center text-lg font-bold text-foreground"
-      aria-label="戻る"
-    >
-      {"\u2190"}
-    </button>
   );
 }
 

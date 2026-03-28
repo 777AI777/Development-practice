@@ -20,6 +20,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import { autosaveRepository } from "@/lib/autosave/client-repository";
+import { BackButton } from "@/components/back-button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { TagCombobox } from "@/components/tag-combobox";
 import { useToast } from "@/components/toast-provider";
@@ -430,14 +431,7 @@ export function RankingForm({
       {/* Header: [← back] [title input] [spacer] */}
       <div className="flex items-center justify-between gap-2">
         {onBack ? (
-          <button
-            type="button"
-            onClick={triggerBack}
-            className="flex h-8 w-8 shrink-0 items-center justify-center bg-transparent text-lg font-bold text-foreground"
-            aria-label="戻る"
-          >
-            {"\u2190"}
-          </button>
+          <BackButton onClick={triggerBack} />
         ) : (
           <div className="h-8 w-8 shrink-0" />
         )}

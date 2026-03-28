@@ -53,7 +53,7 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
           className="text-sm text-muted-foreground hover:text-foreground transition mb-4 inline-block"
           style={{ color: "var(--primary)" }}
         >
-          &larr; 戻る
+          &larr; 
         </button>
 
         <h1 className="text-xl font-bold mb-6" style={{ color: "var(--foreground)" }}>設定</h1>
