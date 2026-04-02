@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
-import { ComingSoon } from "@/components/coming-soon";
+import { RecommendContent } from "@/components/recommend-content";
 import { EmptyStateMessage } from "@/components/empty-state-message";
 import { FollowingContent } from "@/components/following-content";
 import { usePageTransition } from "@/components/page-transition-provider";
@@ -307,9 +307,14 @@ function RankingsListContentInner({
       </div>
 
       <div className={activeTab !== "recommend" ? "hidden" : undefined}>
-        <ComingSoon
-          title="おすすめ"
-          description="おすすめランキングは現在準備中です。"
+        <RecommendContent
+          enabled={activeTab === "recommend"}
+          onAvatarClick={(clickedAuthor) => {
+            router.push(buildUserProfilePath(clickedAuthor));
+          }}
+          onTagClick={(tagName) => {
+            router.push(`/search?q=${encodeURIComponent("#" + tagName)}&tab=rankings`);
+          }}
         />
       </div>
 

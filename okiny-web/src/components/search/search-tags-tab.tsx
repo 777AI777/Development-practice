@@ -192,13 +192,13 @@ export function SearchTagsTab({
         <h3 className="px-4 text-sm font-medium text-muted-foreground">
           検索結果
         </h3>
-        <div className="mt-2 flex flex-wrap gap-2 px-4">
+        <div className="mt-2 flex flex-col items-start gap-2 px-4">
           {displayResults.map((tag) => (
             <button
               key={tag.id}
               type="button"
               onClick={() => onTagSelect(tag.name)}
-              className="text-sm text-primary transition hover:text-primary/70"
+              className="text-sm text-muted-foreground transition hover:text-foreground"
             >
               #{tag.name}
             </button>

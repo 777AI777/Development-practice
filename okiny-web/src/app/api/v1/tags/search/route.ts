@@ -5,7 +5,7 @@ import {
   getAuthenticatedUserId,
   authErrorResponse,
 } from "@/lib/supabase/auth-guard";
-import { searchTagsUnified } from "@/lib/supabase-rest";
+import { searchTagsUnified, searchTagsByEmbedding } from "@/lib/supabase-rest";
 import { toTagItem } from "@/lib/tag-mappers";
 import { TAG_QUERY_LIMITS } from "@/lib/constants";
 import { normalizeTagName } from "@/lib/tag-utils";
@@ -49,7 +49,43 @@ export async function GET(request: Request) {
       accessToken,
     });
 
-    const data = rows.map((row) => toTagItem(row, 0));
+    // keyword 検索が少ない場合、Gemini embedding で補完
+    let allRows = rows;
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    if (rows.length < 3 && geminiApiKey) {
+      try {
+        const embeddingRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${geminiApiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "models/gemini-embedding-001",
+              content: { parts: [{ text: normalizedQ }] },
+              outputDimensionality: 768,
+            }),
+          },
+        );
+        if (embeddingRes.ok) {
+          const embData = (await embeddingRes.json()) as {
+            embedding: { values: number[] };
+          };
+          const existingIds = new Set(rows.map((r) => r.id));
+          const embeddingRows = await searchTagsByEmbedding({
+            queryEmbedding: embData.embedding.values,
+            limit: TAG_QUERY_LIMITS.SEARCH,
+            threshold: 0.75,
+            accessToken,
+          });
+          const additional = embeddingRows.filter((r) => !existingIds.has(r.id));
+          allRows = [...rows, ...additional];
+        }
+      } catch {
+        // embedding 検索失敗はサイレントにスキップ
+      }
+    }
+
+    const data = allRows.map((row) => toTagItem(row, 0));
 
     return NextResponse.json({ data });
   } catch (error) {

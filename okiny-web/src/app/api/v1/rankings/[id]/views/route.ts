@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
-import { incrementViewCount } from "@/lib/supabase-rest";
+import { incrementViewCount, requestSupabase } from "@/lib/supabase-rest";
+import { updateUserTagAffinity } from "@/lib/supabase-rest-recommend";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -76,6 +77,39 @@ export async function POST(
   try {
     await incrementViewCount({ rankingId: id, accessToken });
     VIEW_CACHE.set(cacheKey, now);
+
+    // 認証済みユーザーのみ: ranking の tag_id を取得してアフィニティを更新（fire-and-forget）
+    if (auth.ok) {
+      const userId = auth.userId;
+      const userAccessToken = auth.accessToken;
+      (async () => {
+        try {
+          const query = new URLSearchParams({
+            select: "tag_id",
+            id: `eq.${id}`,
+            limit: "1",
+          });
+          const rankingRes = await requestSupabase(
+            `rankings?${query.toString()}`,
+            { method: "GET", accessToken: userAccessToken },
+          );
+          if (!rankingRes.ok) return;
+          const rows = (await rankingRes.json()) as Array<{
+            tag_id: string | null;
+          }>;
+          const tagId = rows[0]?.tag_id;
+          if (!tagId) return;
+          await updateUserTagAffinity({
+            userId,
+            tagId,
+            accessToken: userAccessToken,
+          });
+        } catch (err) {
+          console.error("[views] affinity update failed:", err);
+        }
+      })();
+    }
+
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("[POST /api/v1/rankings/:id/views] failed");

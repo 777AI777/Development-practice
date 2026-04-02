@@ -139,3 +139,9 @@ export interface ViewedUserEntry {
   displayUserId: string | null;
   viewedAt: number;
 }
+
+export interface RecommendCursor {
+  priority: number;
+  createdAt: string;
+  id: string;
+}

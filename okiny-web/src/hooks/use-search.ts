@@ -210,7 +210,8 @@ export function useSearch<TItem>({
         // マウント直後の初回: キャッシュから復元（戻るナビゲーション用）
         isMountSearchRef.current = false;
         const cached = getCache(trimmedQuery);
-        if (cached) {
+        if (cached && cached.items.length > 0) {
+          // 有効なキャッシュあり → 復元して終了
           setItems(cached.items);
           setIsLoading(false);
           setIsLoadingMore(false);
@@ -220,6 +221,8 @@ export function useSearch<TItem>({
           setIsInitialized(true);
           return;
         }
+        // 空キャッシュあり（戻る遷移で0件だった）→ エントリ削除して通常フェッチへ
+        if (cached) removeCache(trimmedQuery);
       } else {
         // 2回目以降（能動的検索）: キャッシュを削除してフレッシュフェッチ
         removeCache(trimmedQuery);

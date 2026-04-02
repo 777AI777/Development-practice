@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "backfill-embeddings": "tsx scripts/backfill-tag-embeddings.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
