@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const size = Math.min(512, Math.max(16, parseInt(searchParams.get("size") ?? "192")));
   const png = await sharp(Buffer.from(makeSvg(size))).png().toBuffer();
-  return new Response(png, {
+  return new Response(new Uint8Array(png), {
     headers: {
       "Content-Type": "image/png",
       "Cache-Control": "public, max-age=31536000, immutable",
