@@ -15,16 +15,16 @@ const SVG = `<svg width="512" height="512" viewBox="0 0 32 32" fill="none" xmlns
   <defs>
     <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#005fcc"/>
-      <stop offset="100%" stop-color="#00b4d8"/>
+      <stop offset="100%" stop-color="#3399ff"/>
     </linearGradient>
   </defs>
   <rect width="32" height="32" rx="8" fill="url(#bgGrad)"/>
-  <path d="M4.34,18.49V7.66l5.83,3.33 5.83,-6.66 5.83,6.66 5.83,-3.33v10.83H4.34z" fill="#ffffff"/>
-  <circle cx="4.34" cy="6.83" r="1.67" fill="#ffffff"/>
-  <circle cx="16" cy="2.67" r="1.67" fill="#ffffff"/>
-  <circle cx="27.66" cy="6.83" r="1.67" fill="#ffffff"/>
-  <rect x="4.34" y="18.49" width="23.33" height="1.67" rx="0.83" fill="#ffffff"/>
-  <text x="16" y="29.55" text-anchor="middle" font-family="Noto Sans JP, sans-serif" font-size="9.21" font-weight="bold" fill="#ffffff">OKINY</text>
+  <path d="M6.67,17.99V9.33l4.66,2.66 4.66,-5.33 4.66,5.33 4.66,-2.66v8.66H6.67z" fill="#ffffff"/>
+  <circle cx="6.67" cy="8.66" r="1.34" fill="#ffffff"/>
+  <circle cx="16" cy="5.34" r="1.34" fill="#ffffff"/>
+  <circle cx="25.33" cy="8.66" r="1.34" fill="#ffffff"/>
+  <rect x="6.67" y="17.99" width="18.66" height="1.34" rx="0.66" fill="#ffffff"/>
+  <text x="16" y="29.55" text-anchor="middle" font-family="Noto Sans JP, sans-serif" font-size="7.37" font-weight="bold" fill="#ffffff">OKINY</text>
 </svg>`;
 
 const html = (size) => `<!DOCTYPE html>

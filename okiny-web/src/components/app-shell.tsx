@@ -356,7 +356,7 @@ export function AppShell({ children }: AppShellProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                   handleSearchSubmit();
                 }
               }}
