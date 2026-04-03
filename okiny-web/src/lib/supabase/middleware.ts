@@ -7,7 +7,7 @@ import { buildContentSecurityPolicy } from "@/lib/security-headers";
 
 const EXACT_PUBLIC_PATHS = ["/login", "/api/auth/callback", "/terms", "/privacy"] as const;
 // /api/v1/users 配下は公開 API を含むため、詳細な認証は各 route handler 側で行う。
-const PREFIX_PUBLIC_PATHS = ["/api/og", "/api/v1/users", "/share", "/users"] as const;
+const PREFIX_PUBLIC_PATHS = ["/api/og", "/api/v1/users", "/api/pwa-icon", "/api/apple-icon", "/share", "/users"] as const;
 
 async function hashString(input: string): Promise<string> {
   const encoded = new TextEncoder().encode(input);

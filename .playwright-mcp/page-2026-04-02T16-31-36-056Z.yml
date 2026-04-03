@@ -1,0 +1,12 @@
+- generic [active] [ref=e1]:
+  - main [ref=e4]:
+    - heading "404 - ページが見つかりません" [level=1] [ref=e5]
+    - paragraph [ref=e6]: お探しのページは見つかりませんでした。
+    - generic [ref=e7]:
+      - link "ログインへ" [ref=e8] [cursor=pointer]:
+        - /url: /login
+      - link "ランキング一覧へ" [ref=e9] [cursor=pointer]:
+        - /url: /rankings
+  - button "Open Next.js Dev Tools" [ref=e15] [cursor=pointer]:
+    - img [ref=e16]
+  - alert [ref=e19]

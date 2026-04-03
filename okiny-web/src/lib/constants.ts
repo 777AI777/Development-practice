@@ -55,3 +55,17 @@ export const BOOKMARKS_CACHE_KEY = "okiny:bookmarks:v2";
 // --- Following Feed Constants ---
 
 export const FOLLOWING_FEED_LIMIT = 10;
+
+// --- Recommend Feed Constants ---
+
+export const RECOMMEND_FEED_LIMIT = 10;
+
+export const RECOMMEND_FEED_CACHE_KEY = "okiny:recommend-feed:v1";
+
+export const SCROLL_KEY_RECOMMEND = "scroll:recommend";
+
+export const RECOMMEND_TAG_SIMILARITY_THRESHOLD = 3;
+
+export const RECOMMEND_AFFINITY_HIGH_THRESHOLD = 3;
+
+export const RECOMMEND_AFFINITY_LOW_THRESHOLD = 1;

@@ -67,7 +67,7 @@ export function TagCombobox({
     if (value && !inputValue && tags.length > 0) {
       const matchedTag = tags.find((t) => t.id === value);
       if (matchedTag) {
-        setInputValue(matchedTag.name);
+        setInputValue(`#${matchedTag.name}`);
       }
     }
   }, [value, tags]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -112,7 +112,7 @@ export function TagCombobox({
 
   const handleSelectTag = useCallback(
     (tag: TagItem) => {
-      setInputValue(tag.name);
+      setInputValue(`#${tag.name}`);
       setIsOpen(false);
       setIsUserSearching(false);
       clearSearch();
@@ -156,11 +156,11 @@ export function TagCombobox({
       onClick={() => handleSelectTag(tag)}
       className={`rounded-full border px-3 py-1 text-sm transition-colors ${
         tag.id === value
-          ? "border-primary bg-primary/10 text-primary"
-          : "border-border bg-secondary text-secondary-foreground hover:bg-muted"
+          ? "border-primary text-primary"
+          : "border-border text-muted-foreground hover:bg-muted"
       }`}
     >
-      {tag.name}
+      #{tag.name}
     </button>
   );
 

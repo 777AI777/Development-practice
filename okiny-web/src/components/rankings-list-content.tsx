@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
-import { ComingSoon } from "@/components/coming-soon";
+import { RecommendContent } from "@/components/recommend-content";
 import { EmptyStateMessage } from "@/components/empty-state-message";
 import { FollowingContent } from "@/components/following-content";
 import { usePageTransition } from "@/components/page-transition-provider";
@@ -146,16 +146,6 @@ function MyRankContent({
 
   return (
     <>
-      <div className="mb-4 flex justify-end">
-        <Link
-          href="/rankings/new"
-          aria-label="新規ランキング作成"
-          className="inline-flex items-center justify-center rounded-lg bg-primary px-2.5 py-1 text-sm font-bold text-primary-foreground hover:opacity-90"
-        >
-          ＋
-        </Link>
-      </div>
-
       <div className="space-y-3">
         {groupedRankings.map((group) => {
           const isCollapsed = collapsedTagIds.includes(group.tagId);
@@ -307,9 +297,14 @@ function RankingsListContentInner({
       </div>
 
       <div className={activeTab !== "recommend" ? "hidden" : undefined}>
-        <ComingSoon
-          title="おすすめ"
-          description="おすすめランキングは現在準備中です。"
+        <RecommendContent
+          enabled={activeTab === "recommend"}
+          onAvatarClick={(clickedAuthor) => {
+            router.push(buildUserProfilePath(clickedAuthor));
+          }}
+          onTagClick={(tagName) => {
+            router.push(`/search?q=${encodeURIComponent("#" + tagName)}&tab=rankings`);
+          }}
         />
       </div>
 
@@ -323,6 +318,16 @@ function RankingsListContentInner({
             router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
           }}
         />
+      </div>
+
+      <div className="fixed bottom-[76px] left-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 pointer-events-none">
+        <Link
+          href="/rankings/new"
+          aria-label="新規ランキング作成"
+          className="pointer-events-auto absolute right-4 bottom-0 flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg transition hover:opacity-90 active:scale-95"
+        >
+          <span className="text-2xl font-bold leading-none text-primary-foreground">＋</span>
+        </Link>
       </div>
 
       <nav className="fixed bottom-0 left-1/2 z-40 flex h-[60px] w-full max-w-[480px] -translate-x-1/2 rounded-t-lg border-x border-t border-border bg-card">

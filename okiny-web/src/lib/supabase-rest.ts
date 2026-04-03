@@ -547,6 +547,25 @@ export async function searchTagsUnified(params: {
   return (await res.json()) as SupabaseTagRow[];
 }
 
+export async function searchTagsByEmbedding(params: {
+  queryEmbedding: number[];
+  threshold?: number;
+  limit: number;
+  accessToken: string;
+}): Promise<SupabaseTagRow[]> {
+  const res = await requestSupabase("rpc/search_tags_by_embedding", {
+    method: "POST",
+    accessToken: params.accessToken,
+    body: {
+      p_query_embedding: params.queryEmbedding,
+      p_threshold: params.threshold ?? 0.5,
+      p_limit: params.limit,
+    },
+  });
+  await ensureResponseOk(res);
+  return (await res.json()) as SupabaseTagRow[];
+}
+
 export async function createTag(
   tag: { name: string; readings: string[] },
   accessToken: string,

@@ -14,6 +14,73 @@ import { tagNameSchema, containsBannedWord } from "@/lib/tag-validation";
 import { getReadings } from "@/lib/yahoo-furigana";
 import { toTagItem } from "@/lib/tag-mappers";
 
+/**
+ * タグ作成後に非同期でembeddingを生成・保存する（fire-and-forget）。
+ * GEMINI_API_KEY が未設定の場合はサイレントにスキップ。
+ */
+async function generateAndSaveTagEmbedding(
+  tagId: string,
+  tagName: string,
+): Promise<void> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return;
+
+  try {
+    const embeddingRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "models/gemini-embedding-001",
+          content: { parts: [{ text: tagName }] },
+          outputDimensionality: 768,
+        }),
+      },
+    );
+
+    if (!embeddingRes.ok) {
+      if (process.env.NODE_ENV !== "production") {
+        const detail = await embeddingRes.text();
+        console.error(`[generateAndSaveTagEmbedding] Gemini API error (${embeddingRes.status}):`, detail);
+      }
+      return;
+    }
+
+    const data = (await embeddingRes.json()) as {
+      embedding: { values: number[] };
+    };
+    const embedding = data.embedding.values;
+
+    // Supabase REST で tags テーブルを更新（service_role key 使用）
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) return;
+
+    const updateRes = await fetch(
+      `${supabaseUrl}/rest/v1/tags?id=eq.${tagId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": serviceRoleKey,
+          "Authorization": `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({ embedding }),
+      },
+    );
+
+    if (!updateRes.ok && process.env.NODE_ENV !== "production") {
+      const detail = await updateRes.text();
+      console.error(`[generateAndSaveTagEmbedding] Supabase update error (${updateRes.status}):`, detail);
+    }
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[generateAndSaveTagEmbedding] unexpected error:", err);
+    }
+  }
+}
+
 const createTagBodySchema = z.object({
   name: tagNameSchema,
 });
@@ -93,6 +160,8 @@ export async function POST(request: Request) {
         { name: normalizedName, readings },
         accessToken,
       );
+      // 新規作成成功後、非同期でembeddingを生成・保存（レスポンスをブロックしない）
+      generateAndSaveTagEmbedding(created.id, created.name).catch(() => {});
       return NextResponse.json(
         { data: toTagItem(created) },
         { status: 201 },

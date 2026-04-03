@@ -182,6 +182,9 @@ export function RankingForm({
   const [navigationDialogOpen, setNavigationDialogOpen] = useState(false);
   const [pendingNavigationUrl, setPendingNavigationUrl] = useState<string | null>(null);
 
+  // 破棄を意図的に選択したフラグ（beforeunloadの二重発火防止）
+  const discardIntentionalRef = useRef(false);
+
   const dndContextId = useId();
   const itemIdsRef = useRef<string[]>(
     Array.from({ length: 5 }, (_, i) => `item-${i}`),
@@ -240,6 +243,9 @@ export function RankingForm({
       return;
     }
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (discardIntentionalRef.current) {
+        return;
+      }
       event.preventDefault();
       event.returnValue = "";
     };
@@ -393,6 +399,7 @@ export function RankingForm({
   const handleCancelConfirm = () => {
     setCancelDialogOpen(false);
     if (onCancel) {
+      discardIntentionalRef.current = true;
       clearAutosaveAndBack(onCancel);
     }
   };
@@ -422,6 +429,7 @@ export function RankingForm({
   const handleDiscardConfirm = () => {
     setDiscardDialogOpen(false);
     if (onBack) {
+      discardIntentionalRef.current = true;
       clearAutosaveAndBack(onBack);
     }
   };
@@ -613,6 +621,7 @@ export function RankingForm({
           setNavigationDialogOpen(false);
           if (pendingNavigationUrl) {
             const url = pendingNavigationUrl;
+            discardIntentionalRef.current = true;
             void (async () => {
               if (autosaveConfig) {
                 try {

@@ -3,6 +3,7 @@ import type {
   UserSearchResult,
   SearchCursor,
   UserSearchCursor,
+  RecommendCursor,
 } from "./types";
 
 /** Supabase RPC search_rankings の行 → PublicRankingWithAuthor */
@@ -114,4 +115,27 @@ export function decodeUserSearchCursor(
   } catch {
     return null;
   }
+}
+
+/** Base64文字列を RecommendCursor にデコード */
+export function decodeRecommendCursor(encoded: string): RecommendCursor | null {
+  try {
+    const parsed = JSON.parse(atob(encoded));
+    if (
+      parsed &&
+      typeof parsed.priority === "number" &&
+      typeof parsed.createdAt === "string" &&
+      typeof parsed.id === "string"
+    ) {
+      return parsed as RecommendCursor;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** RecommendCursor を Base64文字列にエンコード */
+export function encodeRecommendCursor(cursor: RecommendCursor): string {
+  return btoa(JSON.stringify(cursor));
 }
