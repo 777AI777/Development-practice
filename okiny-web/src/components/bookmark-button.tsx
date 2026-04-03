@@ -64,12 +64,16 @@ export function BookmarkButton({
   const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
-    setIsBookmarked(initialIsBookmarked);
-  }, [initialIsBookmarked]);
+    if (!isPending) {
+      setIsBookmarked(initialIsBookmarked);
+    }
+  }, [initialIsBookmarked, isPending]);
 
   useEffect(() => {
-    setCount(bookmarkCount);
-  }, [bookmarkCount]);
+    if (!isPending) {
+      setCount(bookmarkCount);
+    }
+  }, [bookmarkCount, isPending]);
 
   const handleToggle = useCallback(
     async (event: MouseEvent<HTMLButtonElement>) => {

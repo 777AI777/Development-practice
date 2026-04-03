@@ -178,8 +178,9 @@ export async function listRecommendRankings(params: {
 
   if (!response.ok) {
     const detail = await response.text();
+    console.error(`[listRecommendRankings] failed (${response.status})`);
     if (process.env.NODE_ENV !== "production") {
-      console.error("[listRecommendRankings] failed:", detail);
+      console.error("[listRecommendRankings] detail:", detail);
     }
     throw new Error(`list_recommend_rankings failed (${response.status})`);
   }
@@ -241,8 +242,11 @@ export async function updateUserTagAffinity(params: {
     body: rpcBody,
   });
 
-  if (!response.ok && process.env.NODE_ENV !== "production") {
-    const detail = await response.text();
-    console.error("[updateUserTagAffinity] failed:", detail);
+  if (!response.ok) {
+    console.error(`[updateUserTagAffinity] failed (${response.status})`);
+    if (process.env.NODE_ENV !== "production") {
+      const detail = await response.text();
+      console.error("[updateUserTagAffinity] detail:", detail);
+    }
   }
 }

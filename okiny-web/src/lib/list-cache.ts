@@ -62,7 +62,7 @@ export function getListCache<T>(config: ListCacheConfig): ListCacheEntry<T> | nu
   }
 }
 
-/** sessionStorageにキャッシュ書き込み（空配列は保存しない） */
+/** sessionStorageにキャッシュ書き込み */
 export function setListCache<T>(config: ListCacheConfig, entry: ListCacheEntry<T>): void {
   if (typeof window === "undefined") return;
   if (entry.items.length === 0) return;

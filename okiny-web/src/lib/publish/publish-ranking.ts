@@ -7,7 +7,7 @@ import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { PublishedRanking, RankingInput, ToastMessage } from "@/lib/types";
 
 export type PublishRankingResult =
-  | { ok: true; published: PublishedRanking; toast: ToastMessage }
+  | { ok: true; published: PublishedRanking; toast: ToastMessage; draftDeleteFailed?: boolean }
   | { ok: false; toast: ToastMessage };
 
 function buildErrorToast(error: unknown): ToastMessage {
@@ -40,11 +40,23 @@ export async function publishRanking(params: {
       ranking: params.ranking,
     });
 
+    let draftDeleteFailed = false;
     if (params.draftId) {
-      await params.draftRepository.delete(params.userId, params.draftId);
+      try {
+        await params.draftRepository.delete(params.userId, params.draftId);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        console.warn("[publish-ranking] Failed to delete draft after publish:", message);
+        draftDeleteFailed = true;
+      }
     }
 
-    return { ok: true, published, toast: { type: "success", message: "ランキングを公開しました。" } };
+    return {
+      ok: true,
+      published,
+      toast: { type: "success", message: "ランキングを公開しました。" },
+      ...(draftDeleteFailed ? { draftDeleteFailed: true } : {}),
+    };
   } catch (error) {
     return { ok: false, toast: buildErrorToast(error) };
   }

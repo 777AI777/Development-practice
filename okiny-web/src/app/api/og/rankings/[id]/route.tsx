@@ -165,7 +165,7 @@ function renderTitle(title: string, fontFamily: string) {
 }
 
 function renderItemsList(items: readonly string[], fontFamily: string) {
-  const displayItems = items.slice(0, 5);
+  const displayItems = items.filter((item) => item.trim()).slice(0, 5);
 
   return (
     <div

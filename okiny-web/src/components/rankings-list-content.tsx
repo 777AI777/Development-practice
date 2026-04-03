@@ -258,6 +258,7 @@ function RankingsListContentInner({
     avatarUrl: displayAvatarUrl,
     displayUserId,
     introduction: user?.introduction ?? null,
+    links: user?.links ?? null,
   };
 
   return (

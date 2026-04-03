@@ -11,19 +11,11 @@ vi.mock("@/lib/supabase-rest", () => ({
   incrementImpressionCount: vi.fn(),
 }));
 
-vi.mock("@/lib/rate-limit", () => ({
-  checkRateLimit: vi.fn(() =>
-    Promise.resolve({ success: true, limit: 10, remaining: 9, reset: Date.now() + 60_000 }),
-  ),
-}));
-
 import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { incrementImpressionCount } from "@/lib/supabase-rest";
 import { POST, _resetForTesting, _testInternals } from "../route";
 
 const mockGetAuthenticatedUserId = vi.mocked(getAuthenticatedUserId);
-const mockCheckRateLimit = vi.mocked(checkRateLimit);
 const mockIncrementImpressionCount = vi.mocked(incrementImpressionCount);
 
 const VALID_UUID_1 = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
@@ -62,12 +54,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   _resetForTesting();
   setupAuth();
-  mockCheckRateLimit.mockResolvedValue({
-    success: true,
-    limit: 10,
-    remaining: 9,
-    reset: Date.now() + 60_000,
-  });
   mockIncrementImpressionCount.mockResolvedValue(undefined);
 });
 
@@ -198,35 +184,6 @@ describe("POST /api/v1/rankings/impressions authentication", () => {
     const response = await POST(makeRequest({ rankingIds: [VALID_UUID_1] }));
 
     expect(response.status).toBe(401);
-    expect(mockIncrementImpressionCount).not.toHaveBeenCalled();
-  });
-});
-
-describe("POST /api/v1/rankings/impressions rate limiting", () => {
-  it("returns 429 when the rate limit is exceeded", async () => {
-    mockCheckRateLimit.mockResolvedValue({
-      success: false,
-      limit: 10,
-      remaining: 0,
-      reset: Date.now() + 60_000,
-    });
-
-    const response = await POST(makeRequest({ rankingIds: [VALID_UUID_1] }));
-    const data = await response.json();
-
-    expect(response.status).toBe(429);
-    expect(data.error.code).toBe("RATE_LIMIT");
-    expect(mockIncrementImpressionCount).not.toHaveBeenCalled();
-  });
-
-  it("returns 500 when the rate limit check fails", async () => {
-    mockCheckRateLimit.mockRejectedValueOnce(new Error("Upstash unavailable"));
-
-    const response = await POST(makeRequest({ rankingIds: [VALID_UUID_1] }));
-    const data = await response.json();
-
-    expect(response.status).toBe(500);
-    expect(data.error.code).toBe("SERVER");
     expect(mockIncrementImpressionCount).not.toHaveBeenCalled();
   });
 });

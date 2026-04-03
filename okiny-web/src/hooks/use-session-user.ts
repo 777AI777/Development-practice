@@ -40,6 +40,7 @@ interface UseSessionUserResult {
     displayUserId: string,
   ) => Promise<"success" | "invalid" | "conflict" | "server">;
   updateIntroduction: (introduction: string) => Promise<"success" | "invalid" | "server">;
+  updateLinks: (newLinks: Array<{ url: string }>) => Promise<"success" | "invalid" | "server">;
 }
 
 function safeString(value: unknown): string | undefined {
@@ -72,6 +73,15 @@ function toAuthUser(supabaseUser: {
     avatarUrl: safeString(meta.avatar_url),
     displayUserId: safeString(meta.display_user_id) ?? null,
     introduction: safeString(meta.introduction) ?? null,
+    links: Array.isArray(meta.links)
+      ? (meta.links as unknown[]).filter(
+          (l: unknown): l is { url: string } =>
+            l !== null &&
+            typeof l === "object" &&
+            "url" in (l as Record<string, unknown>) &&
+            typeof (l as Record<string, string>).url === "string",
+        ).slice(0, 5)
+      : null,
   };
 }
 
@@ -235,6 +245,40 @@ export function useSessionUser(): UseSessionUserResult {
     }
   };
 
+  const updateLinks = async (
+    newLinks: Array<{ url: string }>,
+  ): Promise<"success" | "invalid" | "server"> => {
+    if (newLinks.length > 5) return "invalid";
+    for (const link of newLinks) {
+      try {
+        const parsed = new URL(link.url);
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+          return "invalid";
+        }
+      } catch {
+        return "invalid";
+      }
+    }
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.updateUser({
+        data: { links: newLinks.length > 0 ? newLinks : null },
+      });
+      if (error) {
+        return "server";
+      }
+      if (data.user) {
+        const updatedUser = toAuthUser(data.user);
+        updateCache(updatedUser, true);
+        setUser(updatedUser);
+      }
+      return "success";
+    } catch {
+      return "server";
+    }
+  };
+
   return {
     isReady,
     user,
@@ -242,5 +286,6 @@ export function useSessionUser(): UseSessionUserResult {
     updateDisplayName,
     updateDisplayUserId,
     updateIntroduction,
+    updateLinks,
   };
 }

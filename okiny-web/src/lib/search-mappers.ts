@@ -55,6 +55,7 @@ export function mapSearchRankingRow(row: {
       avatarUrl: row.author_avatar_url ?? null,
       displayUserId: row.author_display_user_id ?? null,
       introduction: null,
+      links: null,
     },
   };
 }
@@ -87,6 +88,7 @@ export function decodeSearchCursor(encoded: string): SearchCursor | null {
     const parsed = JSON.parse(atob(encoded));
     if (
       parsed &&
+      typeof parsed === "object" &&
       typeof parsed.createdAt === "string" &&
       typeof parsed.id === "string"
     ) {
@@ -106,6 +108,7 @@ export function decodeUserSearchCursor(
     const parsed = JSON.parse(atob(encoded));
     if (
       parsed &&
+      typeof parsed === "object" &&
       typeof parsed.displayName === "string" &&
       typeof parsed.id === "string"
     ) {
@@ -123,6 +126,7 @@ export function decodeRecommendCursor(encoded: string): RecommendCursor | null {
     const parsed = JSON.parse(atob(encoded));
     if (
       parsed &&
+      typeof parsed === "object" &&
       typeof parsed.priority === "number" &&
       typeof parsed.createdAt === "string" &&
       typeof parsed.id === "string"

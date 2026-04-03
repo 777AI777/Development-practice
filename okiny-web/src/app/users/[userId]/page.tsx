@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 
 import { UserProfileContent } from "@/components/user-profile-content";
 import {
-  getFollowingUserIds,
+  getRelationship,
   listPublicRankingsByUser,
 } from "@/lib/supabase-rest";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRelationship } from "@/lib/types";
 import { getUserProfileWithFallback } from "@/lib/user-profile-with-fallback";
 
 export async function generateMetadata({
@@ -64,7 +65,15 @@ export default async function UserProfilePage({
   }
 
   const isOwnProfile = viewer.viewerUserId === profile.id;
-  const [rankings, followingIds] = await Promise.all([
+
+  const defaultRelationship: UserRelationship = {
+    isFollowing: false,
+    isMuted: false,
+    isBlocked: false,
+    isBlockedBy: false,
+  };
+
+  const [rankings, relationship] = await Promise.all([
     viewer.accessToken
       ? listPublicRankingsByUser({
           userId: profile.id,
@@ -72,19 +81,24 @@ export default async function UserProfilePage({
         }).catch(() => [])
       : Promise.resolve([]),
     viewer.viewerUserId && viewer.accessToken && !isOwnProfile
-      ? getFollowingUserIds({
-          followerId: viewer.viewerUserId,
-          targetUserIds: [profile.id],
+      ? getRelationship({
+          viewerId: viewer.viewerUserId,
+          targetUserId: profile.id,
           accessToken: viewer.accessToken,
-        }).catch(() => new Set<string>())
-      : Promise.resolve(new Set<string>()),
+        }).catch(() => defaultRelationship)
+      : Promise.resolve(defaultRelationship),
   ]);
+
+  // ブロック関係がある場合は notFound
+  if (relationship.isBlocked || relationship.isBlockedBy) {
+    notFound();
+  }
 
   return (
     <UserProfileContent
       profile={profile}
       rankings={rankings}
-      initialIsFollowing={followingIds.has(profile.id)}
+      initialRelationship={relationship}
       isOwnProfile={isOwnProfile}
     />
   );

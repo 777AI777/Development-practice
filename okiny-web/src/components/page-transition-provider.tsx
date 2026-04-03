@@ -12,7 +12,7 @@ import {
 } from "react";
 
 const SUPPRESS_TRANSITION_PATHS = new Set(["/login", "/settings/logout"]);
-const SAFETY_TIMEOUT_MS = 10_000;
+const SAFETY_TIMEOUT_MS = 5_000;
 
 // ---------------------------------------------------------------------------
 // replaceState による pathname 変更を検知するフラグ

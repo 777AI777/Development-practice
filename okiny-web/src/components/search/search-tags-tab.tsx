@@ -73,6 +73,10 @@ export function SearchTagsTab({
 
     lastRequestedQueryRef.current = normalizedQuery;
     searchIfActive(normalizedQuery);
+
+    return () => {
+      lastRequestedQueryRef.current = "";
+    };
   }, [clearSearch, normalizedQuery, searchIfActive]);
 
   useEffect(() => {

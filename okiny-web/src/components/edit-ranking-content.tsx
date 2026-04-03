@@ -114,6 +114,14 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
         pushToast(buildSessionExpiredToast());
         return;
       }
+      if (error instanceof PublishedApiError && error.code === "CONFLICT") {
+        pushToast({
+          type: "error",
+          message: "このランキングは更新されています。ページを再読み込みしてください。",
+          persistent: true,
+        });
+        return;
+      }
       const message =
         error instanceof PublishedApiError
           ? error.message

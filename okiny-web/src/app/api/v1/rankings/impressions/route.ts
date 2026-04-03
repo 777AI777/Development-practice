@@ -101,7 +101,14 @@ export async function POST(request: Request) {
     }
 
     while (IMPRESSION_CACHE.size > MAX_IMPRESSION_CACHE_SIZE) {
-      const oldestKey = IMPRESSION_CACHE.keys().next().value;
+      let oldestKey: string | undefined;
+      let oldestTimestamp = Infinity;
+      for (const [key, timestamp] of IMPRESSION_CACHE) {
+        if (timestamp < oldestTimestamp) {
+          oldestTimestamp = timestamp;
+          oldestKey = key;
+        }
+      }
       if (!oldestKey) {
         break;
       }

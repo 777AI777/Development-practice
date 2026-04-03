@@ -13,6 +13,8 @@ import {
   getSimilarTagIds,
   listRecommendRankings,
 } from "@/lib/supabase-rest-recommend";
+import { getMutedWordStrings } from "@/lib/supabase-rest-muted-words";
+import { filterByMutedWords } from "@/lib/muted-word-filter";
 import { decodeRecommendCursor } from "@/lib/search-mappers";
 import {
   RECOMMEND_FEED_LIMIT,
@@ -93,20 +95,28 @@ export async function GET(request: NextRequest) {
   const cursor = cursorStr ? decodeRecommendCursor(cursorStr) : null;
 
   try {
-    // ユーザーの行動データを並列取得
-    const [ownTagIds, bookmarkedTagIds, affinityTagIds] = await Promise.all([
-      getUserOwnTagIds({ userId: auth.userId, accessToken: auth.accessToken }),
-      getBookmarkedTagIds({
-        userId: auth.userId,
-        accessToken: auth.accessToken,
-      }),
-      getAffinityTagIds({
-        userId: auth.userId,
-        accessToken: auth.accessToken,
-        highThreshold: RECOMMEND_AFFINITY_HIGH_THRESHOLD,
-        lowThreshold: RECOMMEND_AFFINITY_LOW_THRESHOLD,
-      }),
-    ]);
+    // ユーザーの行動データ + ミュートワードを並列取得
+    const [ownTagIds, bookmarkedTagIds, affinityTagIds, mutedWords] =
+      await Promise.all([
+        getUserOwnTagIds({
+          userId: auth.userId,
+          accessToken: auth.accessToken,
+        }),
+        getBookmarkedTagIds({
+          userId: auth.userId,
+          accessToken: auth.accessToken,
+        }),
+        getAffinityTagIds({
+          userId: auth.userId,
+          accessToken: auth.accessToken,
+          highThreshold: RECOMMEND_AFFINITY_HIGH_THRESHOLD,
+          lowThreshold: RECOMMEND_AFFINITY_LOW_THRESHOLD,
+        }),
+        getMutedWordStrings({
+          userId: auth.userId,
+          accessToken: auth.accessToken,
+        }),
+      ]);
 
     // tier3 = 自作タグ（最優先）
     const tier3TagIds = ownTagIds;
@@ -151,8 +161,12 @@ export async function GET(request: NextRequest) {
       cursor,
     });
 
-    return NextResponse.json({ data: result });
+    const filteredItems = filterByMutedWords(result.items, mutedWords);
+    const filteredResult = { ...result, items: filteredItems };
+
+    return NextResponse.json({ data: filteredResult });
   } catch (error) {
+    console.error("[GET /api/v1/rankings/recommend] failed");
     if (process.env.NODE_ENV !== "production") {
       console.error("[GET /api/v1/rankings/recommend] detail:", error);
     }

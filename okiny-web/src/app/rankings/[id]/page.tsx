@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
 
 import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
-import { getRankingById, getPublicRankingById, getUserProfile } from "@/lib/supabase-rest";
+import { getRankingById, getPublicRankingById, getUserProfile, getRelationship } from "@/lib/supabase-rest";
 import { DEMO_RANKING, DEMO_RANKING_ID } from "@/lib/demo-ranking";
 import { RankingDetailContent } from "@/components/ranking-detail-content";
-import type { UserProfile } from "@/lib/types";
+import type { UserProfile, UserRelationship } from "@/lib/types";
 
 export async function generateMetadata({
   params,
@@ -113,11 +113,32 @@ export default async function RankingDetailPage({
   // 著者プロフィールを取得（自分・他ユーザー問わず）
   authorProfile = await getUserProfile(ranking.userId);
 
+  // ブロック関係チェック（他ユーザーのランキングのみ）
+  const defaultRelationship: UserRelationship = {
+    isFollowing: false,
+    isMuted: false,
+    isBlocked: false,
+    isBlockedBy: false,
+  };
+
+  const authorRelationship = !isOwner
+    ? await getRelationship({
+        viewerId: auth.userId,
+        targetUserId: ranking.userId,
+        accessToken: auth.accessToken,
+      }).catch(() => defaultRelationship)
+    : defaultRelationship;
+
+  if (authorRelationship.isBlocked || authorRelationship.isBlockedBy) {
+    notFound();
+  }
+
   return (
     <RankingDetailContent
       ranking={ranking}
       isOwner={isOwner}
       authorProfile={authorProfile ?? undefined}
+      authorRelationship={!isOwner ? authorRelationship : undefined}
     />
   );
 }
