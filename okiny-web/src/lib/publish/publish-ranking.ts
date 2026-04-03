@@ -31,6 +31,7 @@ function buildErrorToast(error: unknown): ToastMessage {
 export async function publishRanking(params: {
   userId: string;
   ranking: RankingInput;
+  comment?: string;
   draftId?: string;
   draftRepository: DraftRepository;
   apiClient: HttpPublishedApiClient;
@@ -38,6 +39,7 @@ export async function publishRanking(params: {
   try {
     const published = await params.apiClient.createPublishedRanking({
       ranking: params.ranking,
+      ...(params.comment ? { comment: params.comment } : {}),
     });
 
     let draftDeleteFailed = false;

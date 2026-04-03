@@ -137,7 +137,7 @@ function NewRankingPageContent() {
     trackedRef.current = true;
   }, [activeDraftId, user]);
 
-  const handlePublish = async (value: RankingInput) => {
+  const handlePublish = async (value: RankingInput, options?: { comment?: string }) => {
     if (!user) return;
     const result = await publishRanking({
       userId: user.id,
@@ -145,6 +145,7 @@ function NewRankingPageContent() {
       draftId: activeDraftId,
       apiClient: publishedApiClient,
       draftRepository,
+      comment: options?.comment,
     });
     pushToast(result.toast);
     if (result.ok) {

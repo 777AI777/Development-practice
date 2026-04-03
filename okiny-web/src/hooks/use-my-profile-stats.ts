@@ -76,7 +76,7 @@ export function useMyProfileStats(userId: string | undefined | null): UseMyProfi
         })
         .then(({ data }): MyProfileStats => {
           const newStats: MyProfileStats = {
-            publicRankingCount: data.rankings.length,
+            publicRankingCount: data.profile.publicRankingCount,
             followingCount: data.profile.followingCount,
             followerCount: data.profile.followerCount,
           };

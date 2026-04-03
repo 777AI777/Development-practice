@@ -949,6 +949,37 @@ export async function listPublicRankingsByUser(params: {
 }
 
 /**
+ * 指定ユーザーの公開ランキング数をカウントする。
+ * Supabase REST の Prefer: count=exact + limit=0 で効率的に取得。
+ */
+export async function countPublicRankingsByUser(userId: string): Promise<number> {
+  const query = new URLSearchParams({
+    select: "id",
+    user_id: `eq.${userId}`,
+    is_public: "eq.true",
+    limit: "0",
+  });
+
+  const response = await requestSupabaseWithServiceRole(
+    `rankings?${query.toString()}`,
+    { prefer: "count=exact", revalidateSeconds: 0 },
+  );
+
+  if (!response.ok) {
+    return 0;
+  }
+
+  const countHeader = response.headers.get("content-range");
+  if (!countHeader) {
+    return 0;
+  }
+
+  // content-range format: "*/123" or "0-0/123"
+  const match = countHeader.match(/\/(\d+)$/);
+  return match ? Number(match[1]) : 0;
+}
+
+/**
  * ブックマークを追加する。
  * bookmarks テーブルに直接 INSERT（UNIQUE制約で重複防止）。
  */
@@ -1159,6 +1190,7 @@ function mapUserProfileRowWithCounts(row: {
     links: parseLinks(row.links),
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
+    publicRankingCount: 0,
   };
 }
 
@@ -1240,3 +1272,14 @@ export {
   listMutedWords,
   getMutedWordStrings,
 } from "./supabase-rest-muted-words";
+
+// ---------------------------------------------------------------------------
+// ランキングコメント（supabase-rest-comments.ts に分離）
+// ---------------------------------------------------------------------------
+export {
+  createRankingComment,
+  deleteRankingComment,
+  getLatestCommentsForRankings,
+  getLatestCommentForRanking,
+  attachCommentsToRankings,
+} from "./supabase-rest-comments";

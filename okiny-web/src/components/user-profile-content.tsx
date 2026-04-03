@@ -7,6 +7,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -15,14 +16,15 @@ import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { FollowButton } from "@/components/follow-button";
 import { usePageTransition } from "@/components/page-transition-provider";
+import { SmartRankingCard } from "@/components/smart-ranking-card";
 import { UserActionMenu } from "@/components/user-action-menu";
-import { RankingCard } from "@/components/ranking-card";
 import { useToast } from "@/components/toast-provider";
 import { useDisplayUserIdCheck } from "@/hooks/use-display-user-id-check";
+import { useListCache } from "@/hooks/use-list-cache";
+import type { PageResult } from "@/hooks/use-list-cache";
 import { useSessionUser } from "@/hooks/use-session-user";
 import type {
-  PublicRankingWithAuthor,
-  PublishedRanking,
+  PublicRankingWithAuthorAndComment,
   UserProfileWithCounts,
   UserRelationship,
 } from "@/lib/types";
@@ -33,9 +35,22 @@ import {
   normalizeDisplayUserId,
 } from "@/lib/user-utils";
 
+function createUserRankingsFetcher(userId: string, type: "posts" | "rankings") {
+  return async (cursor: string | null, signal: AbortSignal): Promise<PageResult<PublicRankingWithAuthorAndComment>> => {
+    const params = new URLSearchParams({ limit: "20", type });
+    if (cursor) params.set("cursor", cursor);
+    const res = await fetch(`/api/v1/users/${userId}/rankings?${params}`, { signal, cache: "no-store" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error((body as { error?: { message?: string } }).error?.message ?? "ランキングの読み込みに失敗しました。");
+    }
+    const json = (await res.json()) as { data: { items: PublicRankingWithAuthorAndComment[]; nextCursor: string | null } };
+    return { items: json.data.items, nextCursor: json.data.nextCursor };
+  };
+}
+
 interface UserProfileContentProps {
   profile: UserProfileWithCounts;
-  rankings: readonly PublishedRanking[];
   initialRelationship: UserRelationship;
   isOwnProfile: boolean;
 }
@@ -143,7 +158,6 @@ function getDomainInfo(url: string): { label: string; icon: React.ReactNode } {
 
 function UserProfileContentInner({
   profile,
-  rankings,
   initialRelationship,
   isOwnProfile,
 }: UserProfileContentProps) {
@@ -156,11 +170,50 @@ function UserProfileContentInner({
   const impressionSentRef = useRef(false);
   const [isFollowing, setIsFollowing] = useState(initialRelationship.isFollowing);
   const [followerCount, setFollowerCount] = useState(profile.followerCount);
+  const [activeTab, setActiveTab] = useState<"posts" | "rankings">("posts");
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState(
     isOwnProfile && searchParams.get("edit") === "true",
   );
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const postsFetcher = useMemo(() => createUserRankingsFetcher(profile.id, "posts"), [profile.id]);
+  const rankingsFetcher = useMemo(() => createUserRankingsFetcher(profile.id, "rankings"), [profile.id]);
+
+  const {
+    items: postItems,
+    isLoading: isLoadingPosts,
+    isLoadingMore: isLoadingMorePosts,
+    hasMore: hasMorePosts,
+    error: postsError,
+    hasFetched: hasFetchedPosts,
+    refresh: refreshPosts,
+    sentinelRef: postsSentinelRef,
+  } = useListCache<PublicRankingWithAuthorAndComment>({
+    cache: { cacheKey: `okiny:user-posts:${profile.id}` },
+    fetcher: postsFetcher,
+    enabled: activeTab === "posts",
+    scrollRestoreKey: `scroll:user-posts:${profile.id}`,
+  });
+
+  const {
+    items: rankingItems,
+    isLoading: isLoadingRankings,
+    isLoadingMore: isLoadingMoreRankings,
+    hasMore: hasMoreRankings,
+    error: rankingsError,
+    hasFetched: hasFetchedRankings,
+    refresh: refreshRankings,
+    sentinelRef: rankingsSentinelRef,
+  } = useListCache<PublicRankingWithAuthorAndComment>({
+    cache: { cacheKey: `okiny:user-rankings:${profile.id}` },
+    fetcher: rankingsFetcher,
+    enabled: activeTab === "rankings",
+    scrollRestoreKey: `scroll:user-rankings:${profile.id}`,
+  });
+
+  const postItemsRef = useRef(postItems);
+  postItemsRef.current = postItems;
 
   // URL (searchParams) is the SSoT for editingProfile.
   // editingProfile is intentionally excluded from deps — reacts only to URL changes, not state changes.
@@ -240,7 +293,7 @@ function UserProfileContentInner({
   }, [initialRelationship.isFollowing]);
 
   useEffect(() => {
-    if (impressionSentRef.current || rankings.length === 0) {
+    if (impressionSentRef.current || !hasFetchedPosts || postItemsRef.current.length === 0) {
       return;
     }
     if (!user || user.id === profile.id) {
@@ -255,10 +308,10 @@ function UserProfileContentInner({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        rankingIds: rankings.map((ranking) => ranking.id),
+        rankingIds: postItemsRef.current.map((ranking) => ranking.id),
       }),
     }).catch(() => {});
-  }, [profile.id, rankings, user]);
+  }, [hasFetchedPosts, profile.id, user]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -272,10 +325,6 @@ function UserProfileContentInner({
   }, [menuOpen]);
 
   const profilePath = buildUserProfilePath(profile);
-  const rankingCards: PublicRankingWithAuthor[] = rankings.map((ranking) => ({
-    ...ranking,
-    author: profile,
-  }));
   const handleFollowChange = useCallback(
     (nextIsFollowing: boolean) => {
       if (nextIsFollowing === isFollowing) {
@@ -631,7 +680,7 @@ function UserProfileContentInner({
 
           {/* Stats (shown in both modes) */}
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-            <StatLink label="公開ランキング" value={rankings.length} />
+            <StatLink label="公開ランキング" value={profile.publicRankingCount} />
             <StatLink
               href={`${profilePath}/following`}
               label="フォロー"
@@ -645,29 +694,100 @@ function UserProfileContentInner({
           </div>
         </section>
 
-        {rankingCards.length === 0 ? (
-          <div className="px-4 py-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              公開ランキングはまだありません。
-            </p>
-          </div>
-        ) : (
-          <div>
-            {rankingCards.map((ranking, index) => (
-              <RankingCard
-                key={ranking.id}
-                ranking={ranking}
-                showBorder={index < rankingCards.length - 1}
-                showTagBadge
-                onAvatarClick={(_event, author) => {
-                  router.push(buildUserProfilePath(author));
-                }}
-                onTagClick={(_event, tagName) => {
-                  router.push(`/search?q=${encodeURIComponent('#' + tagName)}&tab=rankings`);
-                }}
-              />
-            ))}
-          </div>
+        {/* タブ */}
+        <div className="flex border-b border-border">
+          <button
+            type="button"
+            onClick={() => setActiveTab("posts")}
+            className={`flex-1 py-3 text-sm font-semibold text-center transition ${
+              activeTab === "posts"
+                ? "text-foreground border-b-2 border-primary"
+                : "text-muted-foreground"
+            }`}
+          >
+            投稿
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("rankings")}
+            className={`flex-1 py-3 text-sm font-semibold text-center transition ${
+              activeTab === "rankings"
+                ? "text-foreground border-b-2 border-primary"
+                : "text-muted-foreground"
+            }`}
+          >
+            ランキング
+          </button>
+        </div>
+
+        {/* 投稿タブ */}
+        {activeTab === "posts" && (
+          <>
+            {postsError ? (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
+                <p className="text-base font-bold text-destructive">読み込みに失敗しました。</p>
+                <p className="mt-1 text-sm text-destructive/80">{postsError}</p>
+                <button type="button" onClick={refreshPosts} className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-destructive/30 bg-card px-4 text-sm font-semibold text-destructive">再読み込み</button>
+              </div>
+            ) : hasFetchedPosts && !isLoadingPosts && postItems.length === 0 ? (
+              <p className="py-12 text-center text-sm text-muted-foreground">公開ランキングはまだありません。</p>
+            ) : (
+              <div className="overflow-hidden rounded-xl bg-card">
+                {postItems.map((ranking, index) => {
+                  const showBorder = index < postItems.length - 1;
+                  return (
+                    <SmartRankingCard
+                      key={ranking.id}
+                      ranking={ranking}
+                      showBorder={showBorder}
+                      showTagBadge
+                      showBookmark
+                    />
+                  );
+                })}
+              </div>
+            )}
+            {hasMorePosts && (
+              <div ref={postsSentinelRef} className="py-4 text-center">
+                {isLoadingMorePosts && <p className="text-sm text-muted-foreground">読み込み中...</p>}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ランキングタブ */}
+        {activeTab === "rankings" && (
+          <>
+            {rankingsError ? (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
+                <p className="text-base font-bold text-destructive">読み込みに失敗しました。</p>
+                <p className="mt-1 text-sm text-destructive/80">{rankingsError}</p>
+                <button type="button" onClick={refreshRankings} className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-destructive/30 bg-card px-4 text-sm font-semibold text-destructive">再読み込み</button>
+              </div>
+            ) : hasFetchedRankings && !isLoadingRankings && rankingItems.length === 0 ? (
+              <p className="py-12 text-center text-sm text-muted-foreground">ランキングはまだありません。</p>
+            ) : (
+              <div className="overflow-hidden rounded-xl bg-card">
+                {rankingItems.map((ranking, index) => {
+                  const showBorder = index < rankingItems.length - 1;
+                  return (
+                    <SmartRankingCard
+                      key={ranking.id}
+                      ranking={ranking}
+                      showBorder={showBorder}
+                      showTagBadge
+                      showBookmark
+                    />
+                  );
+                })}
+              </div>
+            )}
+            {hasMoreRankings && (
+              <div ref={rankingsSentinelRef} className="py-4 text-center">
+                {isLoadingMoreRankings && <p className="text-sm text-muted-foreground">読み込み中...</p>}
+              </div>
+            )}
+          </>
         )}
 
         <div className="h-8" aria-hidden="true" />

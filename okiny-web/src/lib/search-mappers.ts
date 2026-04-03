@@ -82,6 +82,9 @@ export function encodeCursor(cursor: SearchCursor | UserSearchCursor): string {
   return btoa(JSON.stringify(cursor));
 }
 
+const ISO8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** Base64文字列を SearchCursor にデコード */
 export function decodeSearchCursor(encoded: string): SearchCursor | null {
   try {
@@ -90,7 +93,9 @@ export function decodeSearchCursor(encoded: string): SearchCursor | null {
       parsed &&
       typeof parsed === "object" &&
       typeof parsed.createdAt === "string" &&
-      typeof parsed.id === "string"
+      typeof parsed.id === "string" &&
+      ISO8601_REGEX.test(parsed.createdAt) &&
+      UUID_REGEX.test(parsed.id)
     ) {
       return parsed as SearchCursor;
     }
@@ -129,7 +134,12 @@ export function decodeRecommendCursor(encoded: string): RecommendCursor | null {
       typeof parsed === "object" &&
       typeof parsed.priority === "number" &&
       typeof parsed.createdAt === "string" &&
-      typeof parsed.id === "string"
+      typeof parsed.id === "string" &&
+      ISO8601_REGEX.test(parsed.createdAt) &&
+      UUID_REGEX.test(parsed.id) &&
+      Number.isInteger(parsed.priority) &&
+      parsed.priority >= 0 &&
+      parsed.priority <= 3
     ) {
       return parsed as RecommendCursor;
     }

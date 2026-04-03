@@ -8,7 +8,8 @@ interface SearchTabsProps {
 }
 
 const TABS: { key: SearchTab; label: string }[] = [
-  { key: "rankings", label: "投稿" },
+  { key: "posts", label: "投稿" },
+  { key: "rankings", label: "ランキング" },
   { key: "accounts", label: "アカウント" },
   { key: "tags", label: "タグ" },
 ];

@@ -1,12 +1,13 @@
 "use client";
 
+import type * as React from "react";
 import Link from "next/link";
 import { useEffect } from "react";
 
 import { EmptyStateMessage } from "@/components/empty-state-message";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { PullToRefresh } from "@/components/pull-to-refresh";
-import { RankingCard } from "@/components/ranking-card";
+import { SmartRankingCard } from "@/components/smart-ranking-card";
 import { useListCache } from "@/hooks/use-list-cache";
 import type { PageResult } from "@/hooks/use-list-cache";
 import {
@@ -14,12 +15,12 @@ import {
   RECOMMEND_FEED_LIMIT,
   SCROLL_KEY_RECOMMEND,
 } from "@/lib/constants";
-import type { PublicRankingWithAuthor, UserProfile } from "@/lib/types";
+import type { PublicRankingWithAuthorAndComment, UserProfile } from "@/lib/types";
 
 async function fetchRecommendFeedPage(
   cursor: string | null,
   signal: AbortSignal,
-): Promise<PageResult<PublicRankingWithAuthor>> {
+): Promise<PageResult<PublicRankingWithAuthorAndComment>> {
   const params = new URLSearchParams({ limit: String(RECOMMEND_FEED_LIMIT) });
   if (cursor) params.set("cursor", cursor);
   const res = await fetch(`/api/v1/rankings/recommend?${params}`, {
@@ -34,7 +35,7 @@ async function fetchRecommendFeedPage(
     );
   }
   const json = (await res.json()) as {
-    data: { items: PublicRankingWithAuthor[]; nextCursor: string | null };
+    data: { items: PublicRankingWithAuthorAndComment[]; nextCursor: string | null };
   };
   return { items: json.data.items, nextCursor: json.data.nextCursor };
 }
@@ -59,7 +60,7 @@ export function RecommendContent({
     hasFetched,
     refresh,
     sentinelRef,
-  } = useListCache<PublicRankingWithAuthor>({
+  } = useListCache<PublicRankingWithAuthorAndComment>({
     cache: { cacheKey: RECOMMEND_FEED_CACHE_KEY, ttlMs: 30 * 60 * 1000 },
     fetcher: fetchRecommendFeedPage,
     enabled,
@@ -113,21 +114,27 @@ export function RecommendContent({
   return (
     <PullToRefresh onRefresh={refresh}>
       <div className="overflow-hidden rounded-xl bg-card">
-        {rankings.map((ranking, index) => (
-          <RankingCard
-            key={ranking.id}
-            ranking={ranking}
-            showBorder={index < rankings.length - 1}
-            showTagBadge
-            showBookmark
-            onAvatarClick={(_event, author) => {
-              onAvatarClick(author);
-            }}
-            onTagClick={(_event, tagName) => {
-              onTagClick(tagName);
-            }}
-          />
-        ))}
+        {rankings.map((ranking, index) => {
+          const showBorder = index < rankings.length - 1;
+          const avatarHandler = (_event: React.MouseEvent<HTMLButtonElement>, author: UserProfile) => {
+            onAvatarClick(author);
+          };
+          const tagHandler = (_event: React.MouseEvent<HTMLButtonElement>, tagName: string) => {
+            onTagClick(tagName);
+          };
+
+          return (
+            <SmartRankingCard
+              key={ranking.latestComment?.id ?? ranking.id}
+              ranking={ranking}
+              showBorder={showBorder}
+              showTagBadge
+              showBookmark
+              onAvatarClick={avatarHandler}
+              onTagClick={tagHandler}
+            />
+          );
+        })}
       </div>
       {hasMore && (
         <div ref={sentinelRef} className="py-4 text-center">

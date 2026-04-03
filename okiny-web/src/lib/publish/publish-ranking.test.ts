@@ -63,6 +63,7 @@ describe("publishRanking", () => {
       followUser: async () => {},
       unfollowUser: async () => {},
       listFollowingRankings: async () => [],
+      deleteRankingComment: async () => {},
     };
 
     const result = await publishRanking({

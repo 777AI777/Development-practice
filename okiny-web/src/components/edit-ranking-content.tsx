@@ -92,7 +92,7 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
   const initialTagName = overrideTagName ?? ranking.tagName;
   const initialNewTagName = overrideNewTagName;
 
-  const handleSubmit = async (value: RankingInput) => {
+  const handleSubmit = async (value: RankingInput, options?: { comment?: string }) => {
     if (!user) return;
     if (!expectedUpdatedAt) {
       pushToast({
@@ -106,6 +106,7 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
         rankingId,
         ranking: value,
         expectedUpdatedAt,
+        comment: options?.comment,
       });
       pushToast({ type: "success", message: "ランキングを更新しました。" });
       router.replace(`/rankings/${rankingId}`);

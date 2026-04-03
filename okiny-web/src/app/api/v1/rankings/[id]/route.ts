@@ -7,11 +7,13 @@ import {
 } from "@/lib/supabase/auth-guard";
 import {
   ConflictError,
+  createRankingComment,
   deleteRanking,
   getRankingById,
   updateRanking,
 } from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
+import { COMMENT_MAX_LENGTH } from "@/lib/constants";
 
 const rankingItemsSchema = z
   .array(
@@ -37,6 +39,7 @@ const updateSchema = z.object({
     items: rankingItemsSchema,
     isPublic: z.boolean().default(true),
   }),
+  comment: z.string().max(COMMENT_MAX_LENGTH, `コメントは${COMMENT_MAX_LENGTH}文字以内にしてください。`).optional(),
 });
 
 const deleteSchema = z.object({
@@ -126,7 +129,26 @@ export async function PATCH(
       expectedUpdatedAt: parsed.data.expectedUpdatedAt,
       accessToken,
     });
-    return NextResponse.json({ data });
+
+    const warnings: string[] = [];
+    if (parsed.data.comment?.trim()) {
+      try {
+        await createRankingComment({
+          rankingId: id,
+          userId,
+          comment: parsed.data.comment.trim(),
+          accessToken,
+        });
+      } catch (commentError) {
+        console.error("[PATCH /api/v1/rankings/:id] comment creation failed (non-blocking)");
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[PATCH /api/v1/rankings/:id] comment detail:", commentError);
+        }
+        warnings.push("コメントの保存に失敗しました。");
+      }
+    }
+
+    return NextResponse.json({ data, ...(warnings.length > 0 && { warnings }) });
   } catch (error) {
     if (error instanceof ConflictError) {
       return NextResponse.json(

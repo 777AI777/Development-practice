@@ -25,6 +25,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { TagCombobox } from "@/components/tag-combobox";
 import { useToast } from "@/components/toast-provider";
 import { isFormEmpty } from "@/lib/drafts/is-form-empty";
+import { COMMENT_MAX_LENGTH } from "@/lib/constants";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
 import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { RankingInput, RankingItems } from "@/lib/types";
@@ -36,7 +37,7 @@ interface RankingFormProps {
   initialTagName?: string;
   initialNewTagName?: string;
   submitLabel: string;
-  onSubmit: (value: RankingInput) => Promise<void>;
+  onSubmit: (value: RankingInput, options?: { comment?: string }) => Promise<void>;
   onSaveDraft?: (value: RankingInput & { newTagName?: string; selectedTagName?: string }) => Promise<boolean>;
   onDraftList?: () => void;
   onCancel?: () => void;
@@ -145,6 +146,7 @@ export function RankingForm({
           isPublic: true,
         },
   );
+  const [comment, setComment] = useState("");
   const [newTagName, setNewTagName] = useState(initialNewTagName ?? "");
   const [tagDisplayName, setTagDisplayName] = useState(initialTagName ?? initialNewTagName ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -318,7 +320,9 @@ export function RankingForm({
         tagId: resolvedTagId,
       };
 
-      await onSubmit(resolvedForm);
+      const trimmedComment = comment.trim();
+      await onSubmit(resolvedForm, trimmedComment ? { comment: trimmedComment } : undefined);
+      setComment("");
       if (autosaveConfig) {
         void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key).catch((err) => console.warn("autosave cleanup failed:", err));
       }
@@ -341,6 +345,7 @@ export function RankingForm({
           void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key).catch((err) => console.warn("autosave cleanup failed:", err));
         }
         setForm({ title: "", tagId: "", items: ["", "", "", "", ""], isPublic: true });
+        setComment("");
         setNewTagName("");
         setTagDisplayName("");
         setIsDirty(false);
@@ -554,6 +559,29 @@ export function RankingForm({
           {"公開にすると他のユーザーがこのランキングを参照できます"}
         </p>
       ) : null}
+
+      {/* コメント（任意） */}
+      <div className="space-y-1">
+        <label htmlFor="ranking-comment" className="text-sm font-medium text-foreground">
+          コメント
+          <span className="ml-1 text-xs font-normal text-muted-foreground">（任意・140文字以内）</span>
+        </label>
+        <textarea
+          id="ranking-comment"
+          value={comment}
+          onChange={(e) => {
+            setComment(e.target.value);
+            setIsDirty(true);
+          }}
+          maxLength={COMMENT_MAX_LENGTH}
+          rows={2}
+          placeholder="このランキングについてひとこと..."
+          className="w-full resize-none rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        />
+        <p className="text-right text-xs text-muted-foreground">
+          {comment.length}/{COMMENT_MAX_LENGTH}
+        </p>
+      </div>
 
       {/* Ranking items */}
       <div className="rounded-xl overflow-hidden bg-card">

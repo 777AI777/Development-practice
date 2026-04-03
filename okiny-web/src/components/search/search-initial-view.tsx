@@ -94,7 +94,7 @@ export function SearchInitialView({
                 <button
                   type="button"
                   onClick={() => onSearchQuery(query)}
-                  className="text-sm text-muted-foreground transition hover:text-foreground"
+                  className="text-base text-muted-foreground transition hover:text-foreground"
                 >
                   {query}
                 </button>
@@ -170,7 +170,7 @@ export function SearchInitialView({
                 key={tag.id}
                 type="button"
                 onClick={() => onTagSelect(tag.name)}
-                className="text-sm text-muted-foreground transition hover:text-foreground"
+                className="text-base text-muted-foreground transition hover:text-foreground"
               >
                 #{tag.name}
               </button>
@@ -190,7 +190,7 @@ export function SearchInitialView({
                 key={tag.id}
                 type="button"
                 onClick={() => onTagSelect(tag.name)}
-                className="text-sm text-muted-foreground transition hover:text-foreground"
+                className="text-base text-muted-foreground transition hover:text-foreground"
               >
                 #{tag.name}
               </button>

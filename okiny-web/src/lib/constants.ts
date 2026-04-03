@@ -30,6 +30,8 @@ export const SEARCH_SUBMIT_EVENT_NAME = "okiny:search-submit";
 
 // --- Search Scroll Restore Keys ---
 
+export const SEARCH_POSTS_SCROLL_KEY = "scroll:search-posts";
+
 export const SEARCH_RANKINGS_SCROLL_KEY = "scroll:search-rankings";
 
 export const SEARCH_USERS_SCROLL_KEY = "scroll:search-users";
@@ -71,3 +73,7 @@ export const RECOMMEND_TAG_SIMILARITY_THRESHOLD = 3;
 export const RECOMMEND_AFFINITY_HIGH_THRESHOLD = 3;
 
 export const RECOMMEND_AFFINITY_LOW_THRESHOLD = 1;
+
+// --- Ranking Comment Constants ---
+
+export const COMMENT_MAX_LENGTH = 140;

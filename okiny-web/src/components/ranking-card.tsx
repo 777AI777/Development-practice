@@ -1,69 +1,13 @@
 import type * as React from "react";
 
-import Image from "next/image";
 import Link from "next/link";
 
-import { BookmarkButton } from "@/components/bookmark-button";
+import {
+  RankingCardAvatar,
+  RankingCardStats,
+} from "@/components/ranking-card-parts";
 import { formatSmartDate } from "@/lib/format-date";
 import type { PublicRankingWithAuthor } from "@/lib/types";
-import { getUserInitial } from "@/lib/user-utils";
-
-function ViewIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
-function ImpressionIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="18" y1="20" x2="18" y2="10" />
-      <line x1="12" y1="20" x2="12" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  );
-}
-
-function BookmarkIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-    </svg>
-  );
-}
 
 function LockIcon() {
   return (
@@ -83,12 +27,6 @@ function LockIcon() {
   );
 }
 
-interface AvatarInfo {
-  displayName: string;
-  avatarUrl: string | null;
-  displayUserId: string | null;
-}
-
 export interface RankingCardProps {
   ranking: PublicRankingWithAuthor;
   showBorder?: boolean;
@@ -104,51 +42,6 @@ export interface RankingCardProps {
     event: React.MouseEvent<HTMLButtonElement>,
     tagName: string,
   ) => void;
-}
-
-function AvatarImage({
-  avatar,
-  onAvatarClick,
-  author,
-}: {
-  avatar: AvatarInfo;
-  onAvatarClick?: RankingCardProps["onAvatarClick"];
-  author: PublicRankingWithAuthor["author"];
-}) {
-  const initial = getUserInitial(avatar.displayName, "?");
-
-  const image = avatar.avatarUrl ? (
-    <Image
-      src={avatar.avatarUrl}
-      alt={avatar.displayName}
-      width={40}
-      height={40}
-      className="h-10 w-10 rounded-full object-cover"
-    />
-  ) : (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-      {initial}
-    </div>
-  );
-
-  if (!onAvatarClick) {
-    return <div className="shrink-0">{image}</div>;
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onAvatarClick(event, author);
-      }}
-      className="shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-      aria-label={`${avatar.displayName}のプロフィール`}
-    >
-      {image}
-    </button>
-  );
 }
 
 const MAX_VISIBLE_ITEMS = 5;
@@ -171,12 +64,6 @@ export function RankingCard({
     introduction: null,
   };
 
-  const avatar: AvatarInfo = {
-    displayName: author.displayName,
-    avatarUrl: author.avatarUrl,
-    displayUserId: author.displayUserId,
-  };
-
   return (
     <Link
       href={`/rankings/${ranking.id}`}
@@ -186,25 +73,29 @@ export function RankingCard({
       }}
     >
     <div className="flex items-start gap-3 p-4">
-        <AvatarImage
-          avatar={avatar}
-          onAvatarClick={onAvatarClick}
+        <RankingCardAvatar
+          displayName={author.displayName}
+          avatarUrl={author.avatarUrl}
           author={author}
+          onAvatarClick={onAvatarClick}
         />
 
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-sm font-bold text-foreground">
-              {avatar.displayName}
+              {author.displayName}
             </span>
-            {avatar.displayUserId ? (
+            {author.displayUserId ? (
               <span className="text-xs text-muted-foreground">
-                @{avatar.displayUserId}
+                @{author.displayUserId}
               </span>
             ) : null}
-            <span className="text-xs text-muted-foreground">
-              {formatSmartDate(ranking.createdAt)}
+            <span className="text-sm text-muted-foreground">
+              {formatSmartDate(ranking.updatedAt)}
             </span>
+            {new Date(ranking.updatedAt).getTime() - new Date(ranking.createdAt).getTime() > 1000 ? (
+              <span className="text-xs text-muted-foreground">編集済み</span>
+            ) : null}
           </div>
 
           <div className="flex flex-col items-start gap-0.5">
@@ -246,30 +137,16 @@ export function RankingCard({
             ))}
           </div>
 
-          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <ViewIcon />
-              {ranking.viewCount}
-            </span>
-            <span className="flex items-center gap-1">
-              <ImpressionIcon />
-              {ranking.impressionCount}
-            </span>
-            {showBookmark ? (
-              <BookmarkButton
-                rankingId={ranking.id}
-                initialIsBookmarked={ranking.isBookmarked}
-                bookmarkCount={ranking.bookmarkCount}
-                compact
-                className="-my-1 -ml-1"
-                onChange={onBookmarkChange}
-              />
-            ) : (
-              <span className="flex items-center gap-1">
-                <BookmarkIcon />
-                {ranking.bookmarkCount}
-              </span>
-            )}
+          <div className="mt-1.5">
+            <RankingCardStats
+              rankingId={ranking.id}
+              viewCount={ranking.viewCount}
+              impressionCount={ranking.impressionCount}
+              bookmarkCount={ranking.bookmarkCount}
+              isBookmarked={ranking.isBookmarked}
+              showBookmark={showBookmark}
+              onBookmarkChange={onBookmarkChange}
+            />
           </div>
         </div>
       </div>

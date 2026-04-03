@@ -1,5 +1,6 @@
 import type {
   PublicRankingWithAuthor,
+  PublicRankingWithAuthorAndComment,
   RecommendCursor,
   SearchPage,
 } from "@/lib/types";
@@ -155,7 +156,7 @@ export async function listRecommendRankings(params: {
   tier2TagIds: string[];
   tier1TagIds: string[];
   cursor?: RecommendCursor | null;
-}): Promise<SearchPage<PublicRankingWithAuthor>> {
+}): Promise<SearchPage<PublicRankingWithAuthorAndComment>> {
   const rpcBody: Record<string, unknown> = {
     p_viewer_user_id: params.viewerUserId,
     p_limit: params.limit + 1, // hasMore判定用に1件多く取得
@@ -203,19 +204,51 @@ export async function listRecommendRankings(params: {
     author_display_user_id: string | null;
     is_bookmarked: boolean;
     priority: number;
+    comment_id: string | null;
+    comment_user_id: string | null;
+    comment_text: string | null;
+    comment_created_at: string | null;
+    comment_user_display_name: string | null;
+    comment_user_avatar_url: string | null;
+    comment_user_display_user_id: string | null;
+    cursor_id: string | null;
+    post_created_at: string;
   }>;
 
   const hasMore = rows.length > params.limit;
   const slicedRows = hasMore ? rows.slice(0, params.limit) : rows;
-  const items = slicedRows.map((row) => mapPublicRankingWithAuthorRow(row));
+  const items = slicedRows.map((row) => {
+    const base = mapPublicRankingWithAuthorRow(row);
+    const item: PublicRankingWithAuthorAndComment = {
+      ...base,
+      latestComment: row.comment_id
+        ? {
+            id: row.comment_id,
+            rankingId: base.id,
+            userId: row.comment_user_id!,
+            comment: row.comment_text!,
+            createdAt: row.comment_created_at!,
+            author: row.comment_user_display_name
+              ? {
+                  displayName: row.comment_user_display_name,
+                  avatarUrl: row.comment_user_avatar_url ?? null,
+                  displayUserId: row.comment_user_display_user_id ?? null,
+                }
+              : undefined,
+          }
+        : null,
+      cursorId: row.cursor_id ?? undefined,
+    };
+    return item;
+  });
 
   const lastRow = slicedRows[slicedRows.length - 1];
   const nextCursor =
     hasMore && lastRow
       ? encodeRecommendCursor({
           priority: lastRow.priority,
-          createdAt: lastRow.created_at,
-          id: lastRow.id,
+          createdAt: lastRow.post_created_at,
+          id: lastRow.cursor_id ?? lastRow.id,
         })
       : null;
 
