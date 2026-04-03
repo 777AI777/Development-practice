@@ -616,10 +616,10 @@ function UserProfileContentInner({
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+                          className="inline-flex items-center gap-1.5 text-sm text-primary transition hover:opacity-70"
                         >
                           {domain.icon}
-                          <span className="underline underline-offset-2">{domain.label}</span>
+                          <span>{domain.label}</span>
                         </a>
                       );
                     })}
