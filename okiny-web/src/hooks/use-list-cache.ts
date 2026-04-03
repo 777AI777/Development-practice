@@ -12,6 +12,68 @@ import {
   touchListCache,
 } from "@/lib/list-cache";
 
+/** ブラウザリロード（F5/Cmd+R）かどうかを判定。SPA内遷移ではfalse */
+function detectBrowserReload(): boolean {
+  if (typeof performance === "undefined") return false;
+
+  const entries = performance.getEntriesByType(
+    "navigation",
+  ) as PerformanceNavigationTiming[];
+  if (entries.length > 0) {
+    return entries[0].type === "reload";
+  }
+
+  // フォールバック（古いブラウザ向け）
+  // eslint-disable-next-line deprecation/deprecation
+  return performance.navigation?.type === 1;
+}
+
+/** ページロード時に一度だけ判定し、結果をキャッシュ */
+const isBrowserReload = detectBrowserReload();
+
+/**
+ * ブラウザリロード時にsessionStorageのフィードキャッシュ＋スクロール位置を一括削除。
+ * list-cache が保存したエントリは JSON に cachedAt フィールドを持つため、それで判別する。
+ * スクロール位置キーは "scroll:" プレフィックスで判別する。
+ */
+if (isBrowserReload && typeof sessionStorage !== "undefined") {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (!key) continue;
+
+      // スクロール位置キーは無条件で削除
+      if (key.startsWith("scroll:")) {
+        keysToRemove.push(key);
+        continue;
+      }
+
+      // list-cache のエントリ判定: JSON に cachedAt フィールドがあるか
+      try {
+        const raw = sessionStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (
+            typeof parsed === "object" &&
+            parsed !== null &&
+            typeof parsed.cachedAt === "number"
+          ) {
+            keysToRemove.push(key);
+          }
+        }
+      } catch {
+        // JSON パース失敗 → list-cache エントリではない
+      }
+    }
+    for (const key of keysToRemove) {
+      sessionStorage.removeItem(key);
+    }
+  } catch {
+    // sessionStorage unavailable
+  }
+}
+
 export interface PageResult<T> {
   items: T[];
   nextCursor: string | null;
@@ -161,6 +223,12 @@ export function useListCache<T>({
       return;
     }
 
+    // ブラウザリロード時はキャッシュをスキップして再フェッチさせる
+    if (isBrowserReload) {
+      setRestoredFromCache(false);
+      return;
+    }
+
     const freshEntry = getListCache<T>({ cacheKey, ttlMs });
     if (!freshEntry) {
       setRestoredFromCache(false);
@@ -214,16 +282,14 @@ export function useListCache<T>({
   }, [scrollRestoreKey, restoredFromCache]);
 
   useEffect(() => {
-    if (!cacheKey) return;
+    if (!enabled || !cacheKey) return;
 
     const eventName = getInvalidationEventName(cacheKey);
     const handleInvalidated = () => {
       resetState();
 
-      if (enabled) {
-        hasFetchedRef.current = true;
-        fetchPage(null, false);
-      }
+      hasFetchedRef.current = true;
+      fetchPage(null, false);
     };
 
     window.addEventListener(eventName, handleInvalidated);

@@ -27,10 +27,10 @@ async function generateAndSaveTagEmbedding(
 
   try {
     const embeddingRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           model: "models/gemini-embedding-001",
           content: { parts: [{ text: tagName }] },
@@ -161,7 +161,9 @@ export async function POST(request: Request) {
         accessToken,
       );
       // 新規作成成功後、非同期でembeddingを生成・保存（レスポンスをブロックしない）
-      generateAndSaveTagEmbedding(created.id, created.name).catch(() => {});
+      generateAndSaveTagEmbedding(created.id, created.name).catch((err) => {
+        console.warn("[POST /api/v1/tags] embedding generation failed:", err);
+      });
       return NextResponse.json(
         { data: toTagItem(created) },
         { status: 201 },

@@ -5,4 +5,5 @@ export interface AuthUser {
   avatarUrl?: string;
   displayUserId: string | null;
   introduction: string | null;
+  links: Array<{ url: string }> | null;
 }

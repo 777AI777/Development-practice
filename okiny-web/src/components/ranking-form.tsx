@@ -177,6 +177,11 @@ export function RankingForm({
     }
   }, [initialTagName, initialNewTagName]);
 
+  // ユーザーが入力を修正したらバリデーションエラーを自動クリア
+  useEffect(() => {
+    setErrorMessage(null);
+  }, [form, newTagName]);
+
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const [navigationDialogOpen, setNavigationDialogOpen] = useState(false);
@@ -196,7 +201,7 @@ export function RankingForm({
       activationConstraint: { distance: 5 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { distance: 5 },
+      activationConstraint: { distance: 8 },
     }),
     useSensor(KeyboardSensor),
   );
@@ -315,7 +320,7 @@ export function RankingForm({
 
       await onSubmit(resolvedForm);
       if (autosaveConfig) {
-        void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key);
+        void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key).catch((err) => console.warn("autosave cleanup failed:", err));
       }
       setIsDirty(false);
     } finally {
@@ -333,7 +338,7 @@ export function RankingForm({
       const success = await onSaveDraft(buildDraftPayload());
       if (success) {
         if (autosaveConfig) {
-          void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key);
+          void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key).catch((err) => console.warn("autosave cleanup failed:", err));
         }
         setForm({ title: "", tagId: "", items: ["", "", "", "", ""], isPublic: true });
         setNewTagName("");
@@ -376,7 +381,7 @@ export function RankingForm({
 
   const clearAutosaveAndBack = (callback: () => void) => {
     if (autosaveConfig) {
-      void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key);
+      void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key).catch((err) => console.warn("autosave cleanup failed:", err));
     }
     callback();
   };
@@ -556,6 +561,7 @@ export function RankingForm({
           id={dndContextId}
           sensors={sensors}
           onDragEnd={handleDragEnd}
+          onDragCancel={() => {/* no drag state to reset */}}
         >
           <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
             {form.items.map((item, index) => (

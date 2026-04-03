@@ -47,6 +47,7 @@ export interface UserProfile {
   avatarUrl: string | null;
   displayUserId: string | null;
   introduction: string | null;
+  links: ReadonlyArray<{ url: string }> | null;
 }
 
 export interface UserProfileWithCounts extends UserProfile {
@@ -144,4 +145,17 @@ export interface RecommendCursor {
   priority: number;
   createdAt: string;
   id: string;
+}
+
+export interface UserRelationship {
+  isFollowing: boolean;
+  isMuted: boolean;
+  isBlocked: boolean;
+  isBlockedBy: boolean;
+}
+
+export interface MutedWord {
+  id: string;
+  word: string;
+  createdAt: string;
 }

@@ -28,8 +28,9 @@ async function extractRateLimitIdentifier(request: NextRequest): Promise<string>
     return `cookie:${hash}`;
   }
 
-  const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded?.split(",")[0]?.trim() ?? "unknown";
+  const ip = request.headers.get("x-real-ip")
+    ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    ?? "unknown";
   return `ip:${ip}`;
 }
 

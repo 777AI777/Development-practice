@@ -104,6 +104,10 @@ export function SearchRankingsTab({
 
     lastRequestedQueryRef.current = normalizedQuery;
     searchIfActive(normalizedQuery);
+
+    return () => {
+      lastRequestedQueryRef.current = "";
+    };
   }, [normalizedQuery, reset, searchIfActive]);
 
   useEffect(() => {

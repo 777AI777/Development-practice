@@ -112,6 +112,7 @@ export function useSearch<TItem>({
         clearTimeout(debounceRef.current);
       }
       abortRef.current?.abort();
+      isMountSearchRef.current = true;
     };
   }, []);
 

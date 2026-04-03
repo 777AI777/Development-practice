@@ -201,6 +201,7 @@ export async function ensureResponseOk(response: Response): Promise<void> {
     return;
   }
   const detail = await response.text();
+  console.error(`[supabase-rest] error (${response.status})`);
   if (process.env.NODE_ENV !== "production") {
     console.error("[supabase-rest] error detail:", detail);
   }
@@ -248,12 +249,22 @@ async function attachBookmarkState(
   }));
 }
 
+function parseLinks(raw: unknown): ReadonlyArray<{ url: string }> | null {
+  if (!Array.isArray(raw)) return null;
+  const filtered = (raw as unknown[]).filter(
+    (l): l is { url: string } =>
+      l !== null && typeof l === "object" && "url" in (l as Record<string, unknown>),
+  );
+  return filtered.length > 0 ? filtered.slice(0, 5) : null;
+}
+
 function mapUserProfileRow(row: {
   id: string;
   display_name: string;
   avatar_url: string | null;
   display_user_id: string | null;
   introduction?: string | null;
+  links?: unknown;
 }): UserProfile {
   return {
     id: row.id,
@@ -261,6 +272,7 @@ function mapUserProfileRow(row: {
     avatarUrl: row.avatar_url,
     displayUserId: row.display_user_id,
     introduction: row.introduction ?? null,
+    links: parseLinks(row.links),
   };
 }
 
@@ -313,6 +325,7 @@ export function mapPublicRankingWithAuthorRow(row: {
       avatarUrl: row.author_avatar_url,
       displayUserId: row.author_display_user_id,
       introduction: null,
+      links: null,
     },
   };
 }
@@ -745,7 +758,7 @@ export async function getUserProfile(
 
   const env = readSupabaseServiceRoleEnv();
   const query = new URLSearchParams({
-    select: "id,display_name,avatar_url,display_user_id,introduction",
+    select: "id,display_name,avatar_url,display_user_id,introduction,links",
     limit: "1",
   });
   query.set(lookup.column, `eq.${lookup.value}`);
@@ -774,6 +787,8 @@ export async function getUserProfile(
     display_name: string;
     avatar_url: string | null;
     display_user_id: string | null;
+    introduction?: string | null;
+    links?: unknown;
   }>;
 
   const row = rows[0];
@@ -883,6 +898,7 @@ export async function listPublicRankingsByTagWithAuthors(params: {
         avatarUrl: null,
         displayUserId: null,
         introduction: null,
+        links: null,
       },
     }));
   }
@@ -1022,6 +1038,7 @@ export async function listBookmarkedRankings(params: {
       avatarUrl: null,
       displayUserId: null,
       introduction: null,
+      links: null,
     },
   }));
 }
@@ -1131,6 +1148,7 @@ function mapUserProfileRowWithCounts(row: {
   follower_count: number;
   following_count: number;
   introduction?: string | null;
+  links?: unknown;
 }): UserProfileWithCounts {
   return {
     id: row.id,
@@ -1138,6 +1156,7 @@ function mapUserProfileRowWithCounts(row: {
     avatarUrl: row.avatar_url,
     displayUserId: row.display_user_id,
     introduction: row.introduction ?? null,
+    links: parseLinks(row.links),
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
   };
@@ -1157,7 +1176,7 @@ export async function getUserProfileWithCounts(
   }
 
   const query = new URLSearchParams({
-    select: "id,display_name,avatar_url,display_user_id,introduction,follower_count,following_count",
+    select: "id,display_name,avatar_url,display_user_id,introduction,links,follower_count,following_count",
     limit: "1",
   });
   query.set(lookup.column, `eq.${lookup.value}`);
@@ -1179,6 +1198,8 @@ export async function getUserProfileWithCounts(
     display_name: string;
     avatar_url: string | null;
     display_user_id: string | null;
+    introduction?: string | null;
+    links?: unknown;
     follower_count: number;
     following_count: number;
   }>;
@@ -1196,3 +1217,26 @@ export {
   listFollowing,
   listFollowingRankings,
 } from "./supabase-rest-follows";
+
+export {
+  addMute,
+  removeMute,
+  getMutedUserIds,
+  listMutedUsers,
+} from "./supabase-rest-mutes";
+
+export {
+  addBlock,
+  removeBlock,
+  getBlockedUserIds,
+  isBlockedBy,
+  listBlockedUsers,
+  getRelationship,
+} from "./supabase-rest-blocks";
+
+export {
+  addMutedWord,
+  removeMutedWord,
+  listMutedWords,
+  getMutedWordStrings,
+} from "./supabase-rest-muted-words";

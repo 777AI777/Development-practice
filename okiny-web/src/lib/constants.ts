@@ -44,6 +44,8 @@ export const SCROLL_KEY_RANKINGS_LIST = "scroll:rankings-list";
 
 export const SCROLL_KEY_BOOKMARKS = "scroll:bookmarks";
 
+export const SCROLL_KEY_MUTED_BLOCKED = "scroll:muted-blocked";
+
 // --- MyRank Cache Constants ---
 
 export const MYRANK_CACHE_KEY = "okiny:myrank";

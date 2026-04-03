@@ -182,8 +182,9 @@ export async function listFollowingRankings(params: {
 
   if (!response.ok) {
     const detail = await response.text();
+    console.error(`[listFollowingRankings] failed (${response.status})`);
     if (process.env.NODE_ENV !== "production") {
-      console.error("[listFollowingRankings] failed:", detail);
+      console.error("[listFollowingRankings] detail:", detail);
     }
     throw new Error(`list_following_rankings failed (${response.status})`);
   }

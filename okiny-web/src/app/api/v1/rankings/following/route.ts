@@ -7,6 +7,8 @@ import {
 } from "@/lib/supabase/auth-guard";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { listFollowingRankings } from "@/lib/supabase-rest";
+import { getMutedWordStrings } from "@/lib/supabase-rest-muted-words";
+import { filterByMutedWords } from "@/lib/muted-word-filter";
 import { decodeSearchCursor } from "@/lib/search-mappers";
 import { FOLLOWING_FEED_LIMIT } from "@/lib/constants";
 
@@ -80,14 +82,23 @@ export async function GET(request: NextRequest) {
   const cursor = cursorStr ? decodeSearchCursor(cursorStr) : null;
 
   try {
-    const result = await listFollowingRankings({
-      viewerUserId: auth.userId,
-      accessToken: auth.accessToken,
-      limit,
-      cursor,
-    });
+    const [result, mutedWords] = await Promise.all([
+      listFollowingRankings({
+        viewerUserId: auth.userId,
+        accessToken: auth.accessToken,
+        limit,
+        cursor,
+      }),
+      getMutedWordStrings({
+        userId: auth.userId,
+        accessToken: auth.accessToken,
+      }),
+    ]);
 
-    return NextResponse.json({ data: result });
+    const filteredItems = filterByMutedWords(result.items, mutedWords);
+    const filteredResult = { ...result, items: filteredItems };
+
+    return NextResponse.json({ data: filteredResult });
   } catch (error) {
     console.error("[GET /api/v1/rankings/following] failed");
     if (process.env.NODE_ENV !== "production") {

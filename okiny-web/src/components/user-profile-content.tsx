@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Suspense,
   useCallback,
@@ -15,6 +15,7 @@ import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { FollowButton } from "@/components/follow-button";
 import { usePageTransition } from "@/components/page-transition-provider";
+import { UserActionMenu } from "@/components/user-action-menu";
 import { RankingCard } from "@/components/ranking-card";
 import { useToast } from "@/components/toast-provider";
 import { useDisplayUserIdCheck } from "@/hooks/use-display-user-id-check";
@@ -23,6 +24,7 @@ import type {
   PublicRankingWithAuthor,
   PublishedRanking,
   UserProfileWithCounts,
+  UserRelationship,
 } from "@/lib/types";
 import {
   buildUserProfilePath,
@@ -34,27 +36,8 @@ import {
 interface UserProfileContentProps {
   profile: UserProfileWithCounts;
   rankings: readonly PublishedRanking[];
-  initialIsFollowing: boolean;
+  initialRelationship: UserRelationship;
   isOwnProfile: boolean;
-}
-
-function PencilIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-      <path d="m15 5 4 4" />
-    </svg>
-  );
 }
 
 function MoreVerticalIcon() {
@@ -110,368 +93,151 @@ function StatLink({
 const MAX_INTRODUCTION_LENGTH = 200;
 const MAX_DISPLAY_NAME_LENGTH = 30;
 
-function IntroductionInlineEditor({
-  currentIntroduction,
-  onClose,
-}: {
-  currentIntroduction: string | null;
-  onClose: () => void;
-}) {
-  const { pushToast } = useToast();
-  const { updateIntroduction } = useSessionUser();
-  const [value, setValue] = useState(currentIntroduction ?? "");
-  const [saving, setSaving] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    textareaRef.current?.focus();
-  }, []);
-
-  const normalized = value.trim();
-  const isDirty = normalized !== (currentIntroduction ?? "");
-  const canSave = isDirty && normalized.length <= MAX_INTRODUCTION_LENGTH;
-
-  const handleSave = useCallback(async () => {
-    if (!canSave || saving) return;
-    setSaving(true);
-    try {
-      const status = await updateIntroduction(normalized);
-      if (status === "success") {
-        pushToast({ type: "success", message: "自己紹介を更新しました。" });
-        onClose();
-        return;
-      }
-      pushToast({
-        type: "error",
-        message:
-          status === "invalid"
-            ? "自己紹介は200文字以内で入力してください。"
-            : "自己紹介の更新に失敗しました。",
-      });
-    } finally {
-      setSaving(false);
-    }
-  }, [canSave, saving, normalized, updateIntroduction, pushToast, onClose]);
-
+function LinkIcon() {
   return (
-    <div className="mt-3 w-full">
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        maxLength={MAX_INTRODUCTION_LENGTH}
-        rows={3}
-        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        placeholder="自己紹介を入力（例：好きなものや最近ハマっていることなど）"
-      />
-      <div className="mt-1.5 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
-          {value.length}/{MAX_INTRODUCTION_LENGTH}
-        </span>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
-          >
-            キャンセル
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!canSave || saving}
-            className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition disabled:opacity-60"
-          >
-            {saving ? "保存中..." : "保存"}
-          </button>
-        </div>
-      </div>
-    </div>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
   );
 }
 
-function ProfileEditForm({ onClose }: { onClose: () => void }) {
-  const { pushToast } = useToast();
-  const { user, updateDisplayName, updateDisplayUserId, updateIntroduction } =
-    useSessionUser();
+function getDomainInfo(url: string): { label: string; icon: React.ReactNode } {
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, "");
 
-  const [displayName, setDisplayName] = useState(user?.name ?? "");
-  const [displayUserId, setDisplayUserId] = useState(
-    user?.displayUserId ?? "",
-  );
-  const [introduction, setIntroduction] = useState(user?.introduction ?? "");
-  const [saving, setSaving] = useState(false);
-
-  const normalizedDisplayUserId = normalizeDisplayUserId(displayUserId);
-  const isUserIdDirty = normalizedDisplayUserId !== (user?.displayUserId ?? "");
-  const checkValue = isUserIdDirty ? normalizedDisplayUserId : "";
-  const { status: availabilityStatus } = useDisplayUserIdCheck(checkValue);
-
-  const isNameDirty = displayName.trim() !== (user?.name ?? "");
-  const normalizedIntroduction = introduction.trim();
-  const isIntroDirty = normalizedIntroduction !== (user?.introduction ?? "");
-
-  const hasChanges = isNameDirty || isUserIdDirty || isIntroDirty;
-
-  const nameValid = displayName.trim().length > 0;
-  const userIdValid =
-    !isUserIdDirty ||
-    (normalizedDisplayUserId.length > 0 &&
-      availabilityStatus === "available");
-  const introValid = normalizedIntroduction.length <= 200;
-
-  const canSave = hasChanges && nameValid && userIdValid && introValid && !saving;
-
-  const handleSave = useCallback(async () => {
-    if (!canSave) return;
-    setSaving(true);
-
-    try {
-      const results: string[] = [];
-
-      if (isNameDirty) {
-        const status = await updateDisplayName(displayName.trim());
-        if (status !== "success") {
-          pushToast({
-            type: "error",
-            message:
-              status === "invalid"
-                ? "表示名は1〜30文字で入力してください。"
-                : "表示名の更新に失敗しました。",
-          });
-          return;
-        }
-        results.push("表示名");
-      }
-
-      if (isUserIdDirty) {
-        const status = await updateDisplayUserId(normalizedDisplayUserId);
-        if (status !== "success") {
-          pushToast({
-            type: "error",
-            message:
-              status === "conflict"
-                ? "そのユーザーIDはすでに使われています。"
-                : status === "invalid"
-                  ? "ユーザーIDは3〜20文字の英小文字・数字・_で入力してください。"
-                  : "ユーザーIDの更新に失敗しました。",
-          });
-          return;
-        }
-        results.push("ユーザーID");
-      }
-
-      if (isIntroDirty) {
-        const status = await updateIntroduction(normalizedIntroduction);
-        if (status !== "success") {
-          pushToast({
-            type: "error",
-            message:
-              status === "invalid"
-                ? "自己紹介は200文字以内で入力してください。"
-                : "自己紹介の更新に失敗しました。",
-          });
-          return;
-        }
-        results.push("自己紹介");
-      }
-
-      pushToast({
-        type: "success",
-        message: `${results.join("・")}を更新しました。`,
-      });
-      onClose();
-    } finally {
-      setSaving(false);
+    if (hostname.includes("x.com") || hostname.includes("twitter.com")) {
+      return { label: "X", icon: <span className="text-xs font-bold">{"\u{1D54F}"}</span> };
     }
-  }, [
-    canSave,
-    isNameDirty,
-    isUserIdDirty,
-    isIntroDirty,
-    displayName,
-    normalizedDisplayUserId,
-    normalizedIntroduction,
-    updateDisplayName,
-    updateDisplayUserId,
-    updateIntroduction,
-    pushToast,
-    onClose,
-  ]);
+    if (hostname.includes("instagram.com")) {
+      return { label: "Instagram", icon: <span className="text-xs">{"\uD83D\uDCF7"}</span> };
+    }
+    if (hostname.includes("youtube.com") || hostname.includes("youtu.be")) {
+      return { label: "YouTube", icon: <span className="text-xs">{"\u25B6"}</span> };
+    }
+    if (hostname.includes("tiktok.com")) {
+      return { label: "TikTok", icon: <span className="text-xs">{"\u266A"}</span> };
+    }
+    if (hostname.includes("github.com")) {
+      return { label: "GitHub", icon: <span className="text-xs">{"\u2328"}</span> };
+    }
+    if (hostname.includes("note.com")) {
+      return { label: "note", icon: <span className="text-xs">{"\uD83D\uDCDD"}</span> };
+    }
 
-  return (
-    <div className="border-b border-border px-4 py-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-foreground">プロフィール編集</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label="閉じる"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <div className="mt-4 space-y-4">
-        {/* 表示名 */}
-        <div>
-          <label
-            htmlFor="profile-edit-name"
-            className="mb-1 block text-xs font-semibold text-muted-foreground"
-          >
-            表示名
-          </label>
-          <input
-            id="profile-edit-name"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            maxLength={MAX_DISPLAY_NAME_LENGTH}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="表示名を入力"
-          />
-          <p className="mt-1 text-right text-xs text-muted-foreground">
-            {displayName.length}/{MAX_DISPLAY_NAME_LENGTH}
-          </p>
-        </div>
-
-        {/* ユーザーID */}
-        <div>
-          <label
-            htmlFor="profile-edit-user-id"
-            className="mb-1 block text-xs font-semibold text-muted-foreground"
-          >
-            ユーザーID
-          </label>
-          <div className="flex items-center rounded-md border border-border bg-background px-3">
-            <span className="text-sm text-muted-foreground">@</span>
-            <input
-              id="profile-edit-user-id"
-              value={displayUserId}
-              onChange={(e) => setDisplayUserId(e.target.value)}
-              maxLength={DISPLAY_USER_ID_MAX_LENGTH}
-              className="w-full bg-transparent px-1 py-2 text-sm text-foreground focus:outline-none"
-              placeholder="okiny_user"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-            />
-          </div>
-          <div className="mt-1 flex items-center justify-between">
-            <div>
-              {availabilityStatus === "checking" && (
-                <span className="text-xs text-muted-foreground">確認中...</span>
-              )}
-              {availabilityStatus === "available" && (
-                <span className="text-xs text-green-600">✓ 利用可能</span>
-              )}
-              {availabilityStatus === "taken" && (
-                <span className="text-xs text-destructive">
-                  ✗ このIDは既に使われています
-                </span>
-              )}
-              {availabilityStatus === "error" && (
-                <span className="text-xs text-destructive">確認に失敗しました</span>
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {normalizedDisplayUserId.length}/{DISPLAY_USER_ID_MAX_LENGTH}
-            </span>
-          </div>
-        </div>
-
-        {/* 自己紹介 */}
-        <div>
-          <label
-            htmlFor="profile-edit-intro"
-            className="mb-1 block text-xs font-semibold text-muted-foreground"
-          >
-            自己紹介
-          </label>
-          <textarea
-            id="profile-edit-intro"
-            value={introduction}
-            onChange={(e) => setIntroduction(e.target.value)}
-            maxLength={MAX_INTRODUCTION_LENGTH}
-            rows={3}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="好きなものや最近ハマっていることなど"
-          />
-          <p className="mt-1 text-right text-xs text-muted-foreground">
-            {introduction.length}/{MAX_INTRODUCTION_LENGTH}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 flex gap-2">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!canSave}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition disabled:opacity-60"
-        >
-          {saving ? "保存中..." : "保存"}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={saving}
-          className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
-        >
-          キャンセル
-        </button>
-      </div>
-    </div>
-  );
+    return { label: hostname, icon: <LinkIcon /> };
+  } catch {
+    return { label: url, icon: <LinkIcon /> };
+  }
 }
 
 function UserProfileContentInner({
   profile,
   rankings,
-  initialIsFollowing,
+  initialRelationship,
   isOwnProfile,
 }: UserProfileContentProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signalReady } = usePageTransition();
-  const { user } = useSessionUser();
+  const { pushToast } = useToast();
+  const { user, updateDisplayName, updateDisplayUserId, updateIntroduction, updateLinks } =
+    useSessionUser();
   const impressionSentRef = useRef(false);
-  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  const [isFollowing, setIsFollowing] = useState(initialRelationship.isFollowing);
   const [followerCount, setFollowerCount] = useState(profile.followerCount);
-  const [editingIntroduction, setEditingIntroduction] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(
+    isOwnProfile && searchParams.get("edit") === "true",
+  );
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // URL (searchParams) is the SSoT for editingProfile.
+  // editingProfile is intentionally excluded from deps — reacts only to URL changes, not state changes.
+  useEffect(() => {
+    if (isOwnProfile) {
+      const shouldEdit = searchParams.get("edit") === "true";
+      if (shouldEdit !== editingProfile) {
+        setEditingProfile(shouldEdit);
+      }
+    }
+  }, [searchParams, isOwnProfile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ローカル表示用: ユーザーメタデータが更新されたら即反映
   const displayIntroduction = isOwnProfile
     ? (user?.introduction ?? profile.introduction)
     : profile.introduction;
 
+  // --- Inline profile edit state ---
+  const [editName, setEditName] = useState(user?.name ?? profile.displayName);
+  const [editUserId, setEditUserId] = useState(user?.displayUserId ?? profile.displayUserId ?? "");
+  const [editIntroduction, setEditIntroduction] = useState(displayIntroduction ?? "");
+  const [editLinks, setEditLinks] = useState<Array<{ url: string }>>(
+    (user?.links ?? profile.links ?? []).map((l) => ({ url: l.url })),
+  );
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const normalizedEditUserId = normalizeDisplayUserId(editUserId);
+  const isEditUserIdDirty = normalizedEditUserId !== (user?.displayUserId ?? profile.displayUserId ?? "");
+  const editUserIdCheckValue = isEditUserIdDirty ? normalizedEditUserId : "";
+  const { status: editUserIdAvailability } = useDisplayUserIdCheck(editUserIdCheckValue);
+
+  const isEditNameDirty = editName.trim() !== (user?.name ?? profile.displayName);
+  const normalizedEditIntro = editIntroduction.trim();
+  const isEditIntroDirty = normalizedEditIntro !== (displayIntroduction ?? "");
+
+  const currentLinks = user?.links ?? profile.links ?? [];
+  const normalizeLinks = (links: ReadonlyArray<{ url: string }>) =>
+    links.filter((l) => l.url.trim()).map((l) => ({ url: l.url.trim() }));
+  const isEditLinksDirty =
+    JSON.stringify(normalizeLinks(editLinks)) !== JSON.stringify(normalizeLinks(currentLinks));
+
+  const hasProfileChanges = isEditNameDirty || isEditUserIdDirty || isEditIntroDirty || isEditLinksDirty;
+  const editNameValid = editName.trim().length > 0;
+  const editUserIdValid = !isEditUserIdDirty || (normalizedEditUserId.length > 0 && editUserIdAvailability === "available");
+  const editIntroValid = normalizedEditIntro.length <= MAX_INTRODUCTION_LENGTH;
+  const editLinksValid = editLinks.every((l) => {
+    if (!l.url.trim()) return true;
+    try {
+      const parsed = new URL(l.url.trim());
+      return ["http:", "https:"].includes(parsed.protocol);
+    } catch {
+      return false;
+    }
+  });
+  const canSaveProfile = hasProfileChanges && editNameValid && editUserIdValid && editIntroValid && editLinksValid && !savingProfile;
+
+  // Re-initialize edit state when entering edit mode
+  useEffect(() => {
+    if (editingProfile) {
+      setEditName(user?.name ?? profile.displayName);
+      setEditUserId(user?.displayUserId ?? profile.displayUserId ?? "");
+      setEditIntroduction(displayIntroduction ?? "");
+      setEditLinks((user?.links ?? profile.links ?? []).map(l => ({ url: l.url })));
+    }
+  }, [editingProfile]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     signalReady();
-  }, [signalReady]);
+  }, [signalReady, searchParams]);
 
   useEffect(() => {
     setFollowerCount(profile.followerCount);
   }, [profile.followerCount]);
 
   useEffect(() => {
-    setIsFollowing(initialIsFollowing);
-  }, [initialIsFollowing]);
+    setIsFollowing(initialRelationship.isFollowing);
+  }, [initialRelationship.isFollowing]);
 
   useEffect(() => {
     if (impressionSentRef.current || rankings.length === 0) {
@@ -524,118 +290,346 @@ function UserProfileContentInner({
     [isFollowing],
   );
 
+  const handleProfileSave = useCallback(async () => {
+    if (!canSaveProfile) return;
+    setSavingProfile(true);
+
+    try {
+      const results: string[] = [];
+
+      if (isEditNameDirty) {
+        const status = await updateDisplayName(editName.trim());
+        if (status !== "success") {
+          pushToast({
+            type: "error",
+            message:
+              status === "invalid"
+                ? "表示名は1〜30文字で入力してください。"
+                : "表示名の更新に失敗しました。",
+          });
+          return;
+        }
+        results.push("表示名");
+      }
+
+      if (isEditUserIdDirty) {
+        const status = await updateDisplayUserId(normalizedEditUserId);
+        if (status !== "success") {
+          pushToast({
+            type: "error",
+            message:
+              status === "conflict"
+                ? "そのユーザーIDはすでに使われています。"
+                : status === "invalid"
+                  ? "ユーザーIDは3〜20文字の英小文字・数字・_で入力してください。"
+                  : "ユーザーIDの更新に失敗しました。",
+          });
+          return;
+        }
+        results.push("ユーザーID");
+      }
+
+      if (isEditIntroDirty) {
+        const status = await updateIntroduction(normalizedEditIntro);
+        if (status !== "success") {
+          pushToast({
+            type: "error",
+            message:
+              status === "invalid"
+                ? "自己紹介は200文字以内で入力してください。"
+                : "自己紹介の更新に失敗しました。",
+          });
+          return;
+        }
+        results.push("自己紹介");
+      }
+
+      if (isEditLinksDirty) {
+        const validLinks = editLinks.filter(l => l.url.trim());
+        const status = await updateLinks(validLinks);
+        if (status !== "success") {
+          pushToast({
+            type: "error",
+            message: status === "invalid"
+              ? "リンクのURLが正しくありません。"
+              : "リンクの更新に失敗しました。",
+          });
+          return;
+        }
+        results.push("リンク");
+      }
+
+      pushToast({ type: "success", message: `${results.join("・")}を更新しました。` });
+      router.replace(profilePath);
+    } finally {
+      setSavingProfile(false);
+    }
+  }, [canSaveProfile, isEditNameDirty, isEditUserIdDirty, isEditIntroDirty, isEditLinksDirty, editName, normalizedEditUserId, normalizedEditIntro, editLinks, updateDisplayName, updateDisplayUserId, updateIntroduction, updateLinks, pushToast, router, profilePath]);
+
   return (
     <AppShell>
       {/* AppShellのpx-4, py-6を打ち消してフルブリードの白背景にする */}
       <div className="-mx-4 -mt-6 min-h-screen bg-card">
-        <div className="mb-2 px-4 pt-4">
+        <div className="px-4 pt-2">
           <BackButton />
         </div>
 
-        <section className="border-b border-border px-4 pb-5 pt-2">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-4">
-              {profile.avatarUrl ? (
-                <Image
-                  src={profile.avatarUrl}
-                  alt={`${profile.displayName}のアバター`}
-                  width={72}
-                  height={72}
-                  className="h-[72px] w-[72px] shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-                  {getUserInitial(profile.displayName, "?")}
-                </div>
-              )}
-
-              <div className="min-w-0">
-                <h1 className="truncate text-xl font-bold text-foreground">
-                  {profile.displayName}
-                </h1>
-                {profile.displayUserId ? (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    @{profile.displayUserId}
-                  </p>
-                ) : null}
-              </div>
+        <section className="border-b border-border px-4 pb-5">
+          {/* Edit mode: cancel/save buttons at top */}
+          {isOwnProfile && editingProfile ? (
+            <div className="flex justify-end gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => router.replace(profilePath)}
+                disabled={savingProfile}
+                className="rounded-md px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground disabled:opacity-60"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={handleProfileSave}
+                disabled={!canSaveProfile}
+                className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition disabled:opacity-60"
+              >
+                {savingProfile ? "保存中..." : "保存"}
+              </button>
             </div>
+          ) : null}
 
-            {isOwnProfile && !editingProfile ? (
-              <div ref={menuRef} className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((prev) => !prev)}
-                  className="rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                  aria-label="メニュー"
-                >
-                  <MoreVerticalIcon />
-                </button>
-                {menuOpen ? (
-                  <div className="absolute right-0 top-8 z-10 min-w-[160px] rounded-lg border border-border bg-card py-1 shadow-md">
+          {editingProfile ? (
+            <>
+              {/* Edit mode: inline editing */}
+              <div className="flex items-start gap-4">
+                {/* Avatar (same as view mode) */}
+                {profile.avatarUrl ? (
+                  <Image
+                    src={profile.avatarUrl}
+                    alt={`${profile.displayName}のアバター`}
+                    width={72}
+                    height={72}
+                    className="h-[72px] w-[72px] shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
+                    {getUserInitial(profile.displayName, "?")}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  {/* Display name input */}
+                  <input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    maxLength={MAX_DISPLAY_NAME_LENGTH}
+                    className="w-full truncate border-b border-border bg-transparent text-xl font-bold text-foreground focus:border-primary focus:outline-none"
+                    placeholder="表示名"
+                  />
+                  {/* @ID input */}
+                  <div className="mt-1 flex items-center">
+                    <span className="text-sm text-muted-foreground">@</span>
+                    <input
+                      value={editUserId}
+                      onChange={(e) => setEditUserId(e.target.value)}
+                      maxLength={DISPLAY_USER_ID_MAX_LENGTH}
+                      className="w-full bg-transparent text-sm text-muted-foreground focus:text-foreground border-b border-border focus:border-primary focus:outline-none"
+                      placeholder="user_id"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                  {/* Availability status */}
+                  <div className="mt-1">
+                    {editUserIdAvailability === "checking" && (
+                      <span className="text-xs text-muted-foreground">確認中...</span>
+                    )}
+                    {editUserIdAvailability === "available" && (
+                      <span className="text-xs text-green-600">✓ 利用可能</span>
+                    )}
+                    {editUserIdAvailability === "taken" && (
+                      <span className="text-xs text-destructive">✗ 使用済み</span>
+                    )}
+                    {editUserIdAvailability === "error" && (
+                      <span className="text-xs text-destructive">確認に失敗</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Introduction textarea */}
+              <textarea
+                value={editIntroduction}
+                onChange={(e) => setEditIntroduction(e.target.value)}
+                maxLength={MAX_INTRODUCTION_LENGTH}
+                rows={3}
+                className="mt-3 w-full bg-transparent text-sm text-muted-foreground border-b border-border focus:border-primary focus:outline-none resize-none"
+                placeholder="自己紹介を入力"
+              />
+              <p className="mt-1 text-right text-xs text-muted-foreground">
+                {editIntroduction.length}/{MAX_INTRODUCTION_LENGTH}
+              </p>
+
+              {/* Links Editor */}
+              <div className="mt-4">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">リンク（最大5件）</p>
+                {editLinks.map((link, index) => (
+                  <div key={index} className="mb-2 flex items-center gap-2">
+                    <input
+                      value={link.url}
+                      onChange={(e) => {
+                        const newLinks = editLinks.map((l, i) =>
+                          i === index ? { url: e.target.value } : l
+                        );
+                        setEditLinks(newLinks);
+                      }}
+                      className="flex-1 border-b border-border bg-transparent text-sm text-foreground focus:border-primary focus:outline-none"
+                      placeholder="https://example.com"
+                    />
                     <button
                       type="button"
                       onClick={() => {
-                        setMenuOpen(false);
-                        setEditingProfile(true);
+                        setEditLinks(editLinks.filter((_, i) => i !== index));
                       }}
-                      className="w-full px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
+                      className="shrink-0 rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                      aria-label="削除"
                     >
-                      プロフィール編集
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
                   </div>
+                ))}
+                {editLinks.length < 5 ? (
+                  <button
+                    type="button"
+                    onClick={() => setEditLinks([...editLinks, { url: "" }])}
+                    className="text-xs text-muted-foreground transition hover:text-foreground"
+                  >
+                    + リンクを追加
+                  </button>
                 ) : null}
               </div>
-            ) : null}
-
-            {!isOwnProfile ? (
-              <div className="shrink-0">
-                <FollowButton
-                  userId={profile.id}
-                  initialIsFollowing={isFollowing}
-                  onChange={handleFollowChange}
-                />
-              </div>
-            ) : null}
-          </div>
-
-          {/* 自己紹介セクション */}
-          {editingIntroduction ? (
-            <IntroductionInlineEditor
-              currentIntroduction={displayIntroduction}
-              onClose={() => setEditingIntroduction(false)}
-            />
+            </>
           ) : (
-            <div className="mt-3">
-              {displayIntroduction ? (
-                <div className="flex items-start gap-2">
-                  <p className="min-w-0 flex-1 text-sm text-muted-foreground whitespace-pre-line">
-                    {displayIntroduction}
-                  </p>
+            <>
+              {/* View mode */}
+              <div className="flex items-start justify-between">
+                <div className="flex min-w-0 items-center gap-4">
+                  {profile.avatarUrl ? (
+                    <Image
+                      src={profile.avatarUrl}
+                      alt={`${profile.displayName}のアバター`}
+                      width={72}
+                      height={72}
+                      className="h-[72px] w-[72px] shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
+                      {getUserInitial(profile.displayName, "?")}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <h1 className="truncate text-xl font-bold text-foreground">
+                      {isOwnProfile ? (user?.name ?? profile.displayName) : profile.displayName}
+                    </h1>
+                    {(isOwnProfile ? (user?.displayUserId ?? profile.displayUserId) : profile.displayUserId) ? (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        @{isOwnProfile ? (user?.displayUserId ?? profile.displayUserId) : profile.displayUserId}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
                   {isOwnProfile ? (
-                    <button
-                      type="button"
-                      onClick={() => setEditingIntroduction(true)}
-                      className="mt-0.5 shrink-0 rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                      aria-label="自己紹介を編集"
-                    >
-                      <PencilIcon />
-                    </button>
+                    <div ref={menuRef} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setMenuOpen((prev) => !prev)}
+                        className="rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                        aria-label="メニュー"
+                      >
+                        <MoreVerticalIcon />
+                      </button>
+                      {menuOpen ? (
+                        <div className="absolute right-0 top-8 z-10 min-w-[160px] rounded-lg border border-border bg-card py-1 shadow-md">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMenuOpen(false);
+                              router.push(`${profilePath}?edit=true`);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-foreground transition hover:bg-muted"
+                          >
+                            プロフィール編集
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {!isOwnProfile ? (
+                    <>
+                      <FollowButton
+                        userId={profile.id}
+                        initialIsFollowing={isFollowing}
+                        onChange={handleFollowChange}
+                      />
+                      <UserActionMenu
+                        userId={profile.id}
+                        displayName={profile.displayName}
+                        initialRelationship={{
+                          isMuted: initialRelationship.isMuted,
+                          isBlocked: initialRelationship.isBlocked,
+                        }}
+                      />
+                    </>
                   ) : null}
                 </div>
+              </div>
+
+              {/* Introduction (view only) */}
+              {displayIntroduction ? (
+                <p className="mt-3 text-sm text-muted-foreground whitespace-pre-line">
+                  {displayIntroduction}
+                </p>
               ) : isOwnProfile ? (
                 <button
                   type="button"
-                  onClick={() => setEditingIntroduction(true)}
-                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  onClick={() => router.push(`${profilePath}?edit=true`)}
+                  className="mt-3 text-sm text-muted-foreground/60 transition hover:text-muted-foreground"
                 >
-                  <PencilIcon />
-                  <span>自己紹介を追加</span>
+                  自己紹介を追加...
                 </button>
               ) : null}
-            </div>
+
+              {/* Profile Links */}
+              {(() => {
+                const profileLinks = isOwnProfile
+                  ? (user?.links ?? profile.links ?? [])
+                  : (profile.links ?? []);
+                return profileLinks.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    {profileLinks.map((link, index) => {
+                      const domain = getDomainInfo(link.url);
+                      return (
+                        <a
+                          key={index}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+                        >
+                          {domain.icon}
+                          <span className="underline underline-offset-2">{domain.label}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : null;
+              })()}
+            </>
           )}
 
+          {/* Stats (shown in both modes) */}
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
             <StatLink label="公開ランキング" value={rankings.length} />
             <StatLink
@@ -650,10 +644,6 @@ function UserProfileContentInner({
             />
           </div>
         </section>
-
-        {editingProfile ? (
-          <ProfileEditForm onClose={() => setEditingProfile(false)} />
-        ) : null}
 
         {rankingCards.length === 0 ? (
           <div className="px-4 py-12 text-center">
@@ -693,4 +683,3 @@ export function UserProfileContent(props: UserProfileContentProps) {
     </Suspense>
   );
 }
-

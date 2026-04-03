@@ -27,8 +27,9 @@ export async function GET(request: NextRequest) {
   if (!auth.ok) return authErrorResponse(auth);
 
   const url = new URL(request.url);
+  const rawQ = url.searchParams.get("q")?.replace(/[\s\u3000]+/g, " ").trim() ?? "";
   const parsed = searchParamsSchema.safeParse({
-    q: url.searchParams.get("q") ?? "",
+    q: rawQ,
     limit: url.searchParams.get("limit") ?? undefined,
     cursor: url.searchParams.get("cursor") ?? undefined,
   });
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { q, limit, cursor: cursorStr } = parsed.data;
-  const cursor = cursorStr ? decodeUserSearchCursor(cursorStr) : null;
+  const cursor = cursorStr ? decodeUserSearchCursor(cursorStr) ?? null : null;
 
   try {
     const result = await searchUsers({

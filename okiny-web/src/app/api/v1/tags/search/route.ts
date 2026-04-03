@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const { accessToken } = auth;
 
   const url = new URL(request.url);
-  const q = url.searchParams.get("q")?.trim() ?? "";
+  const q = url.searchParams.get("q")?.replace(/[\s\u3000]+/g, " ").trim() ?? "";
 
   const parsed = searchQuerySchema.safeParse(q);
   if (!parsed.success) {
@@ -55,10 +55,10 @@ export async function GET(request: Request) {
     if (rows.length < 3 && geminiApiKey) {
       try {
         const embeddingRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${geminiApiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "x-goog-api-key": geminiApiKey },
             body: JSON.stringify({
               model: "models/gemini-embedding-001",
               content: { parts: [{ text: normalizedQ }] },

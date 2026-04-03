@@ -9,8 +9,9 @@ import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { BookmarkButton } from "@/components/bookmark-button";
 import { usePageTransition } from "@/components/page-transition-provider";
+import { UserActionMenu } from "@/components/user-action-menu";
 import { formatSmartDate } from "@/lib/format-date";
-import type { PublishedRanking, UserProfile } from "@/lib/types";
+import type { PublishedRanking, UserProfile, UserRelationship } from "@/lib/types";
 import { buildUserProfilePath } from "@/lib/user-utils";
 
 interface RankingDetailContentProps {
@@ -19,12 +20,15 @@ interface RankingDetailContentProps {
   isOwner: boolean;
   /** 著者プロフィール */
   authorProfile?: UserProfile;
+  /** 著者との関係性（ミュート・ブロック状態） */
+  authorRelationship?: UserRelationship;
 }
 
 export function RankingDetailContent({
   ranking,
   isOwner,
   authorProfile,
+  authorRelationship,
 }: RankingDetailContentProps) {
   const router = useRouter();
   const { signalReady } = usePageTransition();
@@ -253,6 +257,18 @@ export function RankingDetailContent({
             <span className="text-xs text-muted-foreground">
               {formatSmartDate(ranking.createdAt)}
             </span>
+            {!isOwner && authorRelationship && (
+              <div className="ml-auto">
+                <UserActionMenu
+                  userId={authorProfile.id}
+                  displayName={authorProfile.displayName}
+                  initialRelationship={{
+                    isMuted: authorRelationship.isMuted,
+                    isBlocked: authorRelationship.isBlocked,
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
 

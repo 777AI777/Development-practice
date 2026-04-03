@@ -14,6 +14,7 @@ const paramsSchema = z.object({
 /** サーバーメモリ上の閲覧キャッシュ（24時間TTL） */
 const VIEW_CACHE = new Map<string, number>();
 const VIEW_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_VIEW_CACHE_SIZE = 10_000;
 
 function cleanExpiredEntries() {
   const now = Date.now();
@@ -54,8 +55,9 @@ export async function POST(
   if (auth.ok) {
     viewerKey = `user:${auth.userId}`;
   } else {
-    const forwarded = request.headers.get("x-forwarded-for");
-    const ip = forwarded?.split(",")[0]?.trim() ?? "unknown";
+    const ip = request.headers.get("x-real-ip")
+      ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      ?? "unknown";
     viewerKey = `ip:${ip}`;
   }
 
@@ -77,6 +79,21 @@ export async function POST(
   try {
     await incrementViewCount({ rankingId: id, accessToken });
     VIEW_CACHE.set(cacheKey, now);
+
+    while (VIEW_CACHE.size > MAX_VIEW_CACHE_SIZE) {
+      let oldestKey: string | undefined;
+      let oldestTimestamp = Infinity;
+      for (const [key, timestamp] of VIEW_CACHE) {
+        if (timestamp < oldestTimestamp) {
+          oldestTimestamp = timestamp;
+          oldestKey = key;
+        }
+      }
+      if (!oldestKey) {
+        break;
+      }
+      VIEW_CACHE.delete(oldestKey);
+    }
 
     // 認証済みユーザーのみ: ranking の tag_id を取得してアフィニティを更新（fire-and-forget）
     if (auth.ok) {

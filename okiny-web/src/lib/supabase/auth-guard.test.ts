@@ -38,6 +38,7 @@ describe("getAuthenticatedUserId", () => {
       userId: "user-google-001",
       accessToken: "jwt-token-abc",
       userName: null,
+      userAvatarUrl: null,
     });
   });
 
@@ -63,6 +64,7 @@ describe("getAuthenticatedUserId", () => {
       userId: "user-google-001",
       accessToken: "jwt-token-abc",
       userName: "Alice",
+      userAvatarUrl: null,
     });
   });
 

@@ -27,7 +27,19 @@ const BOOTSTRAP_CACHE_TTL_MS = 5 * 60 * 1000; // 5 分
  * モジュールスコープのタグ検索キャッシュ。
  * コンポーネント再マウント（ページ遷移→戻る）でも保持される。
  */
+const TAG_SEARCH_CACHE_MAX = 100;
 const tagSearchCache = new Map<string, TagItem[]>();
+
+function tagSearchCacheSet(key: string, value: TagItem[]): void {
+  // 上限超過時は最古のエントリ（Map先頭）を削除
+  if (tagSearchCache.size >= TAG_SEARCH_CACHE_MAX && !tagSearchCache.has(key)) {
+    const firstKey = tagSearchCache.keys().next().value;
+    if (firstKey !== undefined) {
+      tagSearchCache.delete(firstKey);
+    }
+  }
+  tagSearchCache.set(key, value);
+}
 
 export function invalidateTagSearchCache(query: string): void {
   const trimmedQuery = query.trim();
@@ -143,7 +155,7 @@ export function useTags(): UseTagsReturn {
 
         const json = await res.json();
         const results = (json.data ?? []) as TagItem[];
-        tagSearchCache.set(trimmedQuery, results);
+        tagSearchCacheSet(trimmedQuery, results);
         setSearchResults(results);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {

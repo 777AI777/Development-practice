@@ -39,6 +39,9 @@ interface ShellUser {
 }
 
 const SETTINGS_MENU_ITEMS: SidebarMenuItemConfig[] = [
+  { label: "ミュートしたユーザー", href: "/settings/muted-users", disabled: false },
+  { label: "ブロックしたユーザー", href: "/settings/blocked-users", disabled: false },
+  { label: "ミュートワード", href: "/settings/muted-words", disabled: false },
   { label: "通知設定", disabled: true, comingSoon: true },
   { label: "テーマ設定", disabled: true, comingSoon: true },
   { label: "利用規約", href: "/terms", disabled: false },
@@ -442,7 +445,7 @@ export function AppShell({ children }: AppShellProps) {
       </aside>
 
       <div
-        className="fixed inset-0 z-50"
+        className="fixed inset-0 z-40"
         onClick={handleSidebarClose}
         style={{
           backgroundColor: "rgba(0, 0, 0, 0.4)",

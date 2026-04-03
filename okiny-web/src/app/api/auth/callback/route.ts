@@ -18,7 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
 
-  if (!code) {
+  if (!code || code.trim() === "") {
     if (process.env.NODE_ENV !== "production") {
       console.warn("[auth/callback] Missing code parameter");
     }
@@ -33,8 +33,9 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
+    console.error("[auth/callback] exchangeCodeForSession failed");
     if (process.env.NODE_ENV !== "production") {
-      console.error("[auth/callback] exchangeCodeForSession failed:", error.message);
+      console.error("[auth/callback] detail:", error.message);
     }
     const url = request.nextUrl.clone();
     url.pathname = "/login";

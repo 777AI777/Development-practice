@@ -17,7 +17,7 @@ export function getUserInitial(name: string | undefined, fallback = ""): string 
 }
 
 export function normalizeDisplayUserId(value: string): string {
-  return value.trim().toLowerCase();
+  return value.normalize("NFKC").trim().toLowerCase();
 }
 
 export function isUuid(value: string): boolean {
