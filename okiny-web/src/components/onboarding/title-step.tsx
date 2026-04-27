@@ -56,10 +56,10 @@ export function TitleStep({
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-foreground">
-          ランキング名をつけよう
+          テーマを決めよう
         </h2>
         <p className="text-sm text-muted-foreground">
-          「{selectedTagDisplayName}」のランキング
+          「{selectedTagDisplayName}」について
         </p>
       </div>
 

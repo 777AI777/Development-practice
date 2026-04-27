@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { isFormEmpty } from "./is-form-empty";
 import type { RankingInput } from "../types";
 
-const EMPTY_ITEMS: RankingInput["items"] = ["", "", "", "", ""];
+const EMPTY_ITEMS: RankingInput["items"] = ["", "", ""];
 
 function makeForm(overrides: Partial<RankingInput> = {}): RankingInput {
   return {
@@ -10,6 +10,8 @@ function makeForm(overrides: Partial<RankingInput> = {}): RankingInput {
     tagId: "",
     items: EMPTY_ITEMS,
     isPublic: true,
+    borderColor: "#FFE5E5",
+    markerIcon: "Heart",
     ...overrides,
   };
 }
@@ -28,7 +30,7 @@ describe("isFormEmpty", () => {
   // 3. itemsの1つだけ入力 → false
   it("returns false when one item is filled", () => {
     expect(
-      isFormEmpty(makeForm({ items: ["First", "", "", "", ""] }))
+      isFormEmpty(makeForm({ items: ["First", "", ""] }))
     ).toBe(false);
   });
 
@@ -50,7 +52,7 @@ describe("isFormEmpty", () => {
       isFormEmpty(
         makeForm({
           title: "   ",
-          items: ["  ", " ", "　", "\t", "\n"],
+          items: ["  ", " ", "　"],
         }),
         "   "
       )
@@ -64,7 +66,7 @@ describe("isFormEmpty", () => {
         makeForm({
           title: "Best Movies",
           tagId: "tag-uuid",
-          items: ["Movie 1", "Movie 2", "Movie 3", "Movie 4", "Movie 5"],
+          items: ["Movie 1", "Movie 2", "Movie 3"],
         }),
         "movies"
       )
@@ -79,14 +81,14 @@ describe("isFormEmpty", () => {
   // Edge: items の途中だけ入力
   it("returns false when a middle item is filled", () => {
     expect(
-      isFormEmpty(makeForm({ items: ["", "", "Third", "", ""] }))
+      isFormEmpty(makeForm({ items: ["", "", "Third"] }))
     ).toBe(false);
   });
 
   // Edge: 最後の item だけ入力
   it("returns false when only the last item is filled", () => {
     expect(
-      isFormEmpty(makeForm({ items: ["", "", "", "", "Fifth"] }))
+      isFormEmpty(makeForm({ items: ["", "", "Third"] }))
     ).toBe(false);
   });
 });

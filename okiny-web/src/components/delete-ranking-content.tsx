@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
 import { DEMO_RANKING_ID } from "@/lib/demo-ranking";
@@ -58,15 +60,19 @@ export function DeleteRankingContent({ ranking }: DeleteRankingContentProps) {
 
   return (
     <AppShell>
+      <div className="mb-4 flex items-center gap-2">
+        <BackButton />
+        <h1 className="text-lg font-bold text-foreground">投稿の削除</h1>
+      </div>
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-3xl">
-            {"\u26A0\uFE0F"}
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
 
-          <h1 className="mt-4 text-xl font-bold text-foreground">
-            ランキングを削除しますか？
-          </h1>
+          <h2 className="mt-4 text-xl font-bold text-foreground">
+            投稿を削除しますか？
+          </h2>
 
           <p className="mt-2 text-sm font-medium text-foreground">
             {ranking.title}

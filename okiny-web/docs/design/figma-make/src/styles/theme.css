@@ -1,9 +1,11 @@
+@import "tailwindcss";
+
 :root {
   --primary: #005fcc;
   --primary-foreground: #ffffff;
   --destructive: #b00020;
   --destructive-foreground: #ffffff;
-  --background: #f3f5f7;
+  --background: #ffffff;
   --foreground: #1a1a1a;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
@@ -18,6 +20,39 @@
   --secondary-foreground: #1a1a1a;
   --popover: #ffffff;
   --popover-foreground: #1a1a1a;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --premium: #7c3aed;
+  --premium-foreground: #ffffff;
+}
+
+[data-theme="dark"] {
+  --primary: #1d9bf0;
+  --primary-foreground: #ffffff;
+  --destructive: #f4212e;
+  --destructive-foreground: #ffffff;
+  --background: #0f1419;
+  --foreground: #e7e9ea;
+  --card: #16202a;
+  --card-foreground: #e7e9ea;
+  --border: #2f3336;
+  --muted: #1e2a35;
+  --muted-foreground: #8b98a5;
+  --accent: #1e2a35;
+  --accent-foreground: #e7e9ea;
+  --input-background: #1e2a35;
+  --secondary: #1e2a35;
+  --secondary-foreground: #e7e9ea;
+  --popover: #16202a;
+  --popover-foreground: #e7e9ea;
+  --warning: #fbbf24;
+  --warning-foreground: #0f1419;
+  --success: #00ba7c;
+  --success-foreground: #ffffff;
+  --premium: #a78bfa;
+  --premium-foreground: #ffffff;
 }
 
 @theme inline {
@@ -44,6 +79,12 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-premium: var(--premium);
+  --color-premium-foreground: var(--premium-foreground);
 }
 
 * {

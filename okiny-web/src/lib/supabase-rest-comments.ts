@@ -104,6 +104,47 @@ export async function getLatestCommentsForRankings(params: {
 }
 
 /**
+ * 複数ランキングIDから各ランキングの投稿者（userId）が書いた最初のコメントを取得する。
+ * 投稿本文コメント表示用（投稿時に添付したコメント）。
+ */
+async function getAuthorCommentsForRankings(params: {
+  rankings: ReadonlyArray<{ id: string; userId: string }>;
+  accessToken: string;
+}): Promise<Map<string, string>> {
+  if (params.rankings.length === 0) return new Map();
+
+  const rankingIds = params.rankings.map((r) => r.id);
+  const inList = toPostgrestInList(rankingIds);
+  // 古い順で取得し、各ランキングの最初のコメントを投稿者コメントとして扱う
+  const query = new URLSearchParams({
+    select: "id,ranking_id,user_id,comment,created_at",
+    order: "created_at.asc",
+  });
+  query.set("ranking_id", `in.${inList}`);
+  query.set("limit", String(params.rankings.length * 3));
+
+  const response = await requestSupabase(`ranking_comments?${query.toString()}`, {
+    method: "GET",
+    accessToken: params.accessToken,
+  });
+  await ensureResponseOk(response);
+  const rows = (await response.json()) as SupabaseCommentRow[];
+
+  // rankingId → userId のマップ（投稿者確認用）
+  const authorByRanking = new Map(params.rankings.map((r) => [r.id, r.userId]));
+
+  const result = new Map<string, string>();
+  for (const row of rows) {
+    if (result.has(row.ranking_id)) continue;
+    const authorUserId = authorByRanking.get(row.ranking_id);
+    if (authorUserId === row.user_id) {
+      result.set(row.ranking_id, row.comment);
+    }
+  }
+  return result;
+}
+
+/**
  * 1つのランキングの最新コメント1件を取得する。
  */
 export async function getLatestCommentForRanking(params: {
@@ -128,8 +169,9 @@ export async function getLatestCommentForRanking(params: {
 }
 
 /**
- * ランキング一覧に最新コメントを付与する。
+ * ランキング一覧に最新コメントと投稿者コメントを付与する。
  * コメントが無いランキングには latestComment: null を設定。
+ * 投稿者が投稿時に書いたコメントは ranking.comment にセットする。
  */
 export async function attachCommentsToRankings(
   rankings: PublicRankingWithAuthor[],
@@ -137,9 +179,13 @@ export async function attachCommentsToRankings(
 ): Promise<PublicRankingWithAuthorAndComment[]> {
   if (rankings.length === 0) return [];
   const rankingIds = rankings.map((r) => r.id);
-  const commentsMap = await getLatestCommentsForRankings({ rankingIds, accessToken });
+  const [commentsMap, authorCommentsMap] = await Promise.all([
+    getLatestCommentsForRankings({ rankingIds, accessToken }),
+    getAuthorCommentsForRankings({ rankings, accessToken }),
+  ]);
   return rankings.map((ranking) => ({
     ...ranking,
+    comment: authorCommentsMap.get(ranking.id) ?? ranking.comment,
     latestComment: commentsMap.get(ranking.id) ?? null,
   }));
 }

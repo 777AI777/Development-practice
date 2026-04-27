@@ -6,7 +6,7 @@ export const TAG_QUERY_LIMITS = {
 
 export const POPULAR_TAGS_CACHE_REVALIDATE_SECONDS = 60 * 30;
 
-export const RANKING_ITEMS_PREVIEW_LIMIT = 5;
+export const RANKING_ITEMS_PREVIEW_LIMIT = 3;
 
 // --- Search Constants ---
 

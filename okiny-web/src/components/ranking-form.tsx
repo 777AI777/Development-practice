@@ -1,23 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
-
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import type { DragEndEvent } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { autosaveRepository } from "@/lib/autosave/client-repository";
 import { BackButton } from "@/components/back-button";
@@ -29,6 +12,8 @@ import { COMMENT_MAX_LENGTH } from "@/lib/constants";
 import { HttpPublishedApiClient, PublishedApiError } from "@/lib/publish/http-published-api-client";
 import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { RankingInput, RankingItems } from "@/lib/types";
+import { BORDER_COLORS, getAccentColor, getEffectiveBorderColor } from "@/components/shared/theme-colors";
+import { MARKER_ICONS, getMarkerIcon } from "@/components/shared/marker-icons";
 
 const apiClient = new HttpPublishedApiClient();
 
@@ -47,65 +32,51 @@ interface RankingFormProps {
 }
 
 function toRankingItems(items: string[]): RankingItems {
-  return [items[0] ?? "", items[1] ?? "", items[2] ?? "", items[3] ?? "", items[4] ?? ""];
+  return [items[0] ?? "", items[1] ?? "", items[2] ?? ""];
 }
 
-interface SortableItemProps {
-  id: string;
-  rank: number;
-  value: string;
-  onChange: (value: string) => void;
-}
+/* --- ChevronDown icon for accordion --- */
 
-function SortableItem({ id, rank, value, onChange }: SortableItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
-
-  const isFirst = rank === 1;
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition: transition ?? undefined,
-    opacity: isDragging ? 0.5 : 1,
-    borderBottom: "1px solid var(--border)",
-  };
-
+function ChevronDownIcon({ open }: { open: boolean }) {
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="flex items-center gap-2 px-3 py-3 bg-card sm:gap-3 sm:px-6"
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{
+        transform: open ? "rotate(180deg)" : "rotate(0deg)",
+        transition: "transform 0.2s ease",
+        flexShrink: 0,
+      }}
     >
-      <span
-        className="cursor-grab touch-none text-muted-foreground"
-        {...attributes}
-        {...listeners}
-      >
-        {"⠿"}
-      </span>
-      <span
-        className={`w-6 shrink-0 text-center sm:w-8 ${isFirst ? "text-xl font-bold sm:text-2xl" : "text-base font-semibold"}`}
-        style={{
-          color: isFirst
-            ? "var(--primary)"
-            : "var(--muted-foreground)",
-        }}
-      >
-        {rank}
-      </span>
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={`min-w-0 flex-1 border border-border rounded-md px-2 py-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none ${isFirst ? "text-base font-semibold" : "text-sm"}`}
-        placeholder={`順位 ${rank}`}
-      />
-    </div>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+/* --- Check icon for color selector --- */
+
+function CheckIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }
 
@@ -117,7 +88,7 @@ function validateInput(value: RankingInput, newTagName: string): string | null {
     return "タグは必須です。";
   }
   if (!value.items.some((item) => item.trim().length > 0)) {
-    return "ランキング順位は1つ以上入力してください。";
+    return "好きなものを1つ以上入力してください。";
   }
   return null;
 }
@@ -142,8 +113,10 @@ export function RankingForm({
       : {
           title: "",
           tagId: "",
-          items: ["", "", "", "", ""],
+          items: ["", "", ""],
           isPublic: true,
+          borderColor: "#FFE5E5",
+          markerIcon: "Heart",
         },
   );
   const [comment, setComment] = useState("");
@@ -155,6 +128,10 @@ export function RankingForm({
   const [isDirty, setIsDirty] = useState(false);
   const [autosavedAt, setAutosavedAt] = useState<Date | null>(null);
 
+  // アコーディオン state
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   // initialValue propの変更にフォームを追従させる（復元確認ダイアログ後など）
   // isDirtyがtrueの場合はユーザー編集中なので上書きしない
   // eslint-disable-next-line react-hooks/exhaustive-deps -- isDirtyは意図的に依存配列から除外
@@ -165,8 +142,6 @@ export function RankingForm({
   }, [initialValue]);
 
   // initialTagName, initialNewTagNameの変更にも追従する
-  // undefinedでない場合（空文字含む）はstateを更新する。
-  // undefinedは「まだ値が決まっていない」を意味するので無視する。
   // eslint-disable-next-line react-hooks/exhaustive-deps -- isDirtyは意図的に依存配列から除外
   useEffect(() => {
     if (!isDirty) {
@@ -191,42 +166,6 @@ export function RankingForm({
 
   // 破棄を意図的に選択したフラグ（beforeunloadの二重発火防止）
   const discardIntentionalRef = useRef(false);
-
-  const dndContextId = useId();
-  const itemIdsRef = useRef<string[]>(
-    Array.from({ length: 5 }, (_, i) => `item-${i}`),
-  );
-  const [itemIds, setItemIds] = useState<string[]>(itemIdsRef.current);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor),
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) {
-      return;
-    }
-    const oldIndex = itemIds.indexOf(String(active.id));
-    const newIndex = itemIds.indexOf(String(over.id));
-    if (oldIndex === -1 || newIndex === -1) {
-      return;
-    }
-    const newItemIds = arrayMove(itemIds, oldIndex, newIndex);
-    setItemIds(newItemIds);
-
-    setIsDirty(true);
-    setForm((prev) => {
-      const newItems = arrayMove([...prev.items], oldIndex, newIndex);
-      return { ...prev, items: toRankingItems(newItems) };
-    });
-  };
 
   const buildDraftPayload = useCallback(() => ({
     ...form,
@@ -344,7 +283,7 @@ export function RankingForm({
         if (autosaveConfig) {
           void autosaveRepository.delete(autosaveConfig.userId, autosaveConfig.key).catch((err) => console.warn("autosave cleanup failed:", err));
         }
-        setForm({ title: "", tagId: "", items: ["", "", "", "", ""], isPublic: true });
+        setForm({ title: "", tagId: "", items: ["", "", ""], isPublic: true, borderColor: "#FFE5E5", markerIcon: "Heart" });
         setComment("");
         setNewTagName("");
         setTagDisplayName("");
@@ -423,7 +362,6 @@ export function RankingForm({
     }
 
     if (isFormEmpty(form, newTagName)) {
-      // 空なら即戻る + autosave クリア
       clearAutosaveAndBack(onBack);
       return;
     }
@@ -444,27 +382,163 @@ export function RankingForm({
     }
   };
 
+  const accentColor = getAccentColor(form.borderColor);
+  const effectiveBorderColor = getEffectiveBorderColor(form.borderColor);
+
   return (
     <div className="space-y-4">
-      {/* Header: [← back] [title input] [spacer] */}
+      {/* Header: back + action buttons */}
       <div className="flex items-center justify-between gap-2">
         {onBack ? (
           <BackButton onClick={triggerBack} />
         ) : (
           <div className="h-8 w-8 shrink-0" />
         )}
-        <input
-          value={form.title}
-          onChange={(event) => setTitle(event.target.value)}
-          className="min-w-0 flex-1 rounded-md border border-border bg-transparent px-2 py-1 text-center text-base font-bold text-foreground shadow-none placeholder:font-bold placeholder:text-muted-foreground/40 focus:outline-none sm:text-xl"
-          placeholder="ランキングタイトル"
-        />
-        <div className="h-8 w-8 shrink-0" />
+        <div className="flex items-center gap-2">
+          {onDraftList ? (
+            <button
+              type="button"
+              onClick={onDraftList}
+              className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+            >
+              下書き一覧
+            </button>
+          ) : null}
+          {onSaveDraft ? (
+            <button
+              type="button"
+              onClick={() => void saveDraft()}
+              disabled={isSavingDraft}
+              className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
+            >
+              {isSavingDraft ? "保存中..." : "下書き保存"}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void submit()}
+            disabled={isSubmitting}
+            className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+          >
+            {isSubmitting ? "送信中..." : submitLabel}
+          </button>
+        </div>
       </div>
 
-      {/* Tag + action buttons row */}
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">
+      {/* autosave indicator */}
+      {autosaveConfig && autosavedAt ? (
+        <div className="flex justify-end">
+          <span className="text-xs text-muted-foreground">
+            {"自動保存済み "}
+            {autosavedAt.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        </div>
+      ) : null}
+
+      {/* カードプレビュー（borderColorと同期した枠） */}
+      <div
+        className="rounded-2xl border-2 overflow-hidden"
+        style={{
+          backgroundColor: "var(--card)",
+          borderColor: effectiveBorderColor,
+        }}
+      >
+        {/* タイトルエリア */}
+        <div
+          className="px-5 pt-5 pb-4"
+          style={{ borderBottom: `1px solid ${effectiveBorderColor}` }}
+        >
+          <input
+            value={form.title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full bg-transparent text-xl font-bold outline-none"
+            placeholder="テーマを入力"
+            style={{ color: "var(--foreground)" }}
+          />
+        </div>
+
+        {/* アイテム入力エリア（マーカーアイコン付き） */}
+        <div
+          className="px-5 py-4 space-y-4"
+          style={{ borderBottom: `1px solid ${effectiveBorderColor}` }}
+        >
+          {form.items.map((item, index) => {
+            const MarkerIcon = getMarkerIcon(form.markerIcon ?? "Heart");
+            return (
+            <div key={index} className="flex items-center gap-3">
+              <MarkerIcon
+                width={14}
+                height={14}
+                style={{ color: accentColor, flexShrink: 0 }}
+                aria-hidden="true"
+              />
+              <input
+                value={item}
+                onChange={(e) => setItem(index, e.target.value)}
+                placeholder={`好きなもの ${index + 1}`}
+                className="flex-1 bg-transparent text-base outline-none border-none"
+                style={{ color: "var(--foreground)" }}
+              />
+            </div>
+            );
+          })}
+        </div>
+
+        {/* コメントアコーディオン */}
+        <div style={{ borderBottom: `1px solid ${effectiveBorderColor}` }}>
+          <button
+            type="button"
+            onClick={() => setCommentOpen((prev) => !prev)}
+            className="flex w-full items-center justify-between px-5 py-3 text-left transition hover:bg-muted"
+            aria-expanded={commentOpen}
+          >
+            <span className="text-xs font-semibold" style={{ color: "var(--muted-foreground)" }}>
+              {"コメント"}
+              {comment.length > 0 && (
+                <span className="ml-2 text-xs" style={{ color: "var(--primary)" }}>
+                  {"入力済み"}
+                </span>
+              )}
+            </span>
+            <span style={{ color: "var(--muted-foreground)" }}>
+              <ChevronDownIcon open={commentOpen} />
+            </span>
+          </button>
+          {commentOpen && (
+            <div className="px-5 pb-4">
+              <textarea
+                id="ranking-comment"
+                value={comment}
+                onChange={(e) => {
+                  if (e.target.value.length > COMMENT_MAX_LENGTH) return;
+                  setComment(e.target.value);
+                  setIsDirty(true);
+                }}
+                maxLength={COMMENT_MAX_LENGTH}
+                rows={3}
+                placeholder="コメントを入力（140文字以内）"
+                className="w-full resize-none bg-transparent text-sm outline-none"
+                style={{
+                  color: "var(--foreground)",
+                  caretColor: "var(--foreground)",
+                  lineHeight: "1.5",
+                }}
+              />
+              <div className="flex items-center justify-end mt-1">
+                <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                  {comment.length}/{COMMENT_MAX_LENGTH}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* タグ選択エリア */}
+        <div className="px-5 py-4">
+          <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted-foreground)" }}>
+            {"タグ"}
+            <span style={{ color: "var(--destructive)" }}>{" *"}</span>
+          </p>
           <TagCombobox
             value={form.tagId}
             displayName={tagDisplayName}
@@ -472,145 +546,162 @@ export function RankingForm({
             onSelect={handleTagSelect}
             onCreate={handleTagCreate}
           />
+          {newTagName ? (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {"新しいタグは他のユーザーにも表示されます"}
+            </p>
+          ) : null}
         </div>
-        {onDraftList ? (
-          <button
-            type="button"
-            onClick={onDraftList}
-            className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
-          >
-            下書き一覧
-          </button>
-        ) : null}
-        {onSaveDraft ? (
-          <button
-            type="button"
-            onClick={() => void saveDraft()}
-            disabled={isSavingDraft}
-            className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-60"
-          >
-            {isSavingDraft ? "保存中..." : "下書き保存"}
-          </button>
-        ) : null}
+      </div>
+
+      {/* その他の設定アコーディオン */}
+      <div
+        className="rounded-2xl border overflow-hidden"
+        style={{
+          borderColor: "var(--border)",
+          backgroundColor: "var(--card)",
+        }}
+      >
         <button
           type="button"
-          onClick={() => void submit()}
-          disabled={isSubmitting}
-          className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+          onClick={() => setSettingsOpen((prev) => !prev)}
+          className="flex w-full items-center justify-between px-5 py-3.5 text-left transition hover:bg-muted"
+          aria-expanded={settingsOpen}
         >
-          {isSubmitting ? "送信中..." : submitLabel}
-        </button>
-      </div>
-      {newTagName ? (
-        <p className="text-xs text-muted-foreground">
-          {"新しいタグは他のユーザーにも表示されます"}
-        </p>
-      ) : null}
-
-      {/* 公開/非公開トグル */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            setIsDirty(true);
-            setForm((prev) => ({ ...prev, isPublic: !prev.isPublic }));
-          }}
-          className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-            form.isPublic ? "bg-primary" : "bg-muted"
-          }`}
-          role="switch"
-          aria-checked={form.isPublic}
-          aria-label={form.isPublic ? "公開" : "非公開"}
-        >
-          <span
-            className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-              form.isPublic ? "translate-x-6" : "translate-x-1"
-            }`}
-          />
-        </button>
-        <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-          {form.isPublic ? (
-            <>
-              {/* 公開アイコン（解錠） */}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-foreground" aria-hidden="true">
-                <path d="M14.5 1A4.5 4.5 0 0 0 10 5.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3.5V5.5a3 3 0 1 1 6 0v1a.75.75 0 0 0 1.5 0v-1A4.5 4.5 0 0 0 14.5 1Z" />
-              </svg>
-              {"公開"}
-            </>
-          ) : (
-            <>
-              {/* 非公開アイコン（施錠） */}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-foreground" aria-hidden="true">
-                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
-              </svg>
-              {"非公開"}
-            </>
-          )}
-        </span>
-        {autosaveConfig && autosavedAt ? (
-          <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-            {"自動保存済み "}
-            {autosavedAt.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+          <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+            {"その他の設定"}
           </span>
-        ) : null}
-      </div>
-      {form.isPublic ? (
-        <p className="text-xs text-muted-foreground">
-          {"公開にすると他のユーザーがこのランキングを参照できます"}
-        </p>
-      ) : null}
-
-      {/* コメント（任意） */}
-      <div className="space-y-1">
-        <label htmlFor="ranking-comment" className="text-sm font-medium text-foreground">
-          コメント
-          <span className="ml-1 text-xs font-normal text-muted-foreground">（任意・140文字以内）</span>
-        </label>
-        <textarea
-          id="ranking-comment"
-          value={comment}
-          onChange={(e) => {
-            setComment(e.target.value);
-            setIsDirty(true);
-          }}
-          maxLength={COMMENT_MAX_LENGTH}
-          rows={2}
-          placeholder="このランキングについてひとこと..."
-          className="w-full resize-none rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        />
-        <p className="text-right text-xs text-muted-foreground">
-          {comment.length}/{COMMENT_MAX_LENGTH}
-        </p>
-      </div>
-
-      {/* Ranking items */}
-      <div className="rounded-xl overflow-hidden bg-card">
-        <DndContext
-          id={dndContextId}
-          sensors={sensors}
-          onDragEnd={handleDragEnd}
-          onDragCancel={() => {/* no drag state to reset */}}
-        >
-          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-            {form.items.map((item, index) => (
-              <SortableItem
-                key={itemIds[index]}
-                id={itemIds[index]}
-                rank={index + 1}
-                value={item}
-                onChange={(v) => setItem(index, v)}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-        <div
-          className="py-3 px-3 sm:px-6 flex items-center justify-center cursor-not-allowed opacity-60 transition bg-card"
-          style={{ borderTop: "1px solid var(--border)" }}
-        >
-          <span className="text-sm font-medium text-muted-foreground">
-            + アイテムを追加 (Coming Soon)
+          <span style={{ color: "var(--muted-foreground)" }}>
+            <ChevronDownIcon open={settingsOpen} />
           </span>
-        </div>
+        </button>
+
+        {settingsOpen && (
+          <div className="px-5 pb-5 flex flex-col gap-5" style={{ borderTop: "1px solid var(--border)" }}>
+            {/* 枠線色セレクター */}
+            <div className="pt-4">
+              <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted-foreground)" }}>
+                {"枠線の色"}
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+                {BORDER_COLORS.map((color) => {
+                  const isSelected = form.borderColor === color.value;
+                  return (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => {
+                        setIsDirty(true);
+                        setForm((prev) => ({ ...prev, borderColor: color.value }));
+                      }}
+                      aria-label={color.label}
+                      title={color.label}
+                      className="flex-shrink-0 flex items-center justify-center rounded-full transition-transform hover:scale-110"
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        backgroundColor: getEffectiveBorderColor(color.value),
+                        border: isSelected
+                          ? "3px solid var(--foreground)"
+                          : "2px solid var(--border)",
+                        boxShadow: isSelected
+                          ? "0 0 0 2px var(--background), 0 0 0 4px var(--foreground)"
+                          : "none",
+                        outline: "none",
+                        color: getAccentColor(color.value),
+                      }}
+                    >
+                      {isSelected && <CheckIcon />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* マーカーアイコンセレクター */}
+            <div>
+              <p className="text-xs font-semibold mb-2" style={{ color: "var(--muted-foreground)" }}>
+                {"アイコン"}
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+                {MARKER_ICONS.map((iconDef) => {
+                  const isSelected = form.markerIcon === iconDef.name;
+                  const Icon = getMarkerIcon(iconDef.name);
+                  return (
+                    <button
+                      key={iconDef.name}
+                      type="button"
+                      onClick={() => {
+                        setIsDirty(true);
+                        setForm((prev) => ({ ...prev, markerIcon: iconDef.name }));
+                      }}
+                      aria-label={iconDef.label}
+                      title={iconDef.label}
+                      className="flex-shrink-0 flex items-center justify-center rounded-lg transition-colors"
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        backgroundColor: isSelected ? "var(--accent)" : "var(--muted)",
+                        border: isSelected
+                          ? `2px solid ${getAccentColor(form.borderColor)}`
+                          : "2px solid transparent",
+                        color: isSelected ? getAccentColor(form.borderColor) : "var(--muted-foreground)",
+                        outline: "none",
+                      }}
+                    >
+                      <Icon width={16} height={16} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 公開/非公開トグル */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDirty(true);
+                  setForm((prev) => ({ ...prev, isPublic: !prev.isPublic }));
+                }}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                  form.isPublic ? "bg-primary" : "bg-muted"
+                }`}
+                role="switch"
+                aria-checked={form.isPublic}
+                aria-label={form.isPublic ? "公開" : "非公開"}
+              >
+                <span
+                  className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                    form.isPublic ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+              <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                {form.isPublic ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-foreground" aria-hidden="true">
+                      <path d="M14.5 1A4.5 4.5 0 0 0 10 5.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-3.5V5.5a3 3 0 1 1 6 0v1a.75.75 0 0 0 1.5 0v-1A4.5 4.5 0 0 0 14.5 1Z" />
+                    </svg>
+                    {"公開"}
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-foreground" aria-hidden="true">
+                      <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
+                    </svg>
+                    {"非公開"}
+                  </>
+                )}
+              </span>
+            </div>
+            {form.isPublic ? (
+              <p className="-mt-3 text-xs text-muted-foreground">
+                {"公開にすると他のユーザーがこの投稿を参照できます"}
+              </p>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {errorMessage ? (

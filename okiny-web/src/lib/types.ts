@@ -1,6 +1,6 @@
-export const RANKING_ITEM_COUNT = 5;
+export const RANKING_ITEM_COUNT = 3;
 
-export type RankingItems = [string, string, string, string, string];
+export type RankingItems = [string, string, string];
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -19,6 +19,8 @@ export interface RankingInput {
   tagId: string;
   items: RankingItems;
   isPublic: boolean;
+  borderColor: string;
+  markerIcon: string;
 }
 
 export interface DraftLocalRecord extends RankingInput {
@@ -33,6 +35,7 @@ export interface PublishedRanking extends RankingInput {
   id: string;
   userId: string;
   tagName?: string;
+  comment?: string;
   createdAt: string;
   updatedAt: string;
   viewCount: number;
@@ -100,6 +103,8 @@ export interface SupabaseRankingRow {
   view_count: number;
   impression_count: number;
   bookmark_count: number;
+  border_color?: string | null;
+  marker_icon?: string | null;
   ranking_items?: Array<{
     rank: number;
     item_text: string;

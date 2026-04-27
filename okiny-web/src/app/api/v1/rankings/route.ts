@@ -14,6 +14,11 @@ import {
 } from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
 import { COMMENT_MAX_LENGTH } from "@/lib/constants";
+import { BORDER_COLORS } from "@/components/shared/theme-colors";
+import { MARKER_ICONS } from "@/components/shared/marker-icons";
+
+const validBorderColors = BORDER_COLORS.map((c) => c.value) as [string, ...string[]];
+const validMarkerIcons = MARKER_ICONS.map((i) => i.name) as [string, ...string[]];
 
 const rankingItemsSchema = z
   .array(
@@ -37,12 +42,14 @@ const createSchema = z.object({
     tagId: z.string().uuid("tagId must be a valid UUID."),
     items: rankingItemsSchema,
     isPublic: z.boolean().default(true),
+    borderColor: z.enum(validBorderColors).default("#FFE5E5"),
+    markerIcon: z.enum(validMarkerIcons).default("Heart"),
   }),
   comment: z.string().max(COMMENT_MAX_LENGTH, `コメントは${COMMENT_MAX_LENGTH}文字以内にしてください。`).optional(),
 });
 
 function toRankingItems(items: string[]): RankingItems {
-  return [items[0] ?? "", items[1] ?? "", items[2] ?? "", items[3] ?? "", items[4] ?? ""];
+  return [items[0] ?? "", items[1] ?? "", items[2] ?? ""];
 }
 
 export async function GET(request: Request) {
@@ -160,6 +167,8 @@ export async function POST(request: Request) {
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
       isPublic: parsed.data.ranking.isPublic,
+      borderColor: parsed.data.ranking.borderColor,
+      markerIcon: parsed.data.ranking.markerIcon,
       accessToken,
     });
 

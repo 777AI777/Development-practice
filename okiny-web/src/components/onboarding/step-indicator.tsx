@@ -5,7 +5,7 @@ interface StepIndicatorProps {
   totalSteps?: 1 | 2 | 3 | 4;
 }
 
-const STEP_LABELS = ["プロフィール", "タグ選択", "タイトル", "ランキング入力"] as const;
+const STEP_LABELS = ["プロフィール", "タグ選択", "タイトル", "好きなもの入力"] as const;
 
 export function StepIndicator({ currentStep, totalSteps = 4 }: StepIndicatorProps) {
   const labels = STEP_LABELS.slice(0, totalSteps);

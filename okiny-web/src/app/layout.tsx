@@ -41,6 +41,18 @@ export default async function RootLayout({
 
   return (
     <html lang="ja" className={notoSansJP.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+  try {
+    var t = localStorage.getItem("okiny-theme");
+    if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+  } catch {}
+`,
+          }}
+        />
+      </head>
       <body className="antialiased">
         <ToastProvider>
           <PageTransitionProvider>{children}</PageTransitionProvider>

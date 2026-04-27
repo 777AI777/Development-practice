@@ -1,18 +1,5 @@
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
 import { AppHeader } from "./AppHeader";
-
-type Screen =
-  | "login"
-  | "rankings"
-  | "ranking-detail"
-  | "ranking-new"
-  | "ranking-edit"
-  | "delete-confirm"
-  | "drafts"
-  | "search"
-  | "settings"
-  | "logout-confirm";
+import type { Screen } from "./types";
 
 interface LogoutConfirmScreenProps {
   onNavigate: (screen: Screen) => void;
@@ -20,64 +7,39 @@ interface LogoutConfirmScreenProps {
 
 export function LogoutConfirmScreen({ onNavigate }: LogoutConfirmScreenProps) {
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: "var(--background)" }}
-    >
+    <div className="min-h-screen bg-background">
       <AppHeader onNavigate={onNavigate} />
 
-      <main className="flex items-center justify-center px-4 py-16">
-        <Card
-          className="w-full max-w-[400px] shadow-sm rounded-xl"
-          style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--border)",
-          }}
-        >
-          <CardContent className="flex flex-col items-center gap-4 py-8">
-            <span className="text-4xl" role="img" aria-label="警告">
-              &#x26A0;&#xFE0F;
-            </span>
-
-            <h2
-              className="text-xl font-bold"
-              style={{ color: "var(--foreground)" }}
-            >
+      <div className="mx-auto max-w-[480px] px-4 pb-24 pt-4">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+            <h1 className="text-xl font-bold text-foreground">
               ログアウトしますか？
-            </h2>
+            </h1>
 
-            <p
-              className="text-sm text-center"
-              style={{ color: "var(--muted-foreground)" }}
-            >
+            <p className="mt-3 text-sm text-muted-foreground">
               ログアウトすると、再度ログインが必要になります。
             </p>
 
-            <div className="flex flex-col gap-3 w-full mt-2">
-              <Button
-                variant="destructive"
-                className="w-full"
+            <div className="mt-8 space-y-3">
+              <button
+                type="button"
                 onClick={() => onNavigate("login")}
-                style={{
-                  backgroundColor: "var(--destructive)",
-                  color: "var(--destructive-foreground)",
-                }}
+                className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
               >
                 ログアウトする
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full"
+              </button>
+              <button
+                type="button"
                 onClick={() => onNavigate("settings")}
-                style={{ borderColor: "var(--border)" }}
+                className="w-full rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
               >
                 キャンセル
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
-      </main>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

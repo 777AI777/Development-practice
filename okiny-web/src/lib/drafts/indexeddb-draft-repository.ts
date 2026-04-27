@@ -162,6 +162,8 @@ export class IndexedDbDraftRepository implements DraftRepository {
       tagId: normalized.tagId,
       items: normalized.items,
       isPublic: normalized.isPublic,
+      borderColor: normalized.borderColor ?? "#FFE5E5",
+      markerIcon: normalized.markerIcon ?? "Heart",
       updatedAt: new Date().toISOString(),
       ...(normalized.newTagName ? { newTagName: normalized.newTagName } : {}),
       ...(normalized.selectedTagName ? { selectedTagName: normalized.selectedTagName } : {}),

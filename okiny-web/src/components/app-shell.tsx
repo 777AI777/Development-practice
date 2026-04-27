@@ -43,7 +43,7 @@ const SETTINGS_MENU_ITEMS: SidebarMenuItemConfig[] = [
   { label: "ブロックしたユーザー", href: "/settings/blocked-users", disabled: false },
   { label: "ミュートワード", href: "/settings/muted-words", disabled: false },
   { label: "通知設定", disabled: true, comingSoon: true },
-  { label: "テーマ設定", disabled: true, comingSoon: true },
+  { label: "テーマ設定", href: "/settings", disabled: false },
   { label: "利用規約", href: "/terms", disabled: false },
   { label: "プライバシーポリシー", href: "/privacy", disabled: false },
 ];

@@ -16,7 +16,7 @@ import { buildSessionExpiredToast } from "@/lib/session-expired-toast";
 import type { PublishedRanking, RankingInput, RankingItems } from "@/lib/types";
 
 function toRankingItems(items: string[]): RankingItems {
-  return [items[0] ?? "", items[1] ?? "", items[2] ?? "", items[3] ?? "", items[4] ?? ""];
+  return [items[0] ?? "", items[1] ?? "", items[2] ?? ""];
 }
 
 interface EditRankingContentProps {
@@ -64,6 +64,8 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
           tagId: record.tagId,
           items: toRankingItems([...record.items]),
           isPublic: record.isPublic ?? true,
+          borderColor: record.borderColor ?? "#FFE5E5",
+          markerIcon: record.markerIcon ?? "Heart",
         });
         setOverrideTagName(record.selectedTagName);
         setOverrideNewTagName(record.newTagName);
@@ -87,6 +89,8 @@ export function EditRankingContent({ ranking }: EditRankingContentProps) {
     tagId: ranking.tagId,
     items: ranking.items,
     isPublic: ranking.isPublic ?? true,
+    borderColor: ranking.borderColor ?? "#FFE5E5",
+    markerIcon: ranking.markerIcon ?? "Heart",
   };
 
   const initialTagName = overrideTagName ?? ranking.tagName;

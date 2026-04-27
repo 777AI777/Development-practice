@@ -473,6 +473,16 @@ function UserProfileContentInner({
                     className="w-full truncate border-b border-border bg-transparent text-xl font-bold text-foreground focus:border-primary focus:outline-none"
                     placeholder="表示名"
                   />
+                  <div className="flex items-center justify-between mt-0.5">
+                    {editName.trim().length === 0 ? (
+                      <p className="text-xs text-destructive">表示名は必須です</p>
+                    ) : (
+                      <span />
+                    )}
+                    <p className="text-right text-xs text-muted-foreground">
+                      {editName.length}/{MAX_DISPLAY_NAME_LENGTH}
+                    </p>
+                  </div>
                   {/* @ID input */}
                   <div className="mt-1 flex items-center">
                     <span className="text-sm text-muted-foreground">@</span>
@@ -500,6 +510,9 @@ function UserProfileContentInner({
                     )}
                     {editUserIdAvailability === "error" && (
                       <span className="text-xs text-destructive">確認に失敗</span>
+                    )}
+                    {editUserIdAvailability === "idle" && (
+                      <span className="text-xs text-muted-foreground">英小文字・数字・アンダースコア（3〜20文字）</span>
                     )}
                   </div>
                 </div>

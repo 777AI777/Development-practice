@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { getAuthenticatedUserId } from "@/lib/supabase/auth-guard";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const SETTINGS_ITEMS = [
   {
@@ -26,8 +29,15 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-24 pt-6">
-      <h1 className="mb-6 text-lg font-bold text-foreground">設定</h1>
+    <AppShell>
+      <div className="mb-4 flex items-center gap-2">
+        <BackButton href="/rankings" />
+        <h1 className="text-lg font-bold text-foreground">設定</h1>
+      </div>
+
+      <div className="mb-4">
+        <ThemeToggle />
+      </div>
 
       <ul className="divide-y divide-border rounded-xl border border-border bg-card">
         {SETTINGS_ITEMS.map((item) => (
@@ -61,6 +71,6 @@ export default async function SettingsPage() {
           </li>
         ))}
       </ul>
-    </div>
+    </AppShell>
   );
 }

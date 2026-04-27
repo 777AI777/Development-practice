@@ -6,7 +6,7 @@ import { publishRanking } from "@/lib/publish/publish-ranking";
 import type { DraftLocalRecord, RankingItems } from "@/lib/types";
 
 function items(seed: string): RankingItems {
-  return [`${seed}-1`, `${seed}-2`, `${seed}-3`, `${seed}-4`, `${seed}-5`];
+  return [`${seed}-1`, `${seed}-2`, `${seed}-3`];
 }
 
 const draftRepository: DraftRepository = {
@@ -19,6 +19,8 @@ const draftRepository: DraftRepository = {
       tagId: "movie",
       items: items("x"),
       isPublic: true,
+      borderColor: "#FFE5E5",
+      markerIcon: "Heart",
       updatedAt: new Date().toISOString(),
     }) as DraftLocalRecord,
   delete: vi.fn(async () => {}),
@@ -40,6 +42,8 @@ describe("publishRanking", () => {
         tagId: "movie",
         items: items("movie"),
         isPublic: true,
+        borderColor: "#FFE5E5",
+        markerIcon: "Heart",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         viewCount: 0,
@@ -73,6 +77,8 @@ describe("publishRanking", () => {
         tagId: "movie",
         items: items("movie"),
         isPublic: true,
+        borderColor: "#FFE5E5",
+        markerIcon: "Heart",
       },
       draftId: "draft-1",
       draftRepository,

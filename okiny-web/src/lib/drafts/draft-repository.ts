@@ -6,6 +6,8 @@ export interface DraftSaveInput {
   tagId: string;
   items: RankingItems;
   isPublic: boolean;
+  borderColor?: string;
+  markerIcon?: string;
   newTagName?: string;
   selectedTagName?: string;
 }

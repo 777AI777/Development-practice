@@ -2,9 +2,21 @@
 
 ## 1. Purpose (The Why)
 
-「好き」を整理・共有するランキングアプリ。
-Phase1: 個人利用（CRUD + 下書き + タグ検索）。
-Phase2: SNS化（フィード・フォロー・リアクション）。
+**コンセプト**: 「好き」の静かなギャラリー — 好きなものを通じて、知らない誰かと静かに繋がれる場所。
+投稿フォーマットは「テーマ + 好きなもの3つ（順位なし・並列）」。順位をつけない設計により、優劣の強制を排除し、その瞬間の純粋な熱量を切り取るタイムカプセルとして機能する。
+
+**ターゲット**: 20〜40代、SNSに馴染みのある多趣味層。ジャンルを横断して「好き」を整理したいユーザー。
+
+**解決するペイン**: 既存SNSやツールでは「好き」が流れる・蓄積されない・検索できない・ジャンル横断できない。
+
+**Phase1スコープ**: 投稿フォーマット改修（テーマ+好きなもの3つの並列リスト）、スレッド、今日のお題、おすすめ、レコメンド、自己分析、ポイント、通知、シェア、プレミアム、広告。
+**既存実装済み**: CRUD、フォロー、コメント、ブックマーク、ブロック・ミュート・NGワード、検索、下書き、閲覧数・インプレッション。詳細は `okiny-web/docs/requirements/requirements-phase1.md`。
+
+**Phase2方向性**: 外部DB連携サジェスト（Spotify/TMDB等）、「〜が好きな人が好きなもの」検索、ネタバレ配慮トグル、スポンサード投稿、公式アカウント機能。
+
+**意図的に排除するもの**: DM・人ベースの繋がり・通知バッジ・プログレスバー・順位（優劣の強制）。「誰か」ではなく「何か」で繋がる設計。
+
+> 詳細: `okiny-web/docs/planning/business-plan.md`（事業思想）、`okiny-web/docs/requirements/requirements-phase1.md`（Phase1要件定義）
 
 ## 2. Repo Map & Progressive Context (The Map)
 
@@ -14,11 +26,13 @@ Development-practice/
 │   ├── CLAUDE.md             # 危険ゾーンガイド（Critical Files詳細はここ）
 │   ├── src/
 │   │   ├── app/              # ページ + APIルート
-│   │   │   └── api/v1/       # 本番API（rankings）
+│   │   │   └── api/v1/       # REST API（rankings / users / tags / search / bookmarks / moderation 等）
 │   │   ├── components/       # 共通UIコンポーネント
 │   │   ├── hooks/            # カスタムHooks
 │   │   └── lib/              # ビジネスロジック・ユーティリティ
 │   └── docs/                 # 設計ドキュメント・デザイン資産
+│       ├── planning/         # 事業計画・思想ドキュメント
+│       └── requirements/     # 要件定義
 ├── docs/memory/              # 成功事例ログ（MEMORY.mdから退避した記録）
 ├── .claude/                  # Rules・Skills・Scripts（自動読み込み対象）
 │   ├── rules/                # パス別詳細ルール（api, coding-style, figma-make, git-workflow, orchestration, security, testing等）
@@ -30,9 +44,13 @@ Development-practice/
 ### Progressive Contextの読み込み順
 
 1. **CLAUDE.md（本ファイル）** — 全体像・Tech Stack・ルール
-2. **MEMORY.md** — 教訓・課題・未探索領域
-3. **okiny-web/CLAUDE.md** — 危険ゾーン・フロントエンド固有事項
-4. **.claude/rules/** — パス別の詳細ルール（自動ロード）
+2. **思想ドキュメント（条件付き参照）** — Purposeセクションに要約常駐。詳細確認は以下の場合のみ:
+   - 機能の企画・スコープ判断・優先度判断 → `okiny-web/docs/planning/business-plan.md`
+   - Phase1機能の実装・仕様確認・改修 → `okiny-web/docs/requirements/requirements-phase1.md`
+   - 通常のバグ修正・リファクタ・スタイル修正では読み込まない
+3. **MEMORY.md** — 教訓・課題・未探索領域
+4. **okiny-web/CLAUDE.md** — 危険ゾーン・フロントエンド固有事項
+5. **.claude/rules/** — パス別の詳細ルール（自動ロード）
    - `api.md` — 楽観ロック・APIルール
    - `coding-style.md` — イミュータビリティ・ファイル分割・エラー処理・品質チェックリスト
    - `figma-make.md` — Figma Make / Tailwind v4 ガードレール
@@ -42,7 +60,7 @@ Development-practice/
    - `orchestration.md` — エージェントオーケストレーション（SSoT）
    - `security.md` — セキュリティチェック・シークレット管理
    - `testing.md` — カバレッジ80%・TDD必須・Vitest
-5. **docs/memory/** — 成功事例ログ（MEMORY.mdから退避した過去記録。通常は参照不要）
+6. **docs/memory/** — 成功事例ログ（MEMORY.mdから退避した過去記録。通常は参照不要）
 
 ## 3. Workflow Rules
 
@@ -81,30 +99,84 @@ npm run test         # Vitest実行（run mode）
 npm run test:watch   # Vitest（watch mode）
 ```
 
-### API Endpoints（本番: Rankings）
+### API Endpoints
+
+#### Rankings
 
 | Method | Path | Description | 楽観ロック |
 |--------|------|-------------|-----------|
 | GET | `/api/v1/rankings` | 一覧取得（tagIdフィルタ可） | — |
 | POST | `/api/v1/rankings` | 新規作成 | — |
-| GET | `/api/v1/rankings/{id}` | 詳細取得 | — |
-| PATCH | `/api/v1/rankings/{id}` | 更新 | `expectedUpdatedAt` 必須 |
-| DELETE | `/api/v1/rankings/{id}` | 削除 | `expectedUpdatedAt` 必須 |
-| POST | `/api/v1/rankings/{id}/views` | 閲覧数記録（24h重複排除） | — |
-| POST | `/api/v1/rankings/impressions` | インプレッション一括記録（レート制限あり） | — |
-| GET | `/api/v1/bookmarks` | ブックマーク一覧取得 | — |
-| POST | `/api/v1/bookmarks/{rankingId}` | ブックマーク追加（冪等） | — |
-| DELETE | `/api/v1/bookmarks/{rankingId}` | ブックマーク削除（冪等） | — |
-| GET | `/api/v1/tags` | タグ一覧・検索（`?q=`） | — |
+| GET | `/api/v1/rankings/[id]` | 詳細取得 | — |
+| PATCH | `/api/v1/rankings/[id]` | 更新 | `expectedUpdatedAt` 必須 |
+| DELETE | `/api/v1/rankings/[id]` | 削除 | `expectedUpdatedAt` 必須 |
+| POST | `/api/v1/rankings/[id]/views` | 閲覧数記録(24h重複排除) | — |
+| POST | `/api/v1/rankings/impressions` | インプレッション一括記録(レート制限あり) | — |
+| GET | `/api/v1/rankings/following` | フォロー中タイムライン | — |
+| GET | `/api/v1/rankings/recommend` | おすすめ | — |
+| DELETE | `/api/v1/rankings/[id]/comment` | コメント削除 | — |
+
+#### Bookmarks
+
+| Method | Path | Description | 楽観ロック |
+|--------|------|-------------|-----------|
+| GET | `/api/v1/bookmarks` | 一覧取得 | — |
+| POST | `/api/v1/bookmarks/[rankingId]` | 追加(冪等) | — |
+| DELETE | `/api/v1/bookmarks/[rankingId]` | 削除(冪等) | — |
+
+#### Tags
+
+| Method | Path | Description | 楽観ロック |
+|--------|------|-------------|-----------|
 | POST | `/api/v1/tags` | タグ新規作成 | — |
 | GET | `/api/v1/tags/search` | タグ検索 | — |
 | GET | `/api/v1/tags/mine` | 自分のタグ一覧 | — |
 | GET | `/api/v1/tags/popular` | 人気タグ一覧 | — |
-| GET | `/api/v1/tags/bootstrap` | タグ初期化（ユーザータグ+人気タグ統合） | — |
+| GET | `/api/v1/tags/bootstrap` | タグ初期化(ユーザータグ+人気タグ統合) | — |
+
+#### Users
+
+| Method | Path | Description | 楽観ロック |
+|--------|------|-------------|-----------|
 | GET | `/api/v1/users/check-availability` | 表示用ユーザーID利用可否確認 | — |
-| GET | `/api/v1/users/{userId}` | ユーザープロフィール公開取得 | — |
-| GET | `/api/v1/og/rankings/{id}` | OGP画像生成 | — |
-| GET | `/api/auth/callback` | OAuthコールバック（PKCE） | — |
+| GET | `/api/v1/users/[userId]` | ユーザープロフィール公開取得 | — |
+| GET | `/api/v1/users/[userId]/rankings` | 該当ユーザー投稿一覧 | — |
+| POST | `/api/v1/users/[userId]/follow` | フォロー | — |
+| DELETE | `/api/v1/users/[userId]/follow` | フォロー解除 | — |
+| GET | `/api/v1/users/[userId]/follow-list` | フォロー/フォロワー一覧 | — |
+| GET | `/api/v1/users/[userId]/relationship` | 関係状態取得 | — |
+| POST | `/api/v1/users/[userId]/block` | ブロック | — |
+| DELETE | `/api/v1/users/[userId]/block` | ブロック解除 | — |
+| POST | `/api/v1/users/[userId]/mute` | ミュート | — |
+| DELETE | `/api/v1/users/[userId]/mute` | ミュート解除 | — |
+| DELETE | `/api/v1/followers/[followerId]` | フォロワー削除 | — |
+
+#### Moderation
+
+| Method | Path | Description | 楽観ロック |
+|--------|------|-------------|-----------|
+| GET | `/api/v1/blocks` | ブロック一覧 | — |
+| GET | `/api/v1/mutes` | ミュート一覧 | — |
+| GET | `/api/v1/muted-words` | NGワード一覧 | — |
+| POST | `/api/v1/muted-words` | NGワード追加 | — |
+| DELETE | `/api/v1/muted-words/[wordId]` | NGワード削除 | — |
+
+#### Search
+
+| Method | Path | Description | 楽観ロック |
+|--------|------|-------------|-----------|
+| GET | `/api/v1/search/posts` | 投稿検索 | — |
+| GET | `/api/v1/search/rankings` | ランキング検索 | — |
+| GET | `/api/v1/search/users` | ユーザー検索 | — |
+
+#### Misc
+
+| Method | Path | Description | 楽観ロック |
+|--------|------|-------------|-----------|
+| GET | `/api/og/rankings/[id]` | OGP画像生成(※ `v1` プレフィックスなし) | — |
+| GET | `/api/auth/callback` | OAuthコールバック(PKCE) | — |
+| GET | `/api/apple-icon` | Apple touch icon | — |
+| GET | `/api/pwa-icon` | PWA icon | — |
 
 ### 楽観ロック
 

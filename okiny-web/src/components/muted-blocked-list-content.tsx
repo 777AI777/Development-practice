@@ -14,6 +14,7 @@ import {
 } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { useToast } from "@/components/toast-provider";
@@ -479,21 +480,9 @@ function MutedBlockedListContentInner({
   return (
     <AppShell>
       {/* ヘッダー: 戻るボタン + タイトル */}
-      <div className="mb-4">
-        <button
-          type="button"
-          onClick={() => {
-            if (window.history.length > 1) {
-              router.back();
-            } else {
-              router.push("/settings");
-            }
-          }}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-        >
-          <span aria-hidden="true">{"\u2190"}</span>
-          <span>設定</span>
-        </button>
+      <div className="mb-4 flex items-center gap-2">
+        <BackButton href="/settings" />
+        <h1 className="text-lg font-bold text-foreground">設定</h1>
       </div>
 
       {/* タブバー */}

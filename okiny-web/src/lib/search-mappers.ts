@@ -46,9 +46,9 @@ export function mapSearchRankingRow(row: {
       items[0]?.item_text ?? "",
       items[1]?.item_text ?? "",
       items[2]?.item_text ?? "",
-      items[3]?.item_text ?? "",
-      items[4]?.item_text ?? "",
-    ] as [string, string, string, string, string],
+    ] as [string, string, string],
+    borderColor: "#FFE5E5",
+    markerIcon: "Heart",
     author: {
       id: row.user_id,
       displayName: row.author_display_name ?? "",
