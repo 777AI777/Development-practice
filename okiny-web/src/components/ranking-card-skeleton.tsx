@@ -1,37 +1,54 @@
-function SkeletonCard({ showBorder }: { showBorder: boolean }) {
+function SkeletonCard() {
   return (
     <div
-      className="flex items-start gap-3 p-4"
+      className="overflow-hidden rounded-2xl shadow-sm"
       style={{
-        borderBottom: showBorder ? "1px solid var(--border)" : "none",
+        backgroundColor: "var(--card)",
+        borderWidth: "2px",
+        borderStyle: "solid",
+        borderColor: "#FFE5E5",
       }}
     >
-      {/* Avatar circle */}
-      <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-muted" />
-
-      <div className="min-w-0 flex-1 space-y-1">
-        {/* Name + userId + date */}
-        <div className="flex items-center gap-1.5">
-          <div className="h-4 w-16 animate-pulse rounded bg-muted" />
-          <div className="h-3 w-20 animate-pulse rounded bg-muted" />
-          <div className="h-3 w-10 animate-pulse rounded bg-muted" />
+      {/* ヘッダー: アバター + ユーザー名 + 日時 */}
+      <div
+        className="flex items-center gap-3 px-4 py-3"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-muted" />
+        <div className="flex flex-col gap-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-12 animate-pulse rounded bg-muted" />
+          </div>
+          <div className="h-3 w-16 animate-pulse rounded bg-muted" />
         </div>
+      </div>
 
-        {/* Title + tag badge */}
-        <div className="flex flex-col items-start gap-0.5">
-          <div className="h-5 w-40 animate-pulse rounded bg-muted" />
-          <div className="h-3 w-14 animate-pulse rounded bg-muted" />
-        </div>
+      {/* タイトル */}
+      <div className="px-4 pt-3 pb-2">
+        <div className="h-5 w-44 animate-pulse rounded bg-muted" />
+      </div>
 
-        {/* Ranking items (3 lines) */}
-        <div className="space-y-0.5">
+      {/* アイテムリスト (3行) */}
+      <div className="flex flex-col gap-1.5 px-4 py-2">
+        <div className="flex items-center gap-2.5">
+          <div className="h-3 w-3 animate-pulse rounded-full bg-muted" />
           <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="flex items-center gap-2.5">
+          <div className="h-3 w-3 animate-pulse rounded-full bg-muted" />
           <div className="h-4 w-44 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="flex items-center gap-2.5">
+          <div className="h-3 w-3 animate-pulse rounded-full bg-muted" />
           <div className="h-4 w-36 animate-pulse rounded bg-muted" />
         </div>
+      </div>
 
-        {/* Stats row (view, impression, bookmark) */}
-        <div className="mt-1.5 flex items-center gap-3">
+      {/* フッター: タグバッジ + 統計 */}
+      <div className="flex items-center justify-between px-4 pb-3 pt-1">
+        <div className="h-5 w-16 animate-pulse rounded-full bg-muted" />
+        <div className="flex items-center gap-3">
           <div className="h-3 w-10 animate-pulse rounded bg-muted" />
           <div className="h-3 w-10 animate-pulse rounded bg-muted" />
           <div className="h-3 w-10 animate-pulse rounded bg-muted" />
@@ -43,9 +60,9 @@ function SkeletonCard({ showBorder }: { showBorder: boolean }) {
 
 export function RankingCardSkeletonList({ count = 3 }: { count?: number }) {
   return (
-    <div className="overflow-hidden rounded-xl bg-card">
+    <div className="flex flex-col gap-3">
       {Array.from({ length: count }, (_, i) => (
-        <SkeletonCard key={i} showBorder={i < count - 1} />
+        <SkeletonCard key={i} />
       ))}
     </div>
   );

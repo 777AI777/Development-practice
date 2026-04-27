@@ -1,4 +1,4 @@
-import type { AppErrorCode, PublicRankingWithAuthor, PublishedRanking, RankingInput, SearchPage, TagItem, UserSearchResult } from "@/lib/types";
+import type { AppErrorCode, PublicRankingWithAuthor, PublicRankingWithAuthorAndComment, PublishedRanking, RankingInput, SearchPage, TagItem, UserSearchResult } from "@/lib/types";
 
 interface ApiResponse<T> {
   data?: T;
@@ -38,16 +38,19 @@ async function parseJson<T>(response: Response): Promise<ApiResponse<T>> {
 
 export interface PublishedApiClient {
   listPublishedRankings(tagId?: string): Promise<PublishedRanking[]>;
-  listPublicRankingsByTag(tagId: string): Promise<PublicRankingWithAuthor[]>;
+  listPublicRankingsByTag(tagId: string): Promise<PublicRankingWithAuthorAndComment[]>;
   getPublishedRanking(rankingId: string): Promise<PublishedRanking>;
   createPublishedRanking(input: {
     ranking: RankingInput;
+    comment?: string;
   }): Promise<PublishedRanking>;
   updatePublishedRanking(input: {
     rankingId: string;
     ranking: RankingInput;
     expectedUpdatedAt: string;
+    comment?: string;
   }): Promise<PublishedRanking>;
+  deleteRankingComment(rankingId: string, commentId: string): Promise<void>;
   deletePublishedRanking(rankingId: string, expectedUpdatedAt: string): Promise<void>;
   createTag(name: string): Promise<TagItem>;
   bookmarkRanking(rankingId: string): Promise<void>;
@@ -58,7 +61,7 @@ export interface PublishedApiClient {
   searchUsers(query: string, cursor?: string | null): Promise<SearchPage<UserSearchResult>>;
   followUser(userId: string): Promise<void>;
   unfollowUser(userId: string): Promise<void>;
-  listFollowingRankings(): Promise<PublicRankingWithAuthor[]>;
+  listFollowingRankings(): Promise<PublicRankingWithAuthorAndComment[]>;
 }
 
 export class HttpPublishedApiClient implements PublishedApiClient {
@@ -82,7 +85,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     return body.data;
   }
 
-  async listPublicRankingsByTag(tagId: string): Promise<PublicRankingWithAuthor[]> {
+  async listPublicRankingsByTag(tagId: string): Promise<PublicRankingWithAuthorAndComment[]> {
     const params = new URLSearchParams({
       tagId,
       scope: "public",
@@ -91,7 +94,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     const response = await fetch(url, {
       cache: "no-store",
     });
-    const body = await parseJson<PublicRankingWithAuthor[]>(response);
+    const body = await parseJson<PublicRankingWithAuthorAndComment[]>(response);
     if (!response.ok || !body.data) {
       throw new PublishedApiError(
         body.error?.code ?? mapStatusToErrorCode(response.status),
@@ -117,6 +120,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
 
   async createPublishedRanking(input: {
     ranking: RankingInput;
+    comment?: string;
   }): Promise<PublishedRanking> {
     const response = await fetch("/api/v1/rankings", {
       method: "POST",
@@ -137,6 +141,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     rankingId: string;
     ranking: RankingInput;
     expectedUpdatedAt: string;
+    comment?: string;
   }): Promise<PublishedRanking> {
     const response = await fetch(`/api/v1/rankings/${input.rankingId}`, {
       method: "PATCH",
@@ -144,6 +149,7 @@ export class HttpPublishedApiClient implements PublishedApiClient {
       body: JSON.stringify({
         expectedUpdatedAt: input.expectedUpdatedAt,
         ranking: input.ranking,
+        ...(input.comment ? { comment: input.comment } : {}),
       }),
     });
     const body = await parseJson<PublishedRanking>(response);
@@ -307,11 +313,26 @@ export class HttpPublishedApiClient implements PublishedApiClient {
     );
   }
 
-  async listFollowingRankings(): Promise<PublicRankingWithAuthor[]> {
+  async deleteRankingComment(rankingId: string, commentId: string): Promise<void> {
+    const params = new URLSearchParams({ commentId });
+    const response = await fetch(`/api/v1/rankings/${rankingId}/comment?${params.toString()}`, {
+      method: "DELETE",
+    });
+    if (response.status === 204) {
+      return;
+    }
+    const body = await parseJson<unknown>(response);
+    throw new PublishedApiError(
+      body.error?.code ?? mapStatusToErrorCode(response.status),
+      body.error?.message ?? "コメントの削除に失敗しました。",
+    );
+  }
+
+  async listFollowingRankings(): Promise<PublicRankingWithAuthorAndComment[]> {
     const response = await fetch("/api/v1/rankings/following", {
       cache: "no-store",
     });
-    const body = await parseJson<PublicRankingWithAuthor[]>(response);
+    const body = await parseJson<PublicRankingWithAuthorAndComment[]>(response);
     if (!response.ok || !body.data) {
       throw new PublishedApiError(
         body.error?.code ?? mapStatusToErrorCode(response.status),

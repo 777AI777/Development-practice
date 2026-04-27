@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { UserProfileContent } from "@/components/user-profile-content";
-import {
-  getRelationship,
-  listPublicRankingsByUser,
-} from "@/lib/supabase-rest";
+import { getRelationship } from "@/lib/supabase-rest";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRelationship } from "@/lib/types";
 import { getUserProfileWithFallback } from "@/lib/user-profile-with-fallback";
@@ -73,21 +70,13 @@ export default async function UserProfilePage({
     isBlockedBy: false,
   };
 
-  const [rankings, relationship] = await Promise.all([
-    viewer.accessToken
-      ? listPublicRankingsByUser({
-          userId: profile.id,
-          accessToken: viewer.accessToken,
-        }).catch(() => [])
-      : Promise.resolve([]),
-    viewer.viewerUserId && viewer.accessToken && !isOwnProfile
-      ? getRelationship({
-          viewerId: viewer.viewerUserId,
-          targetUserId: profile.id,
-          accessToken: viewer.accessToken,
-        }).catch(() => defaultRelationship)
-      : Promise.resolve(defaultRelationship),
-  ]);
+  const relationship = viewer.viewerUserId && viewer.accessToken && !isOwnProfile
+    ? await getRelationship({
+        viewerId: viewer.viewerUserId,
+        targetUserId: profile.id,
+        accessToken: viewer.accessToken,
+      }).catch(() => defaultRelationship)
+    : defaultRelationship;
 
   // ブロック関係がある場合は notFound
   if (relationship.isBlocked || relationship.isBlockedBy) {
@@ -97,7 +86,6 @@ export default async function UserProfilePage({
   return (
     <UserProfileContent
       profile={profile}
-      rankings={rankings}
       initialRelationship={relationship}
       isOwnProfile={isOwnProfile}
     />

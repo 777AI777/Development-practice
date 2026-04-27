@@ -6,7 +6,7 @@ import { saveDraftWithFeedback } from "@/lib/drafts/save-draft-with-feedback";
 import type { RankingItems } from "@/lib/types";
 
 function items(): RankingItems {
-  return ["1", "2", "3", "4", "5"];
+  return ["1", "2", "3"];
 }
 
 describe("saveDraftWithFeedback", () => {

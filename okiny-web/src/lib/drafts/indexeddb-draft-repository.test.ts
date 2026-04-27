@@ -15,8 +15,6 @@ function rankingItems(seed: string): RankingItems {
     `${seed}-1`,
     `${seed}-2`,
     `${seed}-3`,
-    `${seed}-4`,
-    `${seed}-5`,
   ];
 }
 

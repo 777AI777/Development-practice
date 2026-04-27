@@ -18,10 +18,10 @@ import { publishRanking } from "@/lib/publish/publish-ranking";
 import type { RankingInput, RankingItems } from "@/lib/types";
 
 function toRankingItems(items: string[]): RankingItems {
-  return [items[0] ?? "", items[1] ?? "", items[2] ?? "", items[3] ?? "", items[4] ?? ""];
+  return [items[0] ?? "", items[1] ?? "", items[2] ?? ""];
 }
 
-const EMPTY_ITEMS: RankingItems = ["", "", "", "", ""];
+const EMPTY_ITEMS: RankingItems = ["", "", ""];
 
 function NewRankingPageContent() {
   const { signalReady } = usePageTransition();
@@ -68,6 +68,8 @@ function NewRankingPageContent() {
               tagId: preselectedTagId,
               items: EMPTY_ITEMS,
               isPublic: true,
+              borderColor: "#FFE5E5",
+              markerIcon: "Heart",
             });
           }
           setInitialTagName(undefined);
@@ -92,6 +94,8 @@ function NewRankingPageContent() {
             tagId: record.tagId,
             items: toRankingItems([...record.items]),
             isPublic: record.isPublic ?? true,
+            borderColor: record.borderColor ?? "#FFE5E5",
+            markerIcon: record.markerIcon ?? "Heart",
           });
           setInitialTagName(record.selectedTagName);
           setInitialNewTagName(record.newTagName);
@@ -114,6 +118,8 @@ function NewRankingPageContent() {
           tagId: target.tagId,
           items: toRankingItems([...target.items]),
           isPublic: target.isPublic ?? true,
+          borderColor: target.borderColor ?? "#FFE5E5",
+          markerIcon: target.markerIcon ?? "Heart",
         });
         setInitialTagName(target.selectedTagName);
         setInitialNewTagName(target.newTagName);
@@ -137,7 +143,7 @@ function NewRankingPageContent() {
     trackedRef.current = true;
   }, [activeDraftId, user]);
 
-  const handlePublish = async (value: RankingInput) => {
+  const handlePublish = async (value: RankingInput, options?: { comment?: string }) => {
     if (!user) return;
     const result = await publishRanking({
       userId: user.id,
@@ -145,6 +151,7 @@ function NewRankingPageContent() {
       draftId: activeDraftId,
       apiClient: publishedApiClient,
       draftRepository,
+      comment: options?.comment,
     });
     pushToast(result.toast);
     if (result.ok) {
@@ -186,6 +193,8 @@ function NewRankingPageContent() {
           tagId: record.tagId,
           items: toRankingItems([...record.items]),
           isPublic: record.isPublic ?? true,
+          borderColor: record.borderColor ?? "#FFE5E5",
+          markerIcon: record.markerIcon ?? "Heart",
         });
         setInitialTagName(record.selectedTagName ?? "");
         setInitialNewTagName(record.newTagName ?? "");
@@ -215,6 +224,8 @@ function NewRankingPageContent() {
               tagId: target.tagId,
               items: toRankingItems([...target.items]),
               isPublic: target.isPublic ?? true,
+              borderColor: target.borderColor ?? "#FFE5E5",
+              markerIcon: target.markerIcon ?? "Heart",
             });
             setInitialTagName(target.selectedTagName);
             setInitialNewTagName(target.newTagName);

@@ -58,7 +58,7 @@ function LoginPageContent() {
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold text-primary">OKINY</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          ランキング共有SNS
+          あなたの「好き」を醸成する
         </p>
       </div>
 

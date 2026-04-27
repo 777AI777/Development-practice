@@ -33,7 +33,7 @@ export function OnboardingWizard({ profileOnly = false }: OnboardingWizardProps)
   const [selectedTagDisplayName, setSelectedTagDisplayName] = useState("")
   const [newTagName, setNewTagName] = useState("")
   const [title, setTitle] = useState("")
-  const [items, setItems] = useState<RankingItems>(["", "", "", "", ""])
+  const [items, setItems] = useState<RankingItems>(["", "", ""])
 
   // UI control
   const [isPublishing, setIsPublishing] = useState(false)
@@ -158,7 +158,7 @@ export function OnboardingWizard({ profileOnly = false }: OnboardingWizardProps)
       }
 
       const ranking = await publishedApiClient.createPublishedRanking({
-        ranking: { title, tagId, items, isPublic: true },
+        ranking: { title, tagId, items, isPublic: true, borderColor: "#FFE5E5", markerIcon: "Heart" },
       })
 
       try {

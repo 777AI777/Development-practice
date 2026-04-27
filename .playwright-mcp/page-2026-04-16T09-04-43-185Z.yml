@@ -1,0 +1,60 @@
+- generic [ref=e3]:
+  - main [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - heading "OKINY" [level=1] [ref=e8]
+        - paragraph [ref=e9]: あなたの「好き」を醸成する
+      - main [ref=e10]:
+        - heading "アカウントにログイン" [level=2] [ref=e11]
+        - button "Googleでログイン" [ref=e13]:
+          - img [ref=e14]
+          - generic [ref=e19]: Googleでログイン
+        - generic [ref=e22]: or
+        - paragraph [ref=e24]: その他のログイン方法は準備中です
+      - paragraph [ref=e25]:
+        - text: ログインすることで
+        - button "利用規約" [ref=e26] [cursor=pointer]
+        - text: および
+        - button "プライバシーポリシー" [ref=e27] [cursor=pointer]
+        - text: に同意したものとみなします。
+  - complementary [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]: メニュー
+      - button [ref=e31] [cursor=pointer]: ✕
+    - generic [ref=e32]:
+      - generic [ref=e33]:
+        - button [ref=e34] [cursor=pointer]:
+          - generic [ref=e35]: TY
+        - generic [ref=e36]:
+          - button [ref=e37] [cursor=pointer]: Taro Yamada
+          - paragraph [ref=e38]: "@taro_yamada"
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e41]: "12"
+          - generic [ref=e42]: 投稿
+        - button [ref=e43] [cursor=pointer]:
+          - generic [ref=e44]: "34"
+          - generic [ref=e45]: フォロー
+        - button [ref=e46] [cursor=pointer]:
+          - generic [ref=e47]: "56"
+          - generic [ref=e48]: フォロワー
+    - navigation [ref=e49]:
+      - button [ref=e50] [cursor=pointer]:
+        - img [ref=e51]
+        - generic [ref=e53]: ブックマーク
+      - button [ref=e54] [cursor=pointer]:
+        - img [ref=e55]
+        - generic [ref=e57]: 参加中のスレッド
+      - button [ref=e58] [cursor=pointer]:
+        - img [ref=e59]
+        - generic [ref=e62]: 自己分析
+      - button [ref=e63] [cursor=pointer]:
+        - img [ref=e64]
+        - generic [ref=e66]: プレミアムプラン
+      - button [ref=e67] [cursor=pointer]:
+        - generic [ref=e68]: ⚙
+        - generic [ref=e69]: 設定
+        - generic [ref=e70]: ▼
+      - button [ref=e71] [cursor=pointer]:
+        - generic [ref=e72]: ↩
+        - generic [ref=e73]: ログアウト

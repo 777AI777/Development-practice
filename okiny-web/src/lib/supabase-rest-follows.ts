@@ -1,4 +1,4 @@
-import type { PublicRankingWithAuthor, SearchCursor, SearchPage, UserProfile } from "@/lib/types";
+import type { PublicRankingWithAuthor, PublicRankingWithAuthorAndComment, SearchCursor, SearchPage, UserProfile } from "@/lib/types";
 import {
   requestSupabase,
   requestSupabaseWithServiceRole,
@@ -164,7 +164,7 @@ export async function listFollowingRankings(params: {
   accessToken: string;
   limit: number;
   cursor?: SearchCursor | null;
-}): Promise<SearchPage<PublicRankingWithAuthor>> {
+}): Promise<SearchPage<PublicRankingWithAuthorAndComment>> {
   const rpcBody: Record<string, unknown> = {
     p_viewer_user_id: params.viewerUserId,
     p_limit: params.limit,
@@ -206,16 +206,47 @@ export async function listFollowingRankings(params: {
     author_avatar_url: string | null;
     author_display_user_id: string | null;
     is_bookmarked: boolean;
+    comment_id: string | null;
+    comment_user_id: string | null;
+    comment_text: string | null;
+    comment_created_at: string | null;
+    comment_user_display_name: string | null;
+    comment_user_avatar_url: string | null;
+    comment_user_display_user_id: string | null;
+    cursor_id: string | null;
+    post_created_at: string;
   }>;
 
   const hasMore = rows.length > params.limit;
   const slicedRows = hasMore ? rows.slice(0, params.limit) : rows;
-  const items = slicedRows.map(mapPublicRankingWithAuthorRow);
+  const items: PublicRankingWithAuthorAndComment[] = slicedRows.map((row) => {
+    const base = mapPublicRankingWithAuthorRow(row);
+    return {
+      ...base,
+      latestComment: row.comment_id
+        ? {
+            id: row.comment_id,
+            rankingId: base.id,
+            userId: row.comment_user_id!,
+            comment: row.comment_text!,
+            createdAt: row.comment_created_at!,
+            author: row.comment_user_display_name
+              ? {
+                  displayName: row.comment_user_display_name,
+                  avatarUrl: row.comment_user_avatar_url ?? null,
+                  displayUserId: row.comment_user_display_user_id ?? null,
+                }
+              : undefined,
+          }
+        : null,
+      cursorId: row.cursor_id ?? undefined,
+    };
+  });
 
-  const lastItem = items[items.length - 1];
+  const lastRow = slicedRows[slicedRows.length - 1];
   const nextCursor =
-    hasMore && lastItem
-      ? encodeCursor({ createdAt: lastItem.createdAt, id: lastItem.id })
+    hasMore && lastRow
+      ? encodeCursor({ createdAt: lastRow.post_created_at, id: lastRow.cursor_id ?? lastRow.id })
       : null;
 
   return { items, nextCursor };

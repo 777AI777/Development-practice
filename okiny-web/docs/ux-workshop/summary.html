@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OKINY UX設計サマリー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+:root {
+  --bg: #FAFAF8;
+  --surface: #FFFFFF;
+  --surface-alt: #F5F4F0;
+  --border: #E8E6E0;
+  --text: #2C2C2A;
+  --text-secondary: #73726C;
+  --text-tertiary: #9C9A92;
+  --accent: #B07D62;
+  --accent-light: #F0E8E2;
+  --blue: #3B6FA0;
+  --blue-light: #E6F0F8;
+  --teal: #1D7A65;
+  --teal-light: #E1F2EC;
+  --coral: #C45A3C;
+  --coral-light: #FAE8E2;
+  --purple: #6B5CA5;
+  --purple-light: #EEEDFE;
+  --amber: #A07020;
+  --amber-light: #FAF0DA;
+  --negative: #C45A3C;
+  --positive: #1D7A65;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.8;
+  font-weight: 400;
+  font-size: 15px;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* Header */
+.doc-header {
+  text-align: center;
+  padding: 60px 0 48px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 48px;
+}
+
+.doc-header .logo {
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.doc-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.doc-header .subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+
+/* Section */
+.section {
+  margin-bottom: 56px;
+}
+
+.section-number {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.section h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
+.section .section-lead {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* Core Insight Card */
+.insight-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.insight-card .label {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.insight-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.insight-card p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* Three Desires */
+.desires-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.desire-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+}
+
+.desire-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+
+.desire-card.store::before { background: var(--teal); }
+.desire-card.control::before { background: var(--blue); }
+.desire-card.belong::before { background: var(--purple); }
+
+.desire-card .desire-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.desire-card .desire-type {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.desire-card .desire-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* Persona Cards */
+.persona-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.persona-header {
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.persona-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.persona-avatar.aoi { background: var(--teal); }
+.persona-avatar.horikawa { background: var(--blue); }
+.persona-avatar.osawa { background: var(--purple); }
+
+.persona-info h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.persona-info .persona-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.persona-tag {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.persona-tag.store { background: var(--teal-light); color: var(--teal); }
+.persona-tag.control { background: var(--blue-light); color: var(--blue); }
+.persona-tag.belong { background: var(--purple-light); color: var(--purple); }
+
+.persona-body {
+  padding: 28px 32px;
+}
+
+.persona-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.detail-group .detail-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.detail-group .detail-value {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.persona-quote {
+  background: var(--surface-alt);
+  border-radius: 8px;
+  padding: 16px 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-style: italic;
+  border-left: 3px solid var(--border);
+}
+
+/* Empathy Map */
+.empathy-map {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.empathy-quadrant {
+  background: var(--surface);
+  padding: 20px 24px;
+}
+
+.empathy-quadrant .eq-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.empathy-quadrant.say .eq-label { color: var(--teal); }
+.empathy-quadrant.think .eq-label { color: var(--blue); }
+.empathy-quadrant.do .eq-label { color: var(--amber); }
+.empathy-quadrant.feel .eq-label { color: var(--coral); }
+
+.empathy-quadrant ul {
+  list-style: none;
+  padding: 0;
+}
+
+.empathy-quadrant li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  padding: 2px 0;
+}
+
+.empathy-quadrant li::before {
+  content: '–';
+  margin-right: 8px;
+  color: var(--text-tertiary);
+}
+
+/* Goal Cards */
+.goal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.goal-persona-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.goal-persona-dot.aoi { background: var(--teal); }
+.goal-persona-dot.horikawa { background: var(--blue); }
+.goal-persona-dot.osawa { background: var(--purple); }
+
+.goal-content h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.goal-content p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.goal-value-tag {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Scene Cards */
+.scene-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 16px;
+}
+
+.scene-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.scene-aspects {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.scene-aspect {
+  font-size: 12px;
+}
+
+.scene-aspect .sa-label {
+  color: var(--text-tertiary);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.scene-aspect .sa-value {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* CJM */
+.cjm-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.cjm-container h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.cjm-phases {
+  display: flex;
+  gap: 2px;
+  min-width: 700px;
+}
+
+.cjm-phase {
+  flex: 1;
+  min-width: 80px;
+}
+
+.cjm-phase-name {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.cjm-phase-name.positive { background: var(--teal-light); color: var(--teal); }
+.cjm-phase-name.neutral { background: var(--surface-alt); color: var(--text-secondary); }
+.cjm-phase-name.negative { background: var(--coral-light); color: var(--coral); }
+
+.cjm-cell {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding: 6px 8px;
+  min-height: 48px;
+}
+
+.cjm-row-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: 1px;
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+/* Emotion Curve SVG */
+.emotion-curve {
+  width: 100%;
+  margin: 16px 0;
+}
+
+/* Design Principles */
+.principles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.principle-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.principle-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--border);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.principle-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.principle-card p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* Touchpoints */
+.tp-list {
+  display: grid;
+  gap: 8px;
+}
+
+.tp-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tp-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tp-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tp-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: auto;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.tp-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--accent-light);
+  color: var(--accent);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+/* Touchpoint Detail Cards */
+.tp-detail {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 16px;
+}
+
+.tp-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tp-detail-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: var(--text-tertiary);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tp-detail-num.teal { background: var(--teal); }
+.tp-detail-num.blue { background: var(--blue); }
+.tp-detail-num.purple { background: var(--purple); }
+.tp-detail-num.amber { background: var(--amber); }
+
+.tp-detail h4 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tp-detail .tp-phase-tag {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.tp-phase-tag.p1 { background: var(--teal-light); color: var(--teal); }
+.tp-phase-tag.p2 { background: var(--purple-light); color: var(--purple); }
+.tp-phase-tag.p3 { background: var(--amber-light); color: var(--amber); }
+
+.tp-detail p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.tp-detail .tp-spec {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+}
+
+.tp-solves {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.solve-tag {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.solve-tag.aoi { background: var(--teal-light); color: var(--teal); }
+.solve-tag.horikawa { background: var(--blue-light); color: var(--blue); }
+.solve-tag.osawa { background: var(--purple-light); color: var(--purple); }
+.solve-tag.hypothesis { background: var(--surface-alt); color: var(--text-secondary); }
+
+.phase-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0 20px;
+}
+
+.phase-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.phase-divider-label {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 16px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.phase-divider-label.p1 { background: var(--teal-light); color: var(--teal); }
+.phase-divider-label.p2 { background: var(--purple-light); color: var(--purple); }
+.phase-divider-label.p3 { background: var(--amber-light); color: var(--amber); }
+
+/* Vision Card */
+.vision-card {
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 16px;
+  padding: 40px 36px;
+  margin-top: 40px;
+}
+
+.vision-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--bg);
+}
+
+.vision-card p {
+  font-size: 14px;
+  line-height: 2;
+  color: #B0AFA8;
+}
+
+/* Phase Gate */
+.phase-gate {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.phase-gate-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.phase-gate-card .phase-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.phase-gate-card .phase-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.phase-gate-card .phase-condition {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .desires-grid { grid-template-columns: 1fr; }
+  .persona-details { grid-template-columns: 1fr; }
+  .empathy-map { grid-template-columns: 1fr; }
+  .scene-aspects { grid-template-columns: 1fr; }
+  .principles-grid { grid-template-columns: 1fr; }
+  .phase-gate { grid-template-columns: 1fr; }
+  .persona-header { flex-wrap: wrap; }
+  .persona-tag { margin-left: 0; }
+}
+
+@media print {
+  body { font-size: 12px; }
+  .container { max-width: 100%; padding: 20px; }
+  .section { page-break-inside: avoid; }
+  .persona-card { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="doc-header">
+  <div class="logo">OKINY</div>
+  <h1>UX設計サマリー</h1>
+  <div class="subtitle">好きなものを通じて、知らない誰かと静かに繋がれる場所<br>Step 1〜7 ワークショップ成果物（Day 7 更新）</div>
+</div>
+
+<!-- 1. Core Insight -->
+<div class="section">
+  <div class="section-number">01</div>
+  <h2>コアインサイト</h2>
+  <p class="section-lead">ユーザーリサーチから発見された、OKINYの存在意義の核心。</p>
+
+  <div class="insight-card">
+    <div class="label">核心概念</div>
+    <h3>「輪郭欲」</h3>
+    <p>人間は「自分が何者であるか」を確かめるために、好きなものを並べて輪郭を描く欲求を持っている。X（旧Twitter）等の既存SNSではこの欲求が発信欲・承認欲・帰属欲で上書きされており、静かに輪郭を整える場所が存在しない。OKINYはその場所になる。</p>
+  </div>
+
+  <div class="desires-grid">
+    <div class="desire-card store">
+      <div class="desire-name">蓄積の欲</div>
+      <div class="desire-type">内発的</div>
+      <div class="desire-desc">消えゆく熱量を器に収めたい。起点は「今夜」、ゴールは「半年後の自分」。</div>
+    </div>
+    <div class="desire-card control">
+      <div class="desire-name">制御の欲</div>
+      <div class="desire-type">内発的</div>
+      <div class="desire-desc">誰に何が届くかを自分で握りたい。日記的な連続性を持つ。</div>
+    </div>
+    <div class="desire-card belong">
+      <div class="desire-name">所属の欲</div>
+      <div class="desire-type">外発的</div>
+      <div class="desire-desc">同じ好きで静かに繋がりたい。他者との遭遇がきっかけで生まれる。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Personas -->
+<div class="section">
+  <div class="section-number">02</div>
+  <h2>ペルソナ</h2>
+  <p class="section-lead">3人は属性ではなく「欲の出発点」で分かれた独立ペルソナ。Phase 1で3人全員の欲求に応えるSNSの最小セットを構築する。</p>
+
+  <!-- Aoi -->
+  <div class="persona-card">
+    <div class="persona-header">
+      <div class="persona-avatar aoi">蒼</div>
+      <div class="persona-info">
+        <h3>蒼井悠太（あおい・ゆうた）</h3>
+        <div class="persona-meta">27歳・IT企業勤務・中野在住・独身</div>
+      </div>
+      <span class="persona-tag store">蓄積の欲</span>
+    </div>
+    <div class="persona-body">
+      <div class="persona-details">
+        <div class="detail-group">
+          <div class="detail-label">趣味</div>
+          <div class="detail-value">ライブ参戦、映画、深夜読書</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">SNS利用</div>
+          <div class="detail-value">X閲覧中心、投稿は月1回程度。Instagramストーリー限定公開のみ</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">性格</div>
+          <div class="detail-value">内省的、言語化欲が強い、蓄積癖がある</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">不満</div>
+          <div class="detail-value">ライブの感動を残したいが、ストーリーは流れる。ネタバレ配慮で詳しく書けない</div>
+        </div>
+      </div>
+      <div class="persona-quote">「ライブ後の興奮を誰かに話したいんじゃない。ちゃんと残しておきたいだけなんだよ」</div>
+
+      <div class="empathy-map">
+        <div class="empathy-quadrant say">
+          <div class="eq-label">言っていること</div>
+          <ul>
+            <li>ストーリーにライブを上げる習慣がある</li>
+            <li>ハイライトとして記録したい</li>
+            <li>ネタバレ配慮であまり書けない</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant think">
+          <div class="eq-label">考えていること</div>
+          <ul>
+            <li>興味ない人に見せたくない</li>
+            <li>見返せる形で残したい</li>
+            <li>感動が流れて消えるのがもったいない</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant do">
+          <div class="eq-label">やっていること</div>
+          <ul>
+            <li>Instagramストーリー→ハイライト保存</li>
+            <li>Xは閲覧中心、月1投稿</li>
+            <li>限定公開で投稿範囲を制御</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant feel">
+          <div class="eq-label">感じていること</div>
+          <ul>
+            <li>「見返したいのに見返せない」もどかしさ</li>
+            <li>自分の好きの全体像が見えない焦り</li>
+            <li>SNS疲れではないが、場所がない感覚</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Horikawa -->
+  <div class="persona-card">
+    <div class="persona-header">
+      <div class="persona-avatar horikawa">堀</div>
+      <div class="persona-info">
+        <h3>堀川麻衣（ほりかわ・まい）</h3>
+        <div class="persona-meta">31歳・PR会社勤務・渋谷在住・独身</div>
+      </div>
+      <span class="persona-tag control">制御の欲</span>
+    </div>
+    <div class="persona-body">
+      <div class="persona-details">
+        <div class="detail-group">
+          <div class="detail-label">趣味</div>
+          <div class="detail-value">Notion日記、カフェ巡り、美術館</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">SNS利用</div>
+          <div class="detail-value">Instagram非公開アカウント、X閲覧のみ</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">性格</div>
+          <div class="detail-value">編集者的、粒度と公開範囲へのこだわりが強い</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">不満</div>
+          <div class="detail-value">Notionは自分だけの世界。誰かの視線がある場所で、でも制御できる形で残したい</div>
+        </div>
+      </div>
+      <div class="persona-quote">「公開するかどうかは、私が決める。でも、誰かが見てくれる可能性だけは、持っておきたい」</div>
+
+      <div class="empathy-map">
+        <div class="empathy-quadrant say">
+          <div class="eq-label">言っていること</div>
+          <ul>
+            <li>Notionで週末に振り返りを書いている</li>
+            <li>公開範囲を自分で決めたい</li>
+            <li>雑に記録するのが嫌</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant think">
+          <div class="eq-label">考えていること</div>
+          <ul>
+            <li>自分の変化を記録として追いたい</li>
+            <li>誰かに見られる緊張感が質を上げる</li>
+            <li>でも見せるための「映え」は要らない</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant do">
+          <div class="eq-label">やっていること</div>
+          <ul>
+            <li>Notionに日記を書き溜めている</li>
+            <li>非公開アカウントで投稿を選別</li>
+            <li>カフェの記録はGoogleマップに星付け</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant feel">
+          <div class="eq-label">感じていること</div>
+          <ul>
+            <li>Notionは閉じすぎ、SNSは開きすぎ</li>
+            <li>ちょうどいい「半開き」の場所がない</li>
+            <li>編集する行為自体に満足感がある</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Osawa -->
+  <div class="persona-card">
+    <div class="persona-header">
+      <div class="persona-avatar osawa">大</div>
+      <div class="persona-info">
+        <h3>大澤拓海（おおさわ・たくみ）</h3>
+        <div class="persona-meta">23歳・映像専門学校生・埼玉実家</div>
+      </div>
+      <span class="persona-tag belong">所属の欲</span>
+    </div>
+    <div class="persona-body">
+      <div class="persona-details">
+        <div class="detail-group">
+          <div class="detail-label">趣味</div>
+          <div class="detail-value">TikTok視聴、映像制作、Discord傍観</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">SNS利用</div>
+          <div class="detail-value">TikTok日常使い、X閲覧、Discord映像系サーバー傍観</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">性格</div>
+          <div class="detail-value">控えめ、承認疲れ、静かな帰属欲求</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">不満</div>
+          <div class="detail-value">Discordは発言のハードルが高い。見ているだけだが、同じ好きの人がいると安心する</div>
+        </div>
+      </div>
+      <div class="persona-quote">「別に話しかけてほしいわけじゃない。ただ、同じものが好きな人がいるって、わかるだけでいい」</div>
+
+      <div class="empathy-map">
+        <div class="empathy-quadrant say">
+          <div class="eq-label">言っていること</div>
+          <ul>
+            <li>Discordは見ているだけ</li>
+            <li>発言する勇気がない</li>
+            <li>同じ好きの人がいると安心する</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant think">
+          <div class="eq-label">考えていること</div>
+          <ul>
+            <li>自分の好きに自信がない</li>
+            <li>間違ったこと言いたくない</li>
+            <li>でも独りでもない場所が欲しい</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant do">
+          <div class="eq-label">やっていること</div>
+          <ul>
+            <li>Discordサーバーに参加するが発言しない</li>
+            <li>TikTokでいいねだけ押す</li>
+            <li>好きなものリストをスマホのメモに書く</li>
+          </ul>
+        </div>
+        <div class="empathy-quadrant feel">
+          <div class="eq-label">感じていること</div>
+          <ul>
+            <li>承認を求めるSNSに疲れている</li>
+            <li>反応を要求されない場所が心地いい</li>
+            <li>タグを辿って似た投稿を見つけた瞬間の安堵</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase Gate -->
+  <div class="phase-gate">
+    <div class="phase-gate-card">
+      <div class="phase-label">PHASE 1</div>
+      <div class="phase-name" style="color: var(--teal);">蒼井 + 堀川 + 大澤</div>
+      <div class="phase-condition">SNSとして成立する最小セット</div>
+    </div>
+    <div class="phase-gate-card">
+      <div class="phase-label">PHASE 2</div>
+      <div class="phase-name" style="color: var(--purple);">拡張・深化</div>
+      <div class="phase-condition">MAU2000 + Day30継続率15%</div>
+    </div>
+    <div class="phase-gate-card">
+      <div class="phase-label">PHASE 3</div>
+      <div class="phase-name" style="color: var(--amber);">収益本格化</div>
+      <div class="phase-condition">MAU3000〜10,000</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Goals -->
+<div class="section">
+  <div class="section-number">03</div>
+  <h2>ゴール設定</h2>
+  <p class="section-lead">OKINYを3ヶ月使った後、この人はどうなっているか。時間軸は「今夜の熱量（起点）」→「半年後の手紙（ゴール）」の二重構造。</p>
+
+  <div class="goal-card">
+    <div class="goal-persona-dot aoi"></div>
+    <div class="goal-content">
+      <h4>蒼井：恥じない確認 / 半年後の自分に届く手紙</h4>
+      <p>ライブの熱も、深夜に読んだ本も、ここに置いておけば消えない。半年後に見返したとき、「自分ってこういう人だったんだ」と静かに確認できる状態。</p>
+    </div>
+    <div class="goal-value-tag">提供価値 #1：蓄積</div>
+  </div>
+  <div class="goal-card">
+    <div class="goal-persona-dot horikawa"></div>
+    <div class="goal-content">
+      <h4>堀川：粒度と公開範囲の自己制御 / 存在する視線</h4>
+      <p>更新することで自分の変化を確かめられる、静かな日記のような場所。公開するかは自分が決めるが、見てくれる可能性だけは持っている。</p>
+    </div>
+    <div class="goal-value-tag">提供価値 #1：制御</div>
+  </div>
+  <div class="goal-card">
+    <div class="goal-persona-dot osawa"></div>
+    <div class="goal-content">
+      <h4>大澤：滞在密度 / 反応を要求しない場</h4>
+      <p>タグをたどって似た投稿を見つけたとき、静かな所属感がある。孤独じゃない、でも騒がしくもない場所に居続けている。</p>
+    </div>
+    <div class="goal-value-tag">提供価値 #1：所属</div>
+  </div>
+</div>
+
+<!-- 4. Scenes -->
+<div class="section">
+  <div class="section-number">04</div>
+  <h2>利用シーン</h2>
+  <p class="section-lead">6観点（タイミング / 役割 / 人の目 / 物理環境 / 制約 / 期待値）でシーンを立体的に捉える。</p>
+
+  <div class="scene-card">
+    <h4 style="color: var(--teal);">蒼井：ライブ帰りの電車（23時台）</h4>
+    <div class="scene-aspects">
+      <div class="scene-aspect">
+        <div class="sa-label">タイミング</div>
+        <div class="sa-value">ライブ終演直後、興奮冷めやらぬ電車の中</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">役割</div>
+        <div class="sa-value">ファン、観客としての自分</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">人の目</div>
+        <div class="sa-value">周囲は他人。静かな夜の移動中</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">物理環境</div>
+        <div class="sa-value">スマホ片手、座席、揺れ</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">制約</div>
+        <div class="sa-value">片手操作、短時間（20分）</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">期待値</div>
+        <div class="sa-value">熱量が冷める前に残しておきたい</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scene-card">
+    <h4 style="color: var(--blue);">堀川：日曜22時、自室のデスク</h4>
+    <div class="scene-aspects">
+      <div class="scene-aspect">
+        <div class="sa-label">タイミング</div>
+        <div class="sa-value">週末の振り返り時間</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">役割</div>
+        <div class="sa-value">自分の編集者</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">人の目</div>
+        <div class="sa-value">完全にプライベート</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">物理環境</div>
+        <div class="sa-value">自室デスク、ノートPC＋iPad</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">制約</div>
+        <div class="sa-value">時間はある。熟考したい</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">期待値</div>
+        <div class="sa-value">今週の自分を整理したい</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scene-card">
+    <h4 style="color: var(--purple);">大澤：木曜夜、学校帰りの電車（22時台）</h4>
+    <div class="scene-aspects">
+      <div class="scene-aspect">
+        <div class="sa-label">タイミング</div>
+        <div class="sa-value">授業終わり、疲れた帰路</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">役割</div>
+        <div class="sa-value">コミュニティ周縁者、観察者</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">人の目</div>
+        <div class="sa-value">Discordの気配だけ感じる</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">物理環境</div>
+        <div class="sa-value">スマホ、イヤホン</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">制約</div>
+        <div class="sa-value">発言する勇気がない</div>
+      </div>
+      <div class="scene-aspect">
+        <div class="sa-label">期待値</div>
+        <div class="sa-value">同じ好きの人の存在を確認したい</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. CJM -->
+<div class="section">
+  <div class="section-number">05</div>
+  <h2>カスタマージャーニーマップ</h2>
+  <p class="section-lead">体験を時系列で描き、感情の山を特定する。内発型（蒼井・堀川）は「着火→投稿→見返し」、外発型（大澤）は「遭遇→参加→重ねる→居場所」。</p>
+
+  <!-- Aoi CJM -->
+  <div class="cjm-container">
+    <h4 style="color: var(--teal);">蒼井悠太のジャーニー（Phase 1）</h4>
+
+    <svg class="emotion-curve" viewBox="0 0 700 140" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1D7A65" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#1D7A65" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <line x1="40" y1="80" x2="660" y2="80" stroke="#E8E6E0" stroke-width="1"/>
+      <text x="20" y="40" font-size="9" fill="#9C9A92" font-family="Noto Sans JP" text-anchor="end">+5</text>
+      <text x="20" y="84" font-size="9" fill="#9C9A92" font-family="Noto Sans JP" text-anchor="end">0</text>
+      <path d="M80,64 L190,52 L300,40 L410,52 L520,40 L620,28" fill="none" stroke="#1D7A65" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M80,64 L190,52 L300,40 L410,52 L520,40 L620,28 L620,130 L80,130 Z" fill="url(#curveGrad)"/>
+      <circle cx="80" cy="64" r="4" fill="#1D7A65"/>
+      <circle cx="190" cy="52" r="4" fill="#1D7A65"/>
+      <circle cx="300" cy="40" r="4" fill="#1D7A65"/>
+      <circle cx="410" cy="52" r="4" fill="#1D7A65"/>
+      <circle cx="520" cy="40" r="4" fill="#1D7A65"/>
+      <circle cx="620" cy="28" r="5" fill="#1D7A65" stroke="white" stroke-width="2"/>
+      <text x="80" y="130" font-size="9" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">着火①</text>
+      <text x="190" y="130" font-size="9" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">着火②</text>
+      <text x="300" y="130" font-size="9" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">着火③</text>
+      <text x="410" y="130" font-size="9" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">投稿</text>
+      <text x="520" y="130" font-size="9" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">見返し①</text>
+      <text x="620" y="130" font-size="9" fill="#1D7A65" font-family="Noto Sans JP" text-anchor="middle" font-weight="500">見返し②</text>
+    </svg>
+
+    <div class="cjm-phases">
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">着火①</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">アプリを開く</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">今の気持ちを残したい</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+2 期待</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">着火②</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">テーマを選ぶ</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">これ書きたい</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+3 高揚</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">着火③</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">3枠を埋める</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">この3つだ</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+4 充実</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">投稿</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">投稿完了</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">残せた</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+3 安堵</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">見返し①</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">自分の投稿を見返す</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">自分はこれが好きだった</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+4 再発見</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">見返し②</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">半年前の投稿を見返す</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">変わったな、自分</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+5 静かな喜び</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Horikawa CJM -->
+  <div class="cjm-container">
+    <h4 style="color: var(--blue);">堀川麻衣のジャーニー（Phase 1）</h4>
+
+    <svg class="emotion-curve" viewBox="0 0 700 140" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="curveGradB" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3B6FA0" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#3B6FA0" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <line x1="40" y1="80" x2="660" y2="80" stroke="#E8E6E0" stroke-width="1"/>
+      <text x="20" y="40" font-size="9" fill="#9C9A92" font-family="Noto Sans JP" text-anchor="end">+4</text>
+      <text x="20" y="84" font-size="9" fill="#9C9A92" font-family="Noto Sans JP" text-anchor="end">0</text>
+      <path d="M60,58 L140,64 L220,52 L300,40 L380,34 L460,52 L540,40 L620,34" fill="none" stroke="#3B6FA0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M60,58 L140,64 L220,52 L300,40 L380,34 L460,52 L540,40 L620,34 L620,130 L60,130 Z" fill="url(#curveGradB)"/>
+      <circle cx="60" cy="58" r="4" fill="#3B6FA0"/>
+      <circle cx="140" cy="64" r="4" fill="#3B6FA0"/>
+      <circle cx="220" cy="52" r="4" fill="#3B6FA0"/>
+      <circle cx="300" cy="40" r="4" fill="#3B6FA0"/>
+      <circle cx="380" cy="34" r="5" fill="#3B6FA0" stroke="white" stroke-width="2"/>
+      <circle cx="460" cy="52" r="4" fill="#3B6FA0"/>
+      <circle cx="540" cy="40" r="4" fill="#3B6FA0"/>
+      <circle cx="620" cy="34" r="5" fill="#3B6FA0" stroke="white" stroke-width="2"/>
+      <text x="60" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">節目の発生</text>
+      <text x="140" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">フォーム発見</text>
+      <text x="220" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">テーマ選択</text>
+      <text x="300" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">投稿編集</text>
+      <text x="380" y="130" font-size="8" fill="#3B6FA0" font-family="Noto Sans JP" text-anchor="middle" font-weight="500">鍵付き保存</text>
+      <text x="460" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">時間経過</text>
+      <text x="540" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">見返す</text>
+      <text x="620" y="130" font-size="8" fill="#3B6FA0" font-family="Noto Sans JP" text-anchor="middle" font-weight="500">公開に切替</text>
+    </svg>
+
+    <div class="cjm-phases">
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">節目の発生</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">好きなバンドの活動休止を知る</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">この気持ちを整理したい</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+2 整理欲</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name neutral">フォーム発見</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">OKINYの投稿フォームを見つける</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">これで残せるかも</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+1 発見</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">テーマ選択</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">テーマを選ぶ</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">3つの問いが良い</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+2 納得</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">投稿編集</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">好きなもの3つを書く</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">書く行為自体が整理になる</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+3 没入</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">鍵付き保存</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">鍵付き（自分だけ）で保存</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">公開は後で決める。今は自分だけでいい</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+4 制御の安心</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name neutral">時間経過</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">数週間、何もしない</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">あのとき書いたやつ、どうだったかな</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+2 静かな思い出し</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">見返す</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">マイページから過去の投稿を開く</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">あのとき、こう感じてたんだ</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+3 再確認</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">公開に切替</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">鍵を外し、公開に変更する</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">もう大丈夫。誰かに見てもらってもいい</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+4 自己決定の充実</div>
+      </div>
+    </div>
+
+    <div style="font-size: 13px; color: var(--text-secondary); padding: 12px 0 0;">堀川のジャーニーには急な山も急な谷もなく、緩やかに登り続ける弧。ピークは「編集する行為そのもの」と「公開/非公開を自分で握る瞬間」の2つ。鍵付きデフォルト→後から公開に切り替える行為が、堀川にとっての「制御の欲」の完成形。</div>
+  </div>
+
+  <!-- Osawa CJM -->
+  <div class="cjm-container">
+    <h4 style="color: var(--purple);">大澤拓海のジャーニー（Phase 1）</h4>
+
+    <svg class="emotion-curve" viewBox="0 0 700 140" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="curveGradP" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6B5CA5" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#6B5CA5" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <line x1="40" y1="80" x2="660" y2="80" stroke="#E8E6E0" stroke-width="1"/>
+      <text x="20" y="40" font-size="9" fill="#9C9A92" font-family="Noto Sans JP" text-anchor="end">+4</text>
+      <text x="20" y="84" font-size="9" fill="#9C9A92" font-family="Noto Sans JP" text-anchor="end">0</text>
+      <path d="M70,70 L150,64 L240,70 L330,58 L420,52 L510,46 L600,34" fill="none" stroke="#6B5CA5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M70,70 L150,64 L240,70 L330,58 L420,52 L510,46 L600,34 L600,130 L70,130 Z" fill="url(#curveGradP)"/>
+      <circle cx="70" cy="70" r="4" fill="#6B5CA5"/>
+      <circle cx="150" cy="64" r="4" fill="#6B5CA5"/>
+      <circle cx="240" cy="70" r="4" fill="#6B5CA5"/>
+      <circle cx="330" cy="58" r="4" fill="#6B5CA5"/>
+      <circle cx="420" cy="52" r="4" fill="#6B5CA5"/>
+      <circle cx="510" cy="46" r="4" fill="#6B5CA5"/>
+      <circle cx="600" cy="34" r="5" fill="#6B5CA5" stroke="white" stroke-width="2"/>
+      <text x="70" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">遭遇</text>
+      <text x="150" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">閲覧</text>
+      <text x="240" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">躊躇</text>
+      <text x="330" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">初投稿</text>
+      <text x="420" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">似た投稿発見</text>
+      <text x="510" y="130" font-size="8" fill="#73726C" font-family="Noto Sans JP" text-anchor="middle">重ねる</text>
+      <text x="600" y="130" font-size="8" fill="#6B5CA5" font-family="Noto Sans JP" text-anchor="middle" font-weight="500">居場所</text>
+    </svg>
+
+    <div class="cjm-phases">
+      <div class="cjm-phase">
+        <div class="cjm-phase-name neutral">遭遇</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">Xで友人のシェアカードを見る</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">なんだこれ？ちょっと見てみるか</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+1 軽い好奇心</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">閲覧</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">アプリを入れ、タグ検索で映画系の投稿を見る</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">同じ映画好きな人いるんだ</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+2 安堵</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name neutral">躊躇</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">投稿フォームを開く→閉じる</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">自分なんかが書いていいのかな</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+1 迷い</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">初投稿</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">テーマに答える形で初めて投稿を作る</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">テーマがあったから書けた</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+2 小さな達成</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">似た投稿発見</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">タグ検索で自分と同じアイテムを入れた投稿を見つける</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">この人も好きなんだ。他に何が好きなんだろう</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+3 静かな所属感</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">重ねる</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">週1ペースで投稿を追加、マイページが育つ</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">自分の好きの輪郭が見えてきた</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+3 自己理解</div>
+      </div>
+      <div class="cjm-phase">
+        <div class="cjm-phase-name positive">居場所</div>
+        <div class="cjm-row-label">行動</div>
+        <div class="cjm-cell">定期的に開く。話しかけなくていい場所</div>
+        <div class="cjm-row-label">思考</div>
+        <div class="cjm-cell">ここは自分の場所だ</div>
+        <div class="cjm-row-label">感情</div>
+        <div class="cjm-cell">+4 静かな帰属</div>
+      </div>
+    </div>
+
+    <div style="font-size: 13px; color: var(--text-secondary); padding: 12px 0 0;">大澤のジャーニーには急な山がない。じわじわと温度が上がる右肩上がり。途中の「躊躇」は離脱リスクだが、おすすめテーマが「書いていいんだ」という言い訳を提供することで乗り越える。ピークは「同じものが好きな人の存在を知る」瞬間と「ここが居場所だと気づく」瞬間の2つ。どちらもシステムが演出するのではなく、ユーザーが自分でたどり着く。</div>
+  </div>
+
+  <div class="insight-card" style="border-left: 3px solid var(--accent);">
+    <div class="label">設計哲学</div>
+    <h3>静かな山のみ</h3>
+    <p>OKINYは谷を意図的に設計しない。メトリクスがないSNSにおいて、見返し衝動を人工的に抑制する意味がない。ユーザーは投稿したら、いつでも自分のペースで見返せる。プッシュ通知は対人通知（フォロー・コメント等）に限定し、行動を煽る通知は送らない。ユーザーが自分で戻ってくることに賭ける。</p>
+  </div>
+</div>
+
+<!-- 6. Design Principles -->
+<div class="section">
+  <div class="section-number">06</div>
+  <h2>デザイン原則 6箇条</h2>
+  <p class="section-lead">全てのUI判断の基準。迷ったらここに立ち返る。</p>
+
+  <div class="principles-grid">
+    <div class="principle-card">
+      <div class="principle-number">01</div>
+      <h4>騒音つくらない</h4>
+      <p>バッジ禁止。効果音禁止。プッシュ通知は必要最小限（フォロー・コメント等の対人通知のみ）。通知で行動を煽らない。</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-number">02</div>
+      <h4>余白は意味持つ</h4>
+      <p>行間1.5倍、画面密度低。空欄3枠そのものが「ここに好きを入れていい」という入口になる。</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-number">03</div>
+      <h4>比較の軸持ち込まない</h4>
+      <p>ランク・スコア・いいね数・閲覧数を表示しない。タグの件数も非表示。数字が比較を生む。</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-number">04</div>
+      <h4>選んだこと自体が表現</h4>
+      <p>選定理由のコメント欄なし。並べた3つですべてを語らせる。補足説明は蛇足。</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-number">05</div>
+      <h4>時間が文脈</h4>
+      <p>半年前の投稿が再発見される導線。更新日による鮮度表現。蓄積されるほど、自分の輪郭が見える。</p>
+    </div>
+    <div class="principle-card">
+      <div class="principle-number">06</div>
+      <h4>主語をシステムに渡さない</h4>
+      <p>「トレンド」「人気ランキング」でユーザーの選択に介入しない。レコメンドは「事実の提示」として設計し、誘導しない。シェアもレコメンドも、全てユーザーの手元にトリガーがある。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Touchpoints -->
+<div class="section">
+  <div class="section-number">07</div>
+  <h2>タッチポイント全体像</h2>
+  <p class="section-lead">Phase 1（SNSとして成立する最小セット）〜Phase 3で段階的にタッチポイントが増えていく。各機能の意味と、なぜそこにあるかを解説する。</p>
+
+  <!-- Phase 1 -->
+  <div class="phase-divider">
+    <div class="phase-divider-line"></div>
+    <div class="phase-divider-label p1">Phase 1（SNSとして成立する最小セット）</div>
+    <div class="phase-divider-line"></div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">1</div>
+      <h4>ホーム・おすすめテーマ</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>アプリを開いたときの最初の画面。運営発テーマ2-3本とユーザー発テーマ3-4本を合わせた計5-7枚のカードが表示される。たとえば「最近心に残った映画3本」「雨の日に聴きたい曲3つ」など。テーマがあることで「何を投稿しよう」と迷わずに済み、投稿のハードルを下げる。ユーザー発テーマの条件は直近30日で5件以上の投稿があるテーマ。週次でランダムシャッフルされ、ラベル（運営/ユーザー）やカウントは非表示。固定スケジュール配信ではなく常時表示。</p>
+    <div class="tp-spec">蒼井にとっては着火のきっかけ。大澤にとっては「何を書けばいいかわからない」を解消する入口。</div>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：着火の入口</span>
+      <span class="solve-tag osawa">大澤：投稿ハードルの解消</span>
+      <span class="solve-tag hypothesis">仮説3-5 テーマが習慣をつくるか</span>
+      <span class="solve-tag hypothesis">差戻し：固定スケジュール配信→混合推奨モデル</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">2</div>
+      <h4>投稿フォーム3枠</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>OKINYの核心。テーマを決め、好きなものを3つだけ入力する画面。空欄が3つ並んでいるだけのシンプルなフォーム。順位なし、スコアなし、レビュー欄なし。「空欄そのものが入口」というデザイン原則②の体現。1投稿 = テーマ + 好きなもの3つ。</p>
+    <div class="tp-spec">3つという制約が「何でも書ける自由」より「厳選する楽しさ」を生む。これがOKINYの自己対話体験の出発点。</div>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：蓄積の欲＝熱量を器に収める</span>
+      <span class="solve-tag hypothesis">仮説3-1 3つ固定が最適か</span>
+      <span class="solve-tag hypothesis">仮説3-2 順位なしでハードル下がるか</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">3</div>
+      <h4>投稿プレビュー</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>投稿を確定する前に、完成した投稿がどう見えるかを確認する画面。「この3つでいいか」を自分に問い直す最後の瞬間。プレビューがあることで投稿の丁寧さが担保され、「間違って投稿してしまった」不安を取り除く。</p>
+    <div class="tp-solves">
+      <span class="solve-tag horikawa">堀川：粒度へのこだわりを担保</span>
+      <span class="solve-tag hypothesis">離脱リスク：投稿ミスへの不安</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">4</div>
+      <h4>投稿完成画面</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>投稿が完了した瞬間に表示される画面。派手なアニメーションや「おめでとう！」は一切なし。完成した投稿が静かに表示されるだけ。これが「投稿できた」という安堵になる。熱量を器に収め終えた直後の、静かな達成感。</p>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：投稿完了の安堵</span>
+      <span class="solve-tag hypothesis">原則① 騒音つくらない</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">5</div>
+      <h4>マイページ</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>自分が作った投稿の一覧。時系列で並び、過去の投稿をいつでも見返せる。これがOKINYの「蓄積」の実体。投稿が増えるほど自分の「好きの輪郭」が見えてくる。蒼井のゴール「半年後の自分に届く手紙」は、この画面で実現される。</p>
+    <div class="tp-spec">デザイン原則⑤「時間が文脈」の中核画面。半年前の投稿を見返すと「自分はこういう人だったんだ」と気づける。</div>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：半年後の自分に届く手紙</span>
+      <span class="solve-tag horikawa">堀川：自分の変化を追う日記</span>
+      <span class="solve-tag hypothesis">仮説4-2 選ぶ行為が自己対話になるか</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">6</div>
+      <h4>投稿詳細</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>1つの投稿を開いたときの画面。テーマと3つの好きが静かに並ぶ。いいね数も閲覧数も表示しない。他人の投稿を開いたときも同じ見え方。「この人はこの3つを選んだんだ」という事実だけが伝わる。シェア機能はこの画面のオーバーフローメニュー（三点リーダー）内に格納。</p>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：見返し＝自分の投稿を見返す</span>
+      <span class="solve-tag osawa">大澤：他者の投稿を静かに覗く</span>
+      <span class="solve-tag hypothesis">原則③ 比較の軸持ち込まない</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">7</div>
+      <h4>タグ検索結果</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>タグで投稿を検索した結果画面。たとえば「スピッツ」で検索すると、スピッツを3つの中に入れた人の投稿が一覧で出る。並び順は最終更新日降順で、毎週ランダムにシャッフルされる。人気順やおすすめ順はない。トレンドタグの表示もない。件数も非表示。「静かに探して、見つける」体験。</p>
+    <div class="tp-spec">大澤にとっては「同じものが好きな人がいる」と知る瞬間。OKINYの「所属の欲」はここから始まる。</div>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：似た投稿発見＝静かな所属感</span>
+      <span class="solve-tag hypothesis">原則⑥ 主語をシステムに渡さない（非誘導検索）</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">8</div>
+      <h4>テーマ下部・他の投稿リンク</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>おすすめテーマの下部にランダムで5つの投稿へのリンクが静かに並ぶ。全体統計は表示しない。数字ではなく「他にも投稿がある」という気配だけを伝える。週次で入れ替わる。コミュニティの存在感を、数値ではなく存在そのもので示す設計。</p>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：孤独じゃないと知る気配</span>
+      <span class="solve-tag hypothesis">仮説4-3 少人数が密度になるか</span>
+      <span class="solve-tag hypothesis">ユーザー発テーマがコミュニティの気配を担う</span>
+    </div>
+  </div>
+
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">9</div>
+      <h4>自己分析ツール（ポイント消費型）</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>投稿やスレッド回答で貯まるポイントを使い、ユーザーが自分で選んで分析を実行するモデル。閾値型（投稿N件で自動解放）ではなく、ポイントを消費して能動的にアンロックする設計。バッジ・トロフィー・進捗バー・達成言語・他ユーザー比較は一切禁止。全段階（3/5/10/20/50件）の分析メニューをPhase 1から提供。分析メニュー案: タグTOP3（5pt）、カテゴリ分布（10pt）、時間帯ヒートマップ（15pt）、タグ変遷（25pt）、好みDNA（40pt）、年間振り返り（50pt）。※分析メニューの詳細・ポイントコストは今後詰める。</p>
+    <div class="tp-spec">デザイン原則①「騒音つくらない」を守りつつ、蓄積に対する静かな報酬を返す。ドーパミン型の達成感ではなく、セロトニン型の「ああ、溜まってたんだ」という気づき。ポイントを「何に使うか選ぶ」行為そのものが自己対話になる。</div>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：蓄積への静かな報酬</span>
+      <span class="solve-tag hypothesis">仮説4-1 自己分析ツールが嬉しいか</span>
+      <span class="solve-tag hypothesis">差戻し：閾値型→ポイント消費型に変更</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">9b</div>
+      <h4>ポイントシステム</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>自己分析ツールの消費通貨となるポイントの獲得・消費・課金の仕組み。獲得方法: 投稿1pt、スレッド回答1pt、ピン止めされると+3pt。消費先は自己分析ツールの各メニュー。ポイントの課金購入あり（レート未定）。プレミアム会員はポイント獲得速度2倍。ポイント残高はマイページに静かに表示し、ランキングや他者比較には使わない。</p>
+    <div class="tp-spec">ポイントの存在自体が「投稿する理由」になる。ただし、ポイントを前面に押し出さない。あくまで自己分析を使いたくなったときに「ああ、投稿してたから使えるんだ」と気づく設計。</div>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：投稿の蓄積がポイントとして可視化される</span>
+      <span class="solve-tag hypothesis">収益：ポイント課金（Phase 1から）</span>
+      <span class="solve-tag hypothesis">原則① 騒音つくらない（ポイント獲得通知なし）</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">10</div>
+      <h4>外部シェア導線</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>投稿詳細画面の三点リーダーメニュー内に「シェア」ボタンを配置（副動線）。タップすると、モノクロームカードデザインの投稿カード画像が生成され、各種SNSにシェアできる。デフォルトは限定URL（リンクを持っている人だけ閲覧可能）で、SNSへの公開シェアは追加タップが必要。文言制限あり、誘導文言は使わない。</p>
+    <div class="tp-spec">事業計画書の「投稿カードのシェアが集客の核」を、デザイン原則⑥と両立させた形。ワンタップシェアは廃止し三点リーダー内の副動線に変更。シェアのトリガーがユーザーの手元にある限り、原則違反にならない。</div>
+    <div class="tp-solves">
+      <span class="solve-tag horikawa">堀川：公開範囲を自分が握るシェア</span>
+      <span class="solve-tag hypothesis">仮説3-4 投稿カードをシェアしたいか</span>
+      <span class="solve-tag hypothesis">成長KPI：MAU2000達成のオーガニック経路</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">11</div>
+      <h4>AdMobバナー広告</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>Phase 1の収益源はAdMobバナー + ポイント課金 + プレミアムプラン（月額550円）の三本柱。表示位置に制限あり（マイページ・投稿詳細には表示しない）。プレミアムプランの特典に「広告非表示」を含む。Phase 2でスポンサード投稿（フィードネイティブ広告）を追加。</p>
+    <div class="tp-spec">ネイティブ広告（スポンサード投稿）はPhase 2。Phase 1ではAdMobバナー + ポイント課金 + プレミアムプランに留める。</div>
+    <div class="tp-solves">
+      <span class="solve-tag hypothesis">収益：Phase 1 AdMob+ポイント課金+プレミアム550円 / Phase 2 +スポンサード投稿</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">12</div>
+      <h4>投稿時レコメンド</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>投稿完了時に「○○を挙げた人はこんなものも好きです」を表示。投稿→発見→次の投稿、という「好きの連鎖ループ」を回すエンジン。データ不足時は表示しない（投稿数が少ない初期は非表示）。SNSとして成立するために、初期から好きの連鎖体験を提供する。</p>
+    <div class="tp-spec">デザイン原則⑥「主語をシステムに渡さない」との整合：「おすすめ」ではなく「事実の提示」（○人が挙げている）として設計する。</div>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：投稿→発見→次の投稿の連鎖</span>
+      <span class="solve-tag hypothesis">仮説4-6 レコメンドが継続の核になるか</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">13</div>
+      <h4>スレッド機能（知恵袋型Q&A）</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>QA型ギャラリー。投稿主がお題を立て、他のユーザーが回答（3つの好き + ひとこと任意140字）をぶら下げる形式。スレッドは誰でも自由に作成可能（ポイント消費なし）。荒らし・ボット対策は別途設計する。対話は不可——投稿主はリアクション（3種: 参考 / 新発見 / 共感）のみ返せる。ピン止め機能あり（投稿主のみ、複数可）。回答はマイページに投稿として蓄積される。運営スレッドも用意し、公式お題で参加ハードルを下げる。</p>
+
+    <div class="tp-spec" style="margin-top: 16px; padding: 16px 20px; background: var(--surface-alt); border-radius: 8px; border-left: 3px solid var(--teal);">
+      <div style="font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 8px;">回答の時間差表示</div>
+      <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.9;">
+        <strong>意図:</strong> 回答者の独立思考を促進する。先行回答へのアンカリング（係留効果）を防ぎ、回答の多様性を確保する。<br><br>
+        <strong>仕組み:</strong> 投稿後一定時間、他の回答が見えない。1〜3番目の回答は5分間、4番目以降の回答は10分間、他者の回答が非表示になる。スレッド主（お題を立てた人）は常時すべての回答を閲覧可能。<br><br>
+        <strong>心理学的根拠:</strong> 認知的反射の研究において、回答までの遅延時間が増えるほど熟慮的な回答が増えることが確認されている。先行回答が見える状態では模倣や同調が起きやすく、回答の多様性が損なわれる。特に「好き」という個人の感性に関わる領域では、他者の回答を先に見ることで「自分もそれにしよう」「自分の答えは変かも」という心理が働きやすい。時間差表示はこの影響を構造的に排除する。<br><br>
+        <strong>効果:</strong> 「それぞれが自分の中から出す」構造になり、スレッド主が多様な視点のアイデアを受け取れる。同じお題でも十人十色の回答が集まることで、スレッドが「静かなギャラリー」として機能する。これはOKINYの「静かなギャラリー」思想——システムが誘導せず、ユーザーが自分で選ぶ——とも整合する。<br><br>
+        <strong>UX配慮:</strong> 回答投稿後に「皆さんが独立して考えるため、最初は他の回答が見えません」等の説明を表示する。カウントダウン表示で待ち時間を可視化し、「いつ見えるのか」の不安を取り除く。待ち時間終了後に「他の回答が見えるようになりました」と静かに通知する。
+      </div>
+    </div>
+
+    <div class="tp-spec">「教えたい欲」と「知りたい欲」を静かに噛み合わせる。対話不可・リアクション3種のみという制約が荒れない場を作る。ピン止めされると+3ptで、回答者のモチベーションにもなる。SNSとして成立する最小セットの一部として、Phase 1から導入する。</div>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：「教えてもらう」から参加が始まる</span>
+      <span class="solve-tag hypothesis">仮説3-6 対話不可+リアクション限定で荒れない場を作れるか</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">13b</div>
+      <h4>Award機能</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>スレッドの回答に対してAwardを贈れる機能。ピン止め（投稿主が「参考になった」と示す行為）やリアクション（参考 / 新発見 / 共感）とは別の仕組みとして、回答の価値をより明確に評価・報酬する手段。Award受賞者はポイントを獲得できる。</p>
+    <div class="tp-spec">ピン止めは投稿主の「目に留まった」印、リアクションは軽い感情表現。Awardはそれらを超えた「この回答に価値がある」という意思表示。回答者にとっては投稿のモチベーションとなり、ポイント獲得を通じて自己分析ツール等の利用にも繋がる。※Award の種類・ポイント額・贈呈条件等の詳細は今後詰める。</div>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：回答が評価される静かな報酬</span>
+      <span class="solve-tag aoi">蒼井：良い回答を見つけたときの表現手段</span>
+      <span class="solve-tag hypothesis">仮説：Awardがスレッド回答の質と量を向上させるか</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">14</div>
+      <h4>今日のお題</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>毎日1つ、運営が出すお題。「今日食べたい朝ごはん3つ」「元気が出る曲3つ」のような軽いテーマを日替わりで配信する。おすすめテーマが「常時表示の選択肢」なのに対し、今日のお題は「今日だけの一期一会」。日替わりの制約が「今日書かなきゃ」という軽い動機を生み、投稿の習慣化を促す。プッシュ通知（オプトイン）で配信。</p>
+    <div class="tp-spec">おすすめテーマとの住み分け: おすすめテーマは選んで書く、今日のお題は出されたものに応える。蒼井は「着火のきっかけ」、大澤は「何を書けばいいか迷わない」安心感。</div>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：日替わりの着火きっかけ</span>
+      <span class="solve-tag osawa">大澤：迷わず書ける安心感</span>
+      <span class="solve-tag hypothesis">仮説：日替わりお題が投稿頻度を上げるか</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">15</div>
+      <h4>プッシュ通知</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>必要最小限のプッシュ通知。対象: フォローされた、コメントがついた、スレッドに回答があった、今日のお題配信。全てオプトイン（初期OFF）で、ユーザーが自分で選んでONにする設計。通知で行動を煽らない。「気づかせる」のみ。デザイン原則①「騒音つくらない」を守りつつ、SNSとして必要な対人通知を提供する。</p>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：フォローやコメントに気づける</span>
+      <span class="solve-tag hypothesis">原則① 騒音つくらない（全通知オプトイン、初期OFF）</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">16</div>
+      <h4>フォロー / フォロワー</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>気になるユーザーをフォローし、その人の新しい投稿をフィードで受け取る機能。フォロワー数は非公開（自分のみ確認可能）。他者のフォロワー数は表示しない。「この人の好きをもっと知りたい」という静かな関心を、数字の比較なしに実現する。</p>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：似た好きの人を静かに追える</span>
+      <span class="solve-tag horikawa">堀川：見てくれる存在の可視化</span>
+      <span class="solve-tag hypothesis">原則③ 比較の軸持ち込まない（フォロワー数非公開）</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">17</div>
+      <h4>コメント</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>投稿に対してコメントを残せる機能。投稿主がコメントの表示/非表示を制御できる。コメント数は非表示。「いいね」の代わりに、言葉で静かに反応を返す仕組み。荒らし対策としてブロック・ミュートと連動。</p>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：言葉で静かに繋がる</span>
+      <span class="solve-tag horikawa">堀川：コメントの表示/非表示を自分が握る</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">18</div>
+      <h4>ブロック / ミュート</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>不快なユーザーをブロック（相互非表示）またはミュート（自分に非表示）する機能。SNSの安全性を担保する基本機能。静かな場所を守るために、Phase 1から必須。</p>
+    <div class="tp-solves">
+      <span class="solve-tag horikawa">堀川：制御の欲＝不快な関係を遮断できる</span>
+      <span class="solve-tag hypothesis">安全性：SNSの最小要件</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">19</div>
+      <h4>ブックマーク</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>気になった他者の投稿を保存しておく機能。ブックマーク数は投稿者にも他のユーザーにも表示しない。「いいね」ではなく「自分のために取っておく」行為。ブックマークは完全にプライベート。</p>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：気になる投稿を静かに保存</span>
+      <span class="solve-tag hypothesis">原則③ 比較の軸持ち込まない（ブックマーク数非表示）</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">20</div>
+      <h4>OAuth認証</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>Google OAuthによるアカウント作成・ログイン。メールアドレスとパスワードの管理不要で、ワンタップで利用開始できる。SNSとしての基盤機能。</p>
+    <div class="tp-solves">
+      <span class="solve-tag hypothesis">UX：登録のハードルを最小化</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num teal">21</div>
+      <h4>プレミアムプラン</h4>
+      <span class="tp-phase-tag p1">Phase 1</span>
+    </div>
+    <p>月額550円の有料プラン。特典: 広告非表示、全分析メニュー解放（ポイント不要）、ポイント獲得2倍速、年間振り返りレポート無料、投稿カードデザイン5種追加、下書き上限15件（通常5件）。OKINYの世界観を気に入ったユーザーが「この静けさにお金を払う」という構造。広告密度を上げて無理に誘導するのではなく、価値を理解してくれる人からだけ受け取る形。</p>
+    <div class="tp-solves">
+      <span class="solve-tag horikawa">堀川：全分析解放＝自分のデータを深く知る</span>
+      <span class="solve-tag hypothesis">仮説6-2 有料プランに3〜5%が課金するか</span>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase-divider">
+    <div class="phase-divider-line"></div>
+    <div class="phase-divider-label p2">Phase 2（MAU2000 + Day30継続率15%達成後）</div>
+    <div class="phase-divider-line"></div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num purple">22</div>
+      <h4>「〜が好きな人が好きなもの」検索</h4>
+      <span class="tp-phase-tag p2">Phase 2</span>
+    </div>
+    <p>OKINYの最大の差別化機能。「スピッツが好きな人は、他にどんな映画を観て、どんなカフェに行くのか？」に答えられる横断検索。蓄積されたデータを使って、あるアイテムを好きな人が他に何を挙げているかをジャンルを超えて表示する。この検索結果は、他のどのサービスにも存在しないデータ。</p>
+    <div class="tp-spec">大澤のジャーニー「重ねる」フェーズの核心。タグ検索から一歩進んで、「好きの繋がり」を可視化する。十分なデータ蓄積が前提のため、Phase 2で有効化。</div>
+    <div class="tp-solves">
+      <span class="solve-tag osawa">大澤：好きの繋がりで居場所を深める</span>
+      <span class="solve-tag hypothesis">事業価値：世界に類のないデータ基盤の実体化</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num purple">23</div>
+      <h4>外部DB連携サジェスト</h4>
+      <span class="tp-phase-tag p2">Phase 2</span>
+    </div>
+    <p>投稿フォームの入力時に、Spotify（音楽）、TMDB（映画）、Google Books（本）、Google Places（場所）等の外部データベースから候補をサジェスト表示。「スピッツ」と入力すると正式名称が候補に出る。選択するとメタデータが構造化データとして保存され、表記ゆれを防ぎ、検索精度を向上させる。フリーテキスト入力も引き続き可能。</p>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：入力の手間を減らし、着火の速度を上げる</span>
+      <span class="solve-tag hypothesis">仮説棚卸し8-3 フリーテキスト表記揺れリスクの解消</span>
+      <span class="solve-tag hypothesis">横断検索・レコメンドの精度基盤</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num purple">24</div>
+      <h4>ネタバレトグル</h4>
+      <span class="tp-phase-tag p2">Phase 2</span>
+    </div>
+    <p>投稿にネタバレを含む場合、投稿者がトグルをONにすることで、閲覧者は「ネタバレを含みます」の表示をタップしてから内容を確認する形式。最低限の実装で、ネタバレ配慮をしたい投稿者の安心感を提供する。</p>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：ネタバレ配慮で安心して書ける</span>
+      <span class="solve-tag horikawa">堀川：公開範囲の制御の延長</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num purple">25</div>
+      <h4>スポンサード投稿</h4>
+      <span class="tp-phase-tag p2">Phase 2</span>
+    </div>
+    <p>フィードにネイティブ広告として表示される企業スポンサードの投稿。OKINYの投稿フォーマット（テーマ + 好きなもの3つ）に沿った形式で、通常の投稿と同じ体験を維持する。「スポンサード」ラベルで明示。フィード内の表示頻度は控えめに制限。</p>
+    <div class="tp-spec">Phase 1のAdMobバナーから、よりOKINYの世界観に馴染む広告形式へ移行。投稿フォーマットに沿うことで、ユーザー体験を損なわない。</div>
+    <div class="tp-solves">
+      <span class="solve-tag hypothesis">収益：フィードネイティブ広告</span>
+      <span class="solve-tag hypothesis">原則① 騒音つくらない（表示頻度を制限）</span>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase-divider">
+    <div class="phase-divider-line"></div>
+    <div class="phase-divider-label p3">Phase 3（MAU3000〜10,000・収益本格化）</div>
+    <div class="phase-divider-line"></div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num amber">26</div>
+      <h4>公式アカウント</h4>
+      <span class="tp-phase-tag p3">Phase 3</span>
+    </div>
+    <p>企業・ラジオ番組・Podcast等が公式アカウントを持ち、スレッドを作成・運営する機能。たとえばラジオ番組が「今月のテーマ：人生を変えた本3冊」とスレッドを立て、リスナーが投稿で回答する。公式スレッドはトップ掲出可能（広告枠として提供）。認証バッジ付き、手動承認制。</p>
+    <div class="tp-solves">
+      <span class="solve-tag hypothesis">収益：タイアップお題・提携広告の受け皿</span>
+      <span class="solve-tag osawa">大澤：好きなアーティストの公式お題に答える参加体験</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num amber">27</div>
+      <h4>企業向けAPI</h4>
+      <span class="tp-phase-tag p3">Phase 3</span>
+    </div>
+    <p>「○○が好きな人が他に何を好むか」を検索できるAPIを外部に提供。メディア・EC・エンタメ業界にとって、ジャンルを横断した好みデータは他に存在しない唯一無二の資産。Phase 3では限定公開ベータ、投稿データ10万件超で本格提供。</p>
+    <div class="tp-solves">
+      <span class="solve-tag hypothesis">事業価値：データ自体が収益を生む構造の本格化</span>
+      <span class="solve-tag hypothesis">仮説6-3 好みデータは少量でも企業に売れるか</span>
+    </div>
+  </div>
+
+  <div class="tp-detail">
+    <div class="tp-detail-header">
+      <div class="tp-detail-num amber">28</div>
+      <h4>好みの世界地図</h4>
+      <span class="tp-phase-tag p3">Phase 3</span>
+    </div>
+    <p>OKINYの最終到達地点の象徴。ジャンルを超えた「好き」の繋がりが可視化された、世界に類のないデータベース。「あのバンドが好きな人は、どんな映画を観て、どんなカフェに行くのか」——この問いに答えられるプラットフォームは、まだどこにもない。ユーザーが「好き」を投稿するたびに地図は広がり続ける。</p>
+    <div class="tp-solves">
+      <span class="solve-tag aoi">蒼井：自分の輪郭が世界地図の一部になる</span>
+      <span class="solve-tag osawa">大澤：好きの繋がりで世界が広がる</span>
+      <span class="solve-tag horikawa">堀川：自分の好みが他者の発見になる</span>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="insight-card" style="border-left: 3px solid var(--blue); margin-top: 32px;">
+    <div class="label">KPI</div>
+    <h3>成功指標</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+      <div>
+        <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 1px; margin-bottom: 4px;">初回投稿率</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--teal);">40%</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 1px; margin-bottom: 4px;">3投稿到達率</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--teal);">50%</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 1px; margin-bottom: 4px;">5投稿到達率</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--blue);">30%</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 1px; margin-bottom: 4px;">Day30継続率</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--blue);">15%</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 1px; margin-bottom: 4px;">自己分析機能クリック率</div>
+        <div style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">計測対象</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 1px; margin-bottom: 4px;">テーマ起点投稿比率</div>
+        <div style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">計測対象</div>
+      </div>
+    </div>
+    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+      <div style="font-size: 12px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 1px; margin-bottom: 8px;">PHASE GATES</div>
+      <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+        Phase 1 → 2：MAU 2,000 + Day30継続率 15%<br>
+        Phase 2 → 3：MAU 3,000〜10,000
+      </div>
+    </div>
+  </div>
+
+  <!-- Vision -->
+  <div class="vision-card">
+    <h3>最終到達地点</h3>
+    <p>一人ひとりが自分の「好き」を理解し、広げられる世界を作る。OKINYは「静かなギャラリー」として始まり、投稿が蓄積されるほど「好みの世界地図」へと育っていく。ユーザーが楽しむほどデータが溜まり、事業の価値も上がる。ユーザーの幸福とビジネスの成長が同じ方向を向いている——これがOKINYの構造の本質。</p>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div style="text-align: center; padding: 48px 0 0; border-top: 1px solid var(--border); margin-top: 24px;">
+  <div style="font-size: 14px; letter-spacing: 4px; color: var(--accent); font-weight: 500; margin-bottom: 8px;">OKINY</div>
+  <div style="font-size: 13px; color: var(--text-tertiary);">UX設計サマリー｜Step 1〜7 ワークショップ成果物（Day 7 更新）</div>
+  <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">2026年4月</div>
+</div>
+
+</div>
+</body>
+</html>

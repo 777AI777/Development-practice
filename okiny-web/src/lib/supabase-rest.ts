@@ -160,14 +160,12 @@ async function callRpc<T>(
   return JSON.parse(text) as T;
 }
 
-function parseItems(row: SupabaseRankingRow): [string, string, string, string, string] {
+function parseItems(row: SupabaseRankingRow): [string, string, string] {
   const sorted = [...(row.ranking_items ?? [])].sort((a, b) => a.rank - b.rank);
   return [
     sorted[0]?.item_text ?? "",
     sorted[1]?.item_text ?? "",
     sorted[2]?.item_text ?? "",
-    sorted[3]?.item_text ?? "",
-    sorted[4]?.item_text ?? "",
   ];
 }
 
@@ -180,6 +178,8 @@ export function mapRankingRow(row: SupabaseRankingRow) {
     isPublic: row.is_public,
     tagName: row.tags?.name,
     items: parseItems(row),
+    borderColor: row.border_color ?? "#FFE5E5",
+    markerIcon: row.marker_icon ?? "Heart",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     viewCount: row.view_count ?? 0,
@@ -295,6 +295,8 @@ export function mapPublicRankingWithAuthorRow(row: {
   view_count: number;
   impression_count: number;
   bookmark_count: number;
+  border_color?: string | null;
+  marker_icon?: string | null;
   ranking_items: Array<{ rank: number; item_text: string }> | null;
   author_display_name: string | null;
   author_avatar_url: string | null;
@@ -312,6 +314,8 @@ export function mapPublicRankingWithAuthorRow(row: {
     view_count: row.view_count,
     impression_count: row.impression_count,
     bookmark_count: row.bookmark_count,
+    border_color: row.border_color ?? null,
+    marker_icon: row.marker_icon ?? null,
     ranking_items: row.ranking_items ?? [],
     tags: row.tag_name ? { name: row.tag_name } : undefined,
   });
@@ -337,7 +341,7 @@ export async function listRankingsByUser(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,border_color,marker_icon,ranking_items(rank,item_text),tags(name)",
     user_id: `eq.${params.userId}`,
     order: "updated_at.desc",
   });
@@ -362,7 +366,7 @@ export async function getRankingById(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow> | null> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,border_color,marker_icon,ranking_items(rank,item_text),tags(name)",
     id: `eq.${params.rankingId}`,
     user_id: `eq.${params.userId}`,
     limit: "1",
@@ -382,8 +386,10 @@ export async function createRanking(params: {
   userId: string;
   title: string;
   tagId: string;
-  items: [string, string, string, string, string];
+  items: [string, string, string];
   isPublic: boolean;
+  borderColor?: string;
+  markerIcon?: string;
   accessToken: string;
 }) {
   const filteredItems = params.items
@@ -400,6 +406,8 @@ export async function createRanking(params: {
     p_tag_id: params.tagId,
     p_items: filteredItems,
     p_is_public: params.isPublic,
+    p_border_color: params.borderColor ?? "#FFE5E5",
+    p_marker_icon: params.markerIcon ?? "Heart",
   }, params.accessToken);
 
   const created = await getRankingById({
@@ -418,8 +426,10 @@ export async function updateRanking(params: {
   userId: string;
   title: string;
   tagId: string;
-  items: [string, string, string, string, string];
+  items: [string, string, string];
   isPublic: boolean;
+  borderColor?: string;
+  markerIcon?: string;
   expectedUpdatedAt: string;
   accessToken: string;
 }) {
@@ -438,6 +448,8 @@ export async function updateRanking(params: {
     p_tag_id: params.tagId,
     p_items: filteredItems,
     p_is_public: params.isPublic,
+    p_border_color: params.borderColor ?? "#FFE5E5",
+    p_marker_icon: params.markerIcon ?? "Heart",
     p_expected_updated_at: params.expectedUpdatedAt,
   }, params.accessToken);
 
@@ -650,7 +662,7 @@ export async function getPublicRankingById(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow> | null> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,border_color,marker_icon,ranking_items(rank,item_text),tags(name)",
     id: `eq.${params.rankingId}`,
     is_public: "eq.true",
     limit: "1",
@@ -805,7 +817,7 @@ export async function listPublicRankingsByTag(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,border_color,marker_icon,ranking_items(rank,item_text),tags(name)",
     is_public: "eq.true",
     user_id: `neq.${params.viewerUserId}`,
     tag_id: `eq.${params.tagId}`,
@@ -931,7 +943,7 @@ export async function listPublicRankingsByUser(params: {
   accessToken: string;
 }): Promise<ReturnType<typeof mapRankingRow>[]> {
   const query = new URLSearchParams({
-    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name)",
+    select: "id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,border_color,marker_icon,ranking_items(rank,item_text),tags(name)",
     user_id: `eq.${params.userId}`,
     is_public: "eq.true",
     order: "updated_at.desc",
@@ -946,6 +958,37 @@ export async function listPublicRankingsByUser(params: {
   await ensureResponseOk(response);
   const rows = (await response.json()) as SupabaseRankingRow[];
   return rows.map(mapRankingRow);
+}
+
+/**
+ * 指定ユーザーの公開ランキング数をカウントする。
+ * Supabase REST の Prefer: count=exact + limit=0 で効率的に取得。
+ */
+export async function countPublicRankingsByUser(userId: string): Promise<number> {
+  const query = new URLSearchParams({
+    select: "id",
+    user_id: `eq.${userId}`,
+    is_public: "eq.true",
+    limit: "0",
+  });
+
+  const response = await requestSupabaseWithServiceRole(
+    `rankings?${query.toString()}`,
+    { prefer: "count=exact", revalidateSeconds: 0 },
+  );
+
+  if (!response.ok) {
+    return 0;
+  }
+
+  const countHeader = response.headers.get("content-range");
+  if (!countHeader) {
+    return 0;
+  }
+
+  // content-range format: "*/123" or "0-0/123"
+  const match = countHeader.match(/\/(\d+)$/);
+  return match ? Number(match[1]) : 0;
 }
 
 /**
@@ -999,7 +1042,7 @@ export async function listBookmarkedRankings(params: {
 }): Promise<PublicRankingWithAuthor[]> {
   // bookmarks テーブルから rankings を JOIN して取得
   const query = new URLSearchParams({
-    select: "ranking_id,rankings(id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,ranking_items(rank,item_text),tags(name))",
+    select: "ranking_id,rankings(id,user_id,title,tag_id,is_public,created_at,updated_at,view_count,impression_count,bookmark_count,border_color,marker_icon,ranking_items(rank,item_text),tags(name))",
     user_id: `eq.${params.userId}`,
     order: "created_at.desc",
   });
@@ -1159,6 +1202,7 @@ function mapUserProfileRowWithCounts(row: {
     links: parseLinks(row.links),
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
+    publicRankingCount: 0,
   };
 }
 
@@ -1240,3 +1284,14 @@ export {
   listMutedWords,
   getMutedWordStrings,
 } from "./supabase-rest-muted-words";
+
+// ---------------------------------------------------------------------------
+// ランキングコメント（supabase-rest-comments.ts に分離）
+// ---------------------------------------------------------------------------
+export {
+  createRankingComment,
+  deleteRankingComment,
+  getLatestCommentsForRankings,
+  getLatestCommentForRanking,
+  attachCommentsToRankings,
+} from "./supabase-rest-comments";

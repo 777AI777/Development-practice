@@ -10,6 +10,8 @@ import { BackButton } from "@/components/back-button";
 import { BookmarkButton } from "@/components/bookmark-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { UserActionMenu } from "@/components/user-action-menu";
+import { getAccentColor } from "@/components/shared/theme-colors";
+import { getMarkerIcon } from "@/components/shared/marker-icons";
 import { formatSmartDate } from "@/lib/format-date";
 import type { PublishedRanking, UserProfile, UserRelationship } from "@/lib/types";
 import { buildUserProfilePath } from "@/lib/user-utils";
@@ -356,44 +358,48 @@ export function RankingDetailContent({
         </div>
 
         {/* Ranking items */}
-        <div className="overflow-hidden rounded-xl bg-card">
-          {ranking.items.map((item, index) => {
-            const rank = index + 1;
-            const isFirst = rank === 1;
-            return (
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          {(() => {
+            const accentColor = getAccentColor(ranking.borderColor ?? "");
+            const MarkerIcon = getMarkerIcon(ranking.markerIcon ?? "Heart");
+            const validItems = ranking.items.filter((i) => i.trim());
+            return validItems.map((item, index) => (
               <div
                 key={`${ranking.id}-${index}`}
                 className="flex items-center gap-3 px-6 py-3"
                 style={{
                   borderBottom:
-                    index < ranking.items.length - 1
+                    index < validItems.length - 1
                       ? "1px solid var(--border)"
                       : "none",
                 }}
               >
-                <span
-                  className={`w-8 text-center ${isFirst ? "text-2xl font-bold" : "text-base font-semibold"}`}
-                  style={{
-                    color: isFirst
-                      ? "var(--primary)"
-                      : "var(--muted-foreground)",
-                  }}
-                >
-                  {rank}
-                </span>
-                <span
-                  className={
-                    isFirst
-                      ? "text-base font-bold text-foreground"
-                      : "text-sm text-foreground"
-                  }
-                >
-                  {item}
-                </span>
+                <MarkerIcon
+                  className="flex-shrink-0"
+                  width={16}
+                  height={16}
+                  style={{ color: accentColor }}
+                  aria-hidden="true"
+                />
+                <span className="text-sm text-foreground">{item}</span>
               </div>
-            );
-          })}
+            ));
+          })()}
         </div>
+
+        {/* もっと見つける（類似投稿 — UI骨組みのみ。類似投稿APIとの接続が残タスク） */}
+        <section
+          className="rounded-xl px-4 py-5"
+          style={{ backgroundColor: "var(--muted)" }}
+          aria-label="もっと見つける"
+        >
+          <h2 className="mb-3 text-sm font-bold text-foreground">
+            もっと見つける
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            類似の投稿は近日公開予定
+          </p>
+        </section>
       </div>
     </AppShell>
   );

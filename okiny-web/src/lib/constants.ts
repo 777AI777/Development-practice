@@ -6,7 +6,7 @@ export const TAG_QUERY_LIMITS = {
 
 export const POPULAR_TAGS_CACHE_REVALIDATE_SECONDS = 60 * 30;
 
-export const RANKING_ITEMS_PREVIEW_LIMIT = 5;
+export const RANKING_ITEMS_PREVIEW_LIMIT = 3;
 
 // --- Search Constants ---
 
@@ -29,6 +29,8 @@ export const VIEWED_USERS_KEY = "okiny:viewed_users";
 export const SEARCH_SUBMIT_EVENT_NAME = "okiny:search-submit";
 
 // --- Search Scroll Restore Keys ---
+
+export const SEARCH_POSTS_SCROLL_KEY = "scroll:search-posts";
 
 export const SEARCH_RANKINGS_SCROLL_KEY = "scroll:search-rankings";
 
@@ -71,3 +73,7 @@ export const RECOMMEND_TAG_SIMILARITY_THRESHOLD = 3;
 export const RECOMMEND_AFFINITY_HIGH_THRESHOLD = 3;
 
 export const RECOMMEND_AFFINITY_LOW_THRESHOLD = 1;
+
+// --- Ranking Comment Constants ---
+
+export const COMMENT_MAX_LENGTH = 140;

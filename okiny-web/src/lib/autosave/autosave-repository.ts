@@ -5,6 +5,8 @@ export interface AutosaveRecord {
   tagId: string;
   items: string[];
   isPublic: boolean;
+  borderColor?: string;
+  markerIcon?: string;
   newTagName?: string;
   selectedTagName?: string;
   updatedAt: string;

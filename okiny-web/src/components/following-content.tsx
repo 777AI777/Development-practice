@@ -3,19 +3,21 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+import type * as React from "react";
+
 import { EmptyStateMessage } from "@/components/empty-state-message";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { PullToRefresh } from "@/components/pull-to-refresh";
-import { RankingCard } from "@/components/ranking-card";
+import { SmartRankingCard } from "@/components/smart-ranking-card";
 import { useListCache } from "@/hooks/use-list-cache";
 import type { PageResult } from "@/hooks/use-list-cache";
 import { FOLLOWING_FEED_LIMIT } from "@/lib/constants";
-import type { PublicRankingWithAuthor, UserProfile } from "@/lib/types";
+import type { PublicRankingWithAuthorAndComment, UserProfile } from "@/lib/types";
 
 async function fetchFollowingFeedPage(
   cursor: string | null,
   signal: AbortSignal,
-): Promise<PageResult<PublicRankingWithAuthor>> {
+): Promise<PageResult<PublicRankingWithAuthorAndComment>> {
   const params = new URLSearchParams({
     limit: String(FOLLOWING_FEED_LIMIT),
   });
@@ -38,7 +40,7 @@ async function fetchFollowingFeedPage(
 
   const json = (await res.json()) as {
     data: {
-      items: PublicRankingWithAuthor[];
+      items: PublicRankingWithAuthorAndComment[];
       nextCursor: string | null;
     };
   };
@@ -66,7 +68,7 @@ export function FollowingContent({
     hasFetched,
     refresh,
     sentinelRef,
-  } = useListCache<PublicRankingWithAuthor>({
+  } = useListCache<PublicRankingWithAuthorAndComment>({
     cache: { cacheKey: "okiny:following-feed-cache" },
     fetcher: fetchFollowingFeedPage,
     enabled,
@@ -120,21 +122,27 @@ export function FollowingContent({
   return (
     <PullToRefresh onRefresh={refresh}>
       <div className="overflow-hidden rounded-xl bg-card">
-        {rankings.map((ranking, index) => (
-          <RankingCard
-            key={ranking.id}
-            ranking={ranking}
-            showBorder={index < rankings.length - 1}
-            showTagBadge
-            showBookmark
-            onAvatarClick={(_event, author) => {
-              onAvatarClick(author);
-            }}
-            onTagClick={(_event, tagName) => {
-              onTagClick(tagName);
-            }}
-          />
-        ))}
+        {rankings.map((ranking, index) => {
+          const showBorder = index < rankings.length - 1;
+          const avatarHandler = (_event: React.MouseEvent<HTMLButtonElement>, author: UserProfile) => {
+            onAvatarClick(author);
+          };
+          const tagHandler = (_event: React.MouseEvent<HTMLButtonElement>, tagName: string) => {
+            onTagClick(tagName);
+          };
+
+          return (
+            <SmartRankingCard
+              key={ranking.latestComment?.id ?? ranking.id}
+              ranking={ranking}
+              showBorder={showBorder}
+              showTagBadge
+              showBookmark
+              onAvatarClick={avatarHandler}
+              onTagClick={tagHandler}
+            />
+          );
+        })}
       </div>
       {hasMore && (
         <div ref={sentinelRef} className="py-4 text-center">

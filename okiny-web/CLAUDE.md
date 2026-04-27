@@ -39,18 +39,23 @@
 | `/` | ログインリダイレクト | 未認証→`/login` |
 | `/login` | ログイン | — |
 | `/onboarding` | オンボーディング | — |
-| `/rankings` | ランキング一覧 | — |
-| `/rankings/new` | ランキング作成 | — |
-| `/rankings/[id]` | ランキング詳細 | — |
-| `/rankings/[id]/edit` | ランキング編集 | — |
+| `/rankings` | 投稿一覧 | UI上は「投稿」。コード上は `rankings` |
+| `/rankings/new` | 投稿作成 | — |
+| `/rankings/[id]` | 投稿詳細 | — |
+| `/rankings/[id]/edit` | 投稿編集 | — |
 | `/rankings/[id]/delete` | 削除確認 | — |
 | `/search` | タグ検索 | — |
 | `/drafts` | 下書き一覧 | — |
 | `/bookmarks` | ブックマーク一覧 | — |
 | `/users/[userId]` | ユーザープロフィール | 公開エンドポイント |
+| `/users/[userId]/followers` | フォロワー一覧 | — |
+| `/users/[userId]/following` | フォロー中一覧 | — |
 | `/settings` | 設定 | — |
 | `/settings/logout` | ログアウト確認 | — |
-| `/share/rankings/[id]` | ランキング公開共有 | 未認証でもアクセス可 |
+| `/settings/blocked-users` | ブロックユーザー管理 | — |
+| `/settings/muted-users` | ミュートユーザー管理 | — |
+| `/settings/muted-words` | NGワード管理 | — |
+| `/share/rankings/[id]` | 投稿の公開共有 | 未認証でもアクセス可 |
 | `/privacy` | プライバシーポリシー | 未認証でもアクセス可 |
 | `/terms` | 利用規約 | 未認証でもアクセス可 |
 
@@ -79,7 +84,7 @@
 
 ### RankingForm autosave
 
-- LocalStorageに1200ms debounceで自動保存
+- IndexedDB（autosaveストア）に1200ms debounceで自動保存
 - `beforeunload` イベントで未保存警告
 - 手動保存と自動保存の競合に注意（debounce中の手動保存で二重書き込みの可能性）
 
@@ -100,4 +105,4 @@
 | Figma Make | `.claude/rules/figma-make.md` |
 | デザイン仕様 | `okiny-web/docs/design/figma-make/guidelines/Guidelines.md` |
 | 画面遷移 | `okiny-web/docs/screen-transition.md` |
-| 要件定義 | `okiny-web/docs/requirements/要件定義.md` |
+| 要件定義 | `okiny-web/docs/requirements/requirements-phase1.md` |

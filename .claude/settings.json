@@ -43,5 +43,9 @@
     "hookify@claude-plugins-official": false,
     "vercel@claude-plugins-official": true,
     "playground@claude-plugins-official": true
+  },
+    "terminal.integrated.env.windows": {
+      "LANG": "ja_JP.UTF-8",
+      "PYTHONIOENCODING": "utf-8"
   }
 }

@@ -202,9 +202,13 @@ export function SearchTagsTab({
               key={tag.id}
               type="button"
               onClick={() => onTagSelect(tag.name)}
-              className="text-sm text-muted-foreground transition hover:text-foreground"
+              aria-label={`タグ ${tag.name}、投稿 ${tag.usageCount ?? 0}件`}
+              className="group flex flex-col items-start text-left"
             >
-              #{tag.name}
+              <span className="text-base text-muted-foreground group-hover:text-foreground transition-colors">#{tag.name}</span>
+              <span className="text-xs text-muted-foreground/70 group-hover:text-foreground transition-colors">
+                投稿 {tag.usageCount ?? 0}件
+              </span>
             </button>
           ))}
         </div>

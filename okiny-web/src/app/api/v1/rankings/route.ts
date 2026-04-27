@@ -6,11 +6,19 @@ import {
   getAuthenticatedUserId,
 } from "@/lib/supabase/auth-guard";
 import {
+  attachCommentsToRankings,
   createRanking,
+  createRankingComment,
   listPublicRankingsByTagWithAuthors,
   listRankingsByUser,
 } from "@/lib/supabase-rest";
 import { RANKING_ITEM_COUNT, type RankingItems } from "@/lib/types";
+import { COMMENT_MAX_LENGTH } from "@/lib/constants";
+import { BORDER_COLORS } from "@/components/shared/theme-colors";
+import { MARKER_ICONS } from "@/components/shared/marker-icons";
+
+const validBorderColors = BORDER_COLORS.map((c) => c.value) as [string, ...string[]];
+const validMarkerIcons = MARKER_ICONS.map((i) => i.name) as [string, ...string[]];
 
 const rankingItemsSchema = z
   .array(
@@ -34,11 +42,14 @@ const createSchema = z.object({
     tagId: z.string().uuid("tagId must be a valid UUID."),
     items: rankingItemsSchema,
     isPublic: z.boolean().default(true),
+    borderColor: z.enum(validBorderColors).default("#FFE5E5"),
+    markerIcon: z.enum(validMarkerIcons).default("Heart"),
   }),
+  comment: z.string().max(COMMENT_MAX_LENGTH, `コメントは${COMMENT_MAX_LENGTH}文字以内にしてください。`).optional(),
 });
 
 function toRankingItems(items: string[]): RankingItems {
-  return [items[0] ?? "", items[1] ?? "", items[2] ?? "", items[3] ?? "", items[4] ?? ""];
+  return [items[0] ?? "", items[1] ?? "", items[2] ?? ""];
 }
 
 export async function GET(request: Request) {
@@ -75,11 +86,12 @@ export async function GET(request: Request) {
         );
       }
 
-      const data = await listPublicRankingsByTagWithAuthors({
+      const rankings = await listPublicRankingsByTagWithAuthors({
         tagId,
         viewerUserId: userId,
         accessToken,
       });
+      const data = await attachCommentsToRankings(rankings, accessToken);
 
       if (
         process.env.NODE_ENV !== "production" &&
@@ -155,9 +167,30 @@ export async function POST(request: Request) {
       tagId: parsed.data.ranking.tagId,
       items: toRankingItems(parsed.data.ranking.items),
       isPublic: parsed.data.ranking.isPublic,
+      borderColor: parsed.data.ranking.borderColor,
+      markerIcon: parsed.data.ranking.markerIcon,
       accessToken,
     });
-    return NextResponse.json({ data: created }, { status: 201 });
+
+    const warnings: string[] = [];
+    if (parsed.data.comment?.trim()) {
+      try {
+        await createRankingComment({
+          rankingId: created.id,
+          userId,
+          comment: parsed.data.comment.trim(),
+          accessToken,
+        });
+      } catch (commentError) {
+        console.error("[POST /api/v1/rankings] comment creation failed (non-blocking)");
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[POST /api/v1/rankings] comment detail:", commentError);
+        }
+        warnings.push("コメントの保存に失敗しました。");
+      }
+    }
+
+    return NextResponse.json({ data: created, ...(warnings.length > 0 && { warnings }) }, { status: 201 });
   } catch (error) {
     console.error("[POST /api/v1/rankings] failed");
     if (process.env.NODE_ENV !== "production") {

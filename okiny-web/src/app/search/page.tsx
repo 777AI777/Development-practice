@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { useSessionUser } from "@/hooks/use-session-user";
 import { useTags, separateTags } from "@/hooks/use-tags";
 import {
+  SEARCH_POSTS_SCROLL_KEY,
   SEARCH_RANKINGS_SCROLL_KEY,
   SEARCH_TAGS_SCROLL_KEY,
   SEARCH_USERS_SCROLL_KEY,
@@ -15,6 +16,7 @@ import { addSearchHistory } from "@/lib/search-history";
 import { SearchTabs } from "@/components/search/search-tabs";
 import { SearchInitialView } from "@/components/search/search-initial-view";
 import { usePageTransition } from "@/components/page-transition-provider";
+import { SearchPostsTab } from "@/components/search/search-posts-tab";
 import { SearchRankingsTab } from "@/components/search/search-rankings-tab";
 import { SearchUsersTab } from "@/components/search/search-users-tab";
 import { SearchTagsTab } from "@/components/search/search-tags-tab";
@@ -22,6 +24,8 @@ import type { SearchTab } from "@/lib/types";
 
 function getSearchScrollKey(tab: SearchTab): string {
   switch (tab) {
+    case "posts":
+      return SEARCH_POSTS_SCROLL_KEY;
     case "accounts":
       return SEARCH_USERS_SCROLL_KEY;
     case "tags":
@@ -41,9 +45,9 @@ function SearchPageContent() {
   const q = searchParams.get("q") ?? "";
   const tabParam = searchParams.get("tab") as SearchTab | null;
   const activeTab: SearchTab =
-    tabParam && ["rankings", "accounts", "tags"].includes(tabParam)
+    tabParam && ["posts", "rankings", "accounts", "tags"].includes(tabParam)
       ? tabParam
-      : "rankings";
+      : "posts";
 
   const { tags, fetchTags, isLoading: isTagsLoading } = useTags();
   const { myTags, popularTags } = separateTags(tags);
@@ -138,6 +142,10 @@ function SearchPageContent() {
         <div className="-mx-4 -mt-4">
           <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />
           <div className="px-4 pb-4">
+            <SearchPostsTab
+              query={searchQuery}
+              isActive={activeTab === "posts"}
+            />
             <SearchRankingsTab
               query={searchQuery}
               isActive={activeTab === "rankings"}

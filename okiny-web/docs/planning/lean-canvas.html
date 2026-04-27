@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+@page { size: A4 landscape; margin: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Helvetica Neue", "Hiragino Kaku Gothic ProN", sans-serif; background: #F5F0EB; width: 297mm; min-height: 210mm; padding: 8mm; display: flex; flex-direction: column; }
+.header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5mm; }
+.header h1 { font-size: 22px; color: #2D2D2D; letter-spacing: 2px; }
+.header .sub { font-size: 11px; color: #999; }
+.canvas { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr auto; flex: 1; gap: 0; border: 1.5px solid #C4A882; }
+.cell { border: 0.5px solid #D9CFC4; padding: 5mm; overflow: hidden; }
+.cell .label { font-size: 11px; font-weight: 700; color: #B07D62; letter-spacing: 1.5px; margin-bottom: 2.5mm; }
+.cell .content { font-size: 11px; color: #3D3D3D; line-height: 1.75; }
+.cell .content li { margin-bottom: 2mm; list-style: none; padding-left: 2mm; }
+.cell .content li::before { content: "·"; color: #B07D62; font-weight: bold; margin-right: 1.5mm; }
+.cell .content .em { font-weight: 600; color: #2D2D2D; }
+.cell .content .note { font-size: 9.5px; color: #999; margin-top: 2mm; font-style: italic; }
+.c-problem { grid-column: 1; grid-row: 1 / 3; }
+.c-solution { grid-column: 2; grid-row: 1; }
+.c-uvp { grid-column: 3; grid-row: 1 / 3; }
+.c-advantage { grid-column: 4; grid-row: 1; }
+.c-segment { grid-column: 5; grid-row: 1 / 3; }
+.c-metrics { grid-column: 2; grid-row: 2; }
+.c-channel { grid-column: 4; grid-row: 2; }
+.c-cost { grid-column: 1 / 3; grid-row: 3; }
+.c-revenue { grid-column: 3 / 6; grid-row: 3; }
+.footer { margin-top: 3mm; display: flex; justify-content: space-between; font-size: 9px; color: #AAA; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>♥ OKINY — 事業の全体像</h1>
+  <div class="sub">好きなものを通じて、知らない誰かと静かに繋がれる場所 ｜ 目標：公開12ヶ月で10,000人</div>
+</div>
+
+<div class="canvas">
+
+  <div class="cell c-problem">
+    <div class="label">今ないもの</div>
+    <div class="content">
+      <ul>
+        <li>映画・音楽・本・カフェなど<span class="em">ジャンルをまたいで「好き」をまとめられる場所</span>がない。今はジャンルごとに別々のアプリを使うしかない</li>
+        <li>「同じものが好きな人が、他に何を好きか」を<span class="em">調べる手段</span>がない。SNSに書いても流れて消える</li>
+        <li>点数やレビューを書かずに、<span class="em">ただ「好き」を並べるだけ</span>で同じ感性の人と出会える場所がない</li>
+      </ul>
+      <div class="note">※2026年4月の調査で、この行動をしている人が大量にいることを確認済み</div>
+    </div>
+  </div>
+
+  <div class="cell c-solution">
+    <div class="label">どう解決するか</div>
+    <div class="content">
+      <ul>
+        <li><span class="em">「テーマ＋好きなもの3つ」</span>を投稿するだけ</li>
+        <li>例：「雨の日に聴きたい曲」→ スピッツ / ミスチル / バンプ</li>
+        <li>投稿が3件たまると好みの傾向分析、5件で<span class="em">ポイント消費型の自己分析ツール</span>が解放される（投稿で貯まるポイントを使って詳細分析）</li>
+        <li>おすすめテーマがコミュニティの盛り上がりを<span class="em">さりげなく映す</span>仕掛け</li>
+        <li><span class="em">スレッド（Q&A）</span>でお題に回答。誰でも自由に作成可能。回答へのAward機能でポイント獲得</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cell c-uvp">
+    <div class="label">他にないもの</div>
+    <div class="content">
+      <p style="font-size:13px; font-weight:700; color:#B07D62; margin-bottom:3mm;">「好き」の静かなギャラリー</p>
+      <ul>
+        <li><span class="em">全ジャンルの好きが1つのプロフィールに蓄積</span>される。これができるアプリは他にない</li>
+        <li><span class="em">「〇〇が好きな人は他に何が好きか」</span>をジャンルを超えて検索できる<span class="note">（Phase 2〜）</span>。このデータは世界に存在しない</li>
+        <li>投稿するたびに<span class="em">自分の好みを再発見</span>できる。3つ選ぶ行為自体が自分との対話になる</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cell c-advantage">
+    <div class="label">真似できない理由</div>
+    <div class="content">
+      <ul>
+        <li>ユーザーが増えるほど<span class="em">好みのデータが蓄積</span>され、後から同じものを作っても追いつけない</li>
+        <li>「好き」しか入力できないので、<span class="em">荒れない空気がルールではなく仕組みで</span>保たれる</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cell c-segment">
+    <div class="label">誰に届けるか</div>
+    <div class="content">
+      <ul>
+        <li>SNSで「おすすめ教えて」「私のトップ3」と日常的に投稿している人</li>
+        <li>好きなもののコラージュ画像を作ってシェアしている人</li>
+        <li>映画・音楽・本の記録アプリを複数使い分けている人</li>
+        <li>ラジオやPodcastのリスナー</li>
+      </ul>
+      <p style="font-size:10px; color:#999; margin-top:2mm;">国内の潜在層：推定100万〜300万人</p>
+    </div>
+  </div>
+
+  <div class="cell c-metrics">
+    <div class="label">毎週チェックする数字</div>
+    <div class="content">
+      <div style="margin-bottom:3mm;">
+        <span class="em" style="color:#B07D62;">Phase 1（1〜3ヶ月目）</span><br>
+        <span style="font-size:10px;">
+        <span style="color:#7E9B82;">40%↑ 初回投稿率</span>｜
+        <span style="color:#B87333;">50%↑ 3投稿到達率</span>｜
+        <span style="color:#C4725E;">15%↑ Day30継続率</span></span>
+      </div>
+      <div style="margin-bottom:3mm;">
+        <span class="em" style="color:#B07D62;">公開4〜8ヶ月目（〜3,500人）</span><br>
+        <span style="font-size:10px;">ユーザー数が月30%以上<br>伸びているか？</span>
+      </div>
+      <div>
+        <span class="em" style="color:#B07D62;">公開9〜12ヶ月目（〜10,000人）</span><br>
+        <span style="font-size:10px;">ユーザーの3〜5%が<br>有料プランに入っているか？</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cell c-channel">
+    <div class="label">どうやって届けるか</div>
+    <div class="content">
+      <ul>
+        <li><span class="em">初期:</span> 投稿カードのSNSシェア＋口コミ＋SNS広告</li>
+        <li><span class="em">中期:</span> ラジオ・Podcast番組との連携</li>
+        <li><span class="em">長期:</span> Google検索で自然に見つかる状態</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cell c-cost">
+    <div class="label">かかるお金</div>
+    <div class="content">
+      <ul>
+        <li><span class="em">サーバー代:</span> 初期は無料〜月数千円</li>
+        <li><span class="em">広告費:</span> SNS広告でユーザーを集める（1人あたり100〜200円が目標）</li>
+        <li><span class="em">運用:</span> お題の企画・通報対応・おすすめ投稿の選定（手動）</li>
+      </ul>
+      <p style="margin-top:2mm; font-size:10px; color:#999;">初期は赤字前提。本業と並行のため、無理なく続けられる体制。</p>
+    </div>
+  </div>
+
+  <div class="cell c-revenue">
+    <div class="label">入ってくるお金（公開6ヶ月目〜）</div>
+    <div class="content">
+      <ul>
+        <li><span class="em">アプリ内広告（Phase 1: AdMobバナー）:</span> 位置制限付きでタイムラインに表示。有料プランで非表示（＝有料化の動機）</li>
+        <li><span class="em">ポイント課金（Phase 1）:</span> 自己分析ツール利用に必要なポイントを課金で購入可能。投稿でも貯まるが、追加購入で深い分析を即座に利用</li>
+        <li><span class="em">有料プラン（Phase 1.5〜）:</span> 好みの詳細分析・振り返り拡張・<span class="em">広告非表示</span>オプション。<span class="em">月額550円</span></li>
+        <li><span class="em">スポンサード投稿（Phase 2）:</span> フィードネイティブ広告。体験を損なわない形で企業の投稿を掲出</li>
+        <li><span class="em">タイアップお題（Phase 2以降）:</span> 企業がお題を出稿。嗜好データ＋プロモーションを兼ねる</li>
+        <li><span class="em">トレンドレポート（Phase 2以降）:</span> 好みの傾向レポートを企業に販売</li>
+        <li><span class="em">API＋データ分析（Phase 3〜）:</span> 好みデータの外部提供。成長するほど価値が上がる</li>
+      </ul>
+      <p style="margin-top:2mm; font-size:10.5px; color:#B07D62; font-weight:600;">ユーザーが楽しむほどデータが溜まり、事業の価値も上がる構造。</p>
+      <p style="margin-top:2mm; font-size:10px; color:#3D3D3D; line-height:1.7;">
+        <span style="font-weight:600;">月間収益見込み：</span><br>
+        <span style="color:#999;">1年目末</span> AdMob広告＋ポイント課金＋有料プラン550円/月＝<span style="font-weight:600;">月4〜8万</span><br>
+        <span style="color:#999;">3年目末</span> ＋タイアップ・レポート・API本格化＝<span style="font-weight:600;">月112〜249万</span><br>
+        <span style="color:#999;">5年目末</span> データ収益が主役＝<span style="font-weight:600;">月309〜725万</span>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>OKINY Business Canvas v2.0 ｜ 2026年4月</span>
+  <span>※数値はすべて仮説。毎週の実測で随時更新する</span>
+</div>
+
+</body>
+</html>

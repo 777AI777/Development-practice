@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 import { useSessionUser } from "@/hooks/use-session-user";
 
 export default function LogoutConfirmPage() {
@@ -13,10 +15,15 @@ export default function LogoutConfirmPage() {
 
   return (
     <AppShell>
+      <div className="mb-4 flex items-center gap-2">
+        <BackButton href="/settings" />
+        <h1 className="text-lg font-bold text-foreground">設定</h1>
+      </div>
+
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-3xl">
-            {"\u26A0\uFE0F"}
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
 
           <h1 className="mt-4 text-xl font-bold text-foreground">
@@ -38,7 +45,6 @@ export default function LogoutConfirmPage() {
                   await signOut();
                   router.push("/login");
                 } catch (error) {
-                  console.error("ログアウトに失敗しました");
                   if (process.env.NODE_ENV !== "production") {
                     console.error("detail:", error);
                   }

@@ -1,6 +1,6 @@
-export const RANKING_ITEM_COUNT = 5;
+export const RANKING_ITEM_COUNT = 3;
 
-export type RankingItems = [string, string, string, string, string];
+export type RankingItems = [string, string, string];
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -19,6 +19,8 @@ export interface RankingInput {
   tagId: string;
   items: RankingItems;
   isPublic: boolean;
+  borderColor: string;
+  markerIcon: string;
 }
 
 export interface DraftLocalRecord extends RankingInput {
@@ -33,6 +35,7 @@ export interface PublishedRanking extends RankingInput {
   id: string;
   userId: string;
   tagName?: string;
+  comment?: string;
   createdAt: string;
   updatedAt: string;
   viewCount: number;
@@ -53,10 +56,16 @@ export interface UserProfile {
 export interface UserProfileWithCounts extends UserProfile {
   followerCount: number;
   followingCount: number;
+  publicRankingCount: number;
 }
 
 export interface PublicRankingWithAuthor extends PublishedRanking {
   author: UserProfile;
+}
+
+export interface PublicRankingWithAuthorAndComment extends PublicRankingWithAuthor {
+  latestComment: RankingComment | null;
+  cursorId?: string;  // COALESCE(comment_id, ranking_id) - ページネーション用
 }
 
 export interface ToastMessage {
@@ -94,6 +103,8 @@ export interface SupabaseRankingRow {
   view_count: number;
   impression_count: number;
   bookmark_count: number;
+  border_color?: string | null;
+  marker_icon?: string | null;
   ranking_items?: Array<{
     rank: number;
     item_text: string;
@@ -103,7 +114,7 @@ export interface SupabaseRankingRow {
 
 // --- Search Types ---
 
-export type SearchTab = "rankings" | "accounts" | "tags";
+export type SearchTab = "posts" | "rankings" | "accounts" | "tags";
 
 export interface SearchCursor {
   createdAt: string;
@@ -158,4 +169,27 @@ export interface MutedWord {
   id: string;
   word: string;
   createdAt: string;
+}
+
+// --- Ranking Comment Types ---
+
+export interface RankingComment {
+  id: string;
+  rankingId: string;
+  userId: string;
+  comment: string;
+  createdAt: string;
+  author?: {
+    displayName: string;
+    avatarUrl: string | null;
+    displayUserId: string | null;
+  };
+}
+
+export interface SupabaseCommentRow {
+  id: string;
+  ranking_id: string;
+  user_id: string;
+  comment: string;
+  created_at: string;
 }

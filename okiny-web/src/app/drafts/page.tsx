@@ -85,7 +85,7 @@ export default function DraftsPage() {
 
     const result = await publishRanking({
       userId: user.id,
-      ranking: { title: draft.title, tagId: resolvedTagId, items: draft.items, isPublic: draft.isPublic ?? true },
+      ranking: { title: draft.title, tagId: resolvedTagId, items: draft.items, isPublic: draft.isPublic ?? true, borderColor: draft.borderColor ?? "#FFE5E5", markerIcon: draft.markerIcon ?? "Heart" },
       draftId: draft.draftId,
       draftRepository,
       apiClient: publishedApiClient,
@@ -136,6 +136,9 @@ export default function DraftsPage() {
                   href={`/rankings/new?draftId=${encodeURIComponent(draft.draftId)}`}
                   className="block transition hover:opacity-80"
                 >
+                  <span className="mb-1.5 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground">
+                    下書き
+                  </span>
                   <p className="font-semibold text-[15px] text-foreground">
                     {draft.title || "（無題）"}
                   </p>

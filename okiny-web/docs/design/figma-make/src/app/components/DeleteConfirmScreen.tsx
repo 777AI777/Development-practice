@@ -1,18 +1,5 @@
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
 import { AppHeader } from "./AppHeader";
-
-type Screen =
-  | "login"
-  | "rankings"
-  | "ranking-detail"
-  | "ranking-new"
-  | "ranking-edit"
-  | "delete-confirm"
-  | "drafts"
-  | "search"
-  | "settings"
-  | "logout-confirm";
+import type { Screen } from "./types";
 
 interface DeleteConfirmScreenProps {
   onNavigate: (screen: Screen) => void;
@@ -20,48 +7,46 @@ interface DeleteConfirmScreenProps {
 
 export function DeleteConfirmScreen({ onNavigate }: DeleteConfirmScreenProps) {
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "var(--background)" }}
-    >
+    <div className="min-h-screen bg-background">
       <AppHeader onNavigate={onNavigate} />
 
-      <div className="flex-1 flex items-center justify-center px-4">
-        <Card className="max-w-sm mx-auto w-full">
-          <CardContent className="p-6 space-y-4">
-            <div className="text-center text-4xl">&#9888;&#65039;</div>
+      <div className="mx-auto max-w-[480px] px-4 pb-24 pt-4">
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-3xl">
+              {"\u26A0\uFE0F"}
+            </div>
 
-            <h2 className="text-lg font-bold text-center" style={{ color: "var(--foreground)" }}>
-              ランキングを削除しますか？
-            </h2>
+            <h1 className="mt-4 text-xl font-bold text-foreground">
+              投稿を削除しますか？
+            </h1>
 
-            <p className="font-semibold text-center" style={{ color: "var(--foreground)" }}>映画トップ5</p>
-
-            <p
-              className="text-sm text-center"
-              style={{ color: "var(--destructive)" }}
-            >
-              この操作は取り消せません。
+            <p className="mt-2 text-sm font-medium text-foreground">
+              映画TOP5
             </p>
 
-            <div className="space-y-3">
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => onNavigate("rankings")}
-              >
-                削除する
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
+            <p className="mt-3 text-sm text-destructive">
+              この操作は取り消せません
+            </p>
+
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                type="button"
                 onClick={() => onNavigate("ranking-detail")}
+                className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
               >
                 キャンセル
-              </Button>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate("rankings")}
+                className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground transition hover:opacity-90"
+              >
+                削除する
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

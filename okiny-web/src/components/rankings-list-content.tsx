@@ -173,12 +173,12 @@ function MyRankContent({
               </button>
 
               {!isCollapsed ? (
-                <div id={panelId} className="overflow-hidden rounded-xl bg-card">
-                  {group.items.map((ranking, index) => (
+                <div id={panelId} className="flex flex-col space-y-2">
+                  {group.items.map((ranking) => (
                     <RankingCard
                       key={ranking.id}
                       ranking={{ ...ranking, author }}
-                      showBorder={index < group.items.length - 1}
+                      showBorder={false}
                       showLockIcon
                       showTagBadge
                       onAvatarClick={(_event, clickedAuthor) => {
