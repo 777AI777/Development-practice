@@ -114,7 +114,7 @@ export interface SupabaseRankingRow {
 
 // --- Search Types ---
 
-export type SearchTab = "posts" | "rankings" | "accounts" | "tags";
+export type SearchTab = "posts" | "accounts" | "tags";
 
 export interface SearchCursor {
   createdAt: string;

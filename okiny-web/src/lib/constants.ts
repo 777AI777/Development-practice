@@ -32,8 +32,6 @@ export const SEARCH_SUBMIT_EVENT_NAME = "okiny:search-submit";
 
 export const SEARCH_POSTS_SCROLL_KEY = "scroll:search-posts";
 
-export const SEARCH_RANKINGS_SCROLL_KEY = "scroll:search-rankings";
-
 export const SEARCH_USERS_SCROLL_KEY = "scroll:search-users";
 
 export const SEARCH_TAGS_SCROLL_KEY = "scroll:search-tags";
