@@ -9,25 +9,6 @@ import type {
   UserProfile,
 } from "@/lib/types";
 
-export function ViewIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
 export function ImpressionIcon() {
   return (
     <svg
@@ -120,7 +101,6 @@ export function RankingCardAvatar({
 
 interface RankingCardStatsProps {
   rankingId: string;
-  viewCount: number;
   impressionCount: number;
   bookmarkCount: number;
   isBookmarked: boolean;
@@ -130,7 +110,6 @@ interface RankingCardStatsProps {
 
 export function RankingCardStats({
   rankingId,
-  viewCount,
   impressionCount,
   bookmarkCount,
   isBookmarked,
@@ -139,10 +118,6 @@ export function RankingCardStats({
 }: RankingCardStatsProps) {
   return (
     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-      <span className="flex items-center gap-1">
-        <ViewIcon />
-        {viewCount}
-      </span>
       <span className="flex items-center gap-1">
         <ImpressionIcon />
         {impressionCount}

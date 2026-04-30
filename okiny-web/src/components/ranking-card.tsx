@@ -336,7 +336,6 @@ export function RankingCard({
       <div className={`flex items-center justify-between ${isDetail ? "px-5 pb-4 pt-1" : "px-4 pb-3 pt-1"}`}>
         <RankingCardStats
           rankingId={ranking.id}
-          viewCount={ranking.viewCount}
           impressionCount={ranking.impressionCount}
           bookmarkCount={ranking.bookmarkCount}
           isBookmarked={ranking.isBookmarked}

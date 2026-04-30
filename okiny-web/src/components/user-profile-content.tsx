@@ -14,6 +14,7 @@ import {
 
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
+import { ComingSoon } from "@/components/coming-soon";
 import { FollowButton } from "@/components/follow-button";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { SmartRankingCard } from "@/components/smart-ranking-card";
@@ -35,14 +36,14 @@ import {
   normalizeDisplayUserId,
 } from "@/lib/user-utils";
 
-function createUserRankingsFetcher(userId: string, type: "posts" | "rankings") {
+function createUserPostsFetcher(userId: string) {
   return async (cursor: string | null, signal: AbortSignal): Promise<PageResult<PublicRankingWithAuthorAndComment>> => {
-    const params = new URLSearchParams({ limit: "20", type });
+    const params = new URLSearchParams({ limit: "20", type: "posts" });
     if (cursor) params.set("cursor", cursor);
     const res = await fetch(`/api/v1/users/${userId}/rankings?${params}`, { signal, cache: "no-store" });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      throw new Error((body as { error?: { message?: string } }).error?.message ?? "ランキングの読み込みに失敗しました。");
+      throw new Error((body as { error?: { message?: string } }).error?.message ?? "投稿の読み込みに失敗しました。");
     }
     const json = (await res.json()) as { data: { items: PublicRankingWithAuthorAndComment[]; nextCursor: string | null } };
     return { items: json.data.items, nextCursor: json.data.nextCursor };
@@ -170,15 +171,14 @@ function UserProfileContentInner({
   const impressionSentRef = useRef(false);
   const [isFollowing, setIsFollowing] = useState(initialRelationship.isFollowing);
   const [followerCount, setFollowerCount] = useState(profile.followerCount);
-  const [activeTab, setActiveTab] = useState<"posts" | "rankings">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "threads">("posts");
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState(
     isOwnProfile && searchParams.get("edit") === "true",
   );
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const postsFetcher = useMemo(() => createUserRankingsFetcher(profile.id, "posts"), [profile.id]);
-  const rankingsFetcher = useMemo(() => createUserRankingsFetcher(profile.id, "rankings"), [profile.id]);
+  const postsFetcher = useMemo(() => createUserPostsFetcher(profile.id), [profile.id]);
 
   const {
     items: postItems,
@@ -194,22 +194,6 @@ function UserProfileContentInner({
     fetcher: postsFetcher,
     enabled: activeTab === "posts",
     scrollRestoreKey: `scroll:user-posts:${profile.id}`,
-  });
-
-  const {
-    items: rankingItems,
-    isLoading: isLoadingRankings,
-    isLoadingMore: isLoadingMoreRankings,
-    hasMore: hasMoreRankings,
-    error: rankingsError,
-    hasFetched: hasFetchedRankings,
-    refresh: refreshRankings,
-    sentinelRef: rankingsSentinelRef,
-  } = useListCache<PublicRankingWithAuthorAndComment>({
-    cache: { cacheKey: `okiny:user-rankings:${profile.id}` },
-    fetcher: rankingsFetcher,
-    enabled: activeTab === "rankings",
-    scrollRestoreKey: `scroll:user-rankings:${profile.id}`,
   });
 
   const postItemsRef = useRef(postItems);
@@ -693,7 +677,7 @@ function UserProfileContentInner({
 
           {/* Stats (shown in both modes) */}
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-            <StatLink label="公開ランキング" value={profile.publicRankingCount} />
+            <StatLink label="公開投稿" value={profile.publicRankingCount} />
             <StatLink
               href={`${profilePath}/following`}
               label="フォロー"
@@ -705,6 +689,32 @@ function UserProfileContentInner({
               value={followerCount}
             />
           </div>
+
+          {/* 自己分析ツール導線（自プロフィールのみ） */}
+          {isOwnProfile ? (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => router.push("/analytics")}
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4l3 3" />
+                </svg>
+                自己分析
+              </button>
+            </div>
+          ) : null}
         </section>
 
         {/* タブ */}
@@ -722,20 +732,20 @@ function UserProfileContentInner({
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("rankings")}
+            onClick={() => setActiveTab("threads")}
             className={`flex-1 py-3 text-sm font-semibold text-center transition ${
-              activeTab === "rankings"
+              activeTab === "threads"
                 ? "text-foreground border-b-2 border-primary"
                 : "text-muted-foreground"
             }`}
           >
-            ランキング
+            スレッド
           </button>
         </div>
 
         {/* 投稿タブ */}
         {activeTab === "posts" && (
-          <>
+          <div className="px-4 py-4">
             {postsError ? (
               <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
                 <p className="text-base font-bold text-destructive">読み込みに失敗しました。</p>
@@ -743,9 +753,9 @@ function UserProfileContentInner({
                 <button type="button" onClick={refreshPosts} className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-destructive/30 bg-card px-4 text-sm font-semibold text-destructive">再読み込み</button>
               </div>
             ) : hasFetchedPosts && !isLoadingPosts && postItems.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">公開ランキングはまだありません。</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">公開投稿はまだありません。</p>
             ) : (
-              <div className="overflow-hidden rounded-xl bg-card">
+              <div className="overflow-hidden rounded-xl bg-card space-y-2">
                 {postItems.map((ranking, index) => {
                   const showBorder = index < postItems.length - 1;
                   return (
@@ -765,42 +775,15 @@ function UserProfileContentInner({
                 {isLoadingMorePosts && <p className="text-sm text-muted-foreground">読み込み中...</p>}
               </div>
             )}
-          </>
+          </div>
         )}
 
-        {/* ランキングタブ */}
-        {activeTab === "rankings" && (
-          <>
-            {rankingsError ? (
-              <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
-                <p className="text-base font-bold text-destructive">読み込みに失敗しました。</p>
-                <p className="mt-1 text-sm text-destructive/80">{rankingsError}</p>
-                <button type="button" onClick={refreshRankings} className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-destructive/30 bg-card px-4 text-sm font-semibold text-destructive">再読み込み</button>
-              </div>
-            ) : hasFetchedRankings && !isLoadingRankings && rankingItems.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">ランキングはまだありません。</p>
-            ) : (
-              <div className="overflow-hidden rounded-xl bg-card">
-                {rankingItems.map((ranking, index) => {
-                  const showBorder = index < rankingItems.length - 1;
-                  return (
-                    <SmartRankingCard
-                      key={ranking.id}
-                      ranking={ranking}
-                      showBorder={showBorder}
-                      showTagBadge
-                      showBookmark
-                    />
-                  );
-                })}
-              </div>
-            )}
-            {hasMoreRankings && (
-              <div ref={rankingsSentinelRef} className="py-4 text-center">
-                {isLoadingMoreRankings && <p className="text-sm text-muted-foreground">読み込み中...</p>}
-              </div>
-            )}
-          </>
+        {/* スレッドタブ */}
+        {activeTab === "threads" && (
+          <ComingSoon
+            title="スレッド"
+            description="このユーザーのスレッド一覧は近日公開予定です。"
+          />
         )}
 
         <div className="h-8" aria-hidden="true" />

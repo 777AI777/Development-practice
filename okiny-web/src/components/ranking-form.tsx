@@ -436,8 +436,9 @@ export function RankingForm({
       ) : null}
 
       {/* カードプレビュー（borderColorと同期した枠） */}
+      {/* overflow-visible: TagCombobox のサジェスト/作成ボタンのドロップダウンが親でクリップされないようにする */}
       <div
-        className="rounded-2xl border-2 overflow-hidden"
+        className="rounded-2xl border-2 overflow-visible"
         style={{
           backgroundColor: "var(--card)",
           borderColor: effectiveBorderColor,

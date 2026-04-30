@@ -7,7 +7,6 @@ import { useSessionUser } from "@/hooks/use-session-user";
 import { useTags, separateTags } from "@/hooks/use-tags";
 import {
   SEARCH_POSTS_SCROLL_KEY,
-  SEARCH_RANKINGS_SCROLL_KEY,
   SEARCH_TAGS_SCROLL_KEY,
   SEARCH_USERS_SCROLL_KEY,
 } from "@/lib/constants";
@@ -17,22 +16,19 @@ import { SearchTabs } from "@/components/search/search-tabs";
 import { SearchInitialView } from "@/components/search/search-initial-view";
 import { usePageTransition } from "@/components/page-transition-provider";
 import { SearchPostsTab } from "@/components/search/search-posts-tab";
-import { SearchRankingsTab } from "@/components/search/search-rankings-tab";
 import { SearchUsersTab } from "@/components/search/search-users-tab";
 import { SearchTagsTab } from "@/components/search/search-tags-tab";
 import type { SearchTab } from "@/lib/types";
 
 function getSearchScrollKey(tab: SearchTab): string {
   switch (tab) {
-    case "posts":
-      return SEARCH_POSTS_SCROLL_KEY;
     case "accounts":
       return SEARCH_USERS_SCROLL_KEY;
     case "tags":
       return SEARCH_TAGS_SCROLL_KEY;
-    case "rankings":
+    case "posts":
     default:
-      return SEARCH_RANKINGS_SCROLL_KEY;
+      return SEARCH_POSTS_SCROLL_KEY;
   }
 }
 
@@ -45,7 +41,7 @@ function SearchPageContent() {
   const q = searchParams.get("q") ?? "";
   const tabParam = searchParams.get("tab") as SearchTab | null;
   const activeTab: SearchTab =
-    tabParam && ["posts", "rankings", "accounts", "tags"].includes(tabParam)
+    tabParam && ["posts", "accounts", "tags"].includes(tabParam)
       ? tabParam
       : "posts";
 
@@ -145,10 +141,6 @@ function SearchPageContent() {
             <SearchPostsTab
               query={searchQuery}
               isActive={activeTab === "posts"}
-            />
-            <SearchRankingsTab
-              query={searchQuery}
-              isActive={activeTab === "rankings"}
             />
             <SearchUsersTab
               query={searchQuery}
